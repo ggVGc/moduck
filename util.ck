@@ -15,6 +15,23 @@ public class Util{
     return target;
   }
 
+
+  fun static Handler setValRef(Handler target, string key, IntRef v){
+    v @=> target.values[key];
+    return target;
+  }
+
+  fun static IntRef toSamples(dur d){
+    return Util.iref((d / samp) $ int);
+  }
+
+  fun static string strOrNull(string s){
+    if(s != null){
+      return s;
+    }else{
+      return "null";
+    }
+  }
 }
 
 

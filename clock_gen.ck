@@ -1,8 +1,7 @@
 
 public class ClockGen extends Handler{
-  /* VEvent out; */
-  Util.bpmToDur(120) => dur delta;
 
+  dur delta;
   Shred @ looper;
 
   fun void loop(){
@@ -23,5 +22,11 @@ public class ClockGen extends Handler{
       }
       return true;
     }
+  }
+
+  fun static ClockGen make(int bpm){
+    ClockGen ret;
+    Util.bpmToDur(bpm) => ret.delta;
+    return ret;
   }
 }

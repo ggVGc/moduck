@@ -2,7 +2,7 @@ public class Delay extends Handler{
   Shred @ waiter;
 
   fun void setWait(dur d){
-    Util.iref((d / samp) $ int) @=> values["wait"];
+    Util.toSamples(d) @=> values["wait"];
   }
   setWait(second);
 

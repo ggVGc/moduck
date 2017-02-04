@@ -7,7 +7,7 @@ public class Patch{
         <<<"Invalid source event: "+srcEventName+" - "+src>>>;
       }
       if(!target.handle(msg, src.out.val)){
-        <<<"Invalid event: "+msg+" - "+target>>>;
+        <<<"Invalid event: "+Util.strOrNull(msg)+" - "+target>>>;
       }
     }
   }
