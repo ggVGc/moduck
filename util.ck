@@ -9,6 +9,12 @@ public class Util{
     v => i.i;
     return i;
   }
+
+  fun static Handler setVal(Handler target, string key, int v){
+    Util.iref(v) @=> target.values[key];
+    return target;
+  }
+
 }
 
 

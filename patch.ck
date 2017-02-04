@@ -35,4 +35,19 @@ public class Patch{
     spork ~ connectValLoop(src, srcEventName, target, msg);
     return target;
   }
+
+
+  fun static Handler chain(Handler first, ChainData rest[]){
+    first @=> Handler h;
+    for(0 => int i; i<rest.size(); i++){
+      rest[i] @=> ChainData d;
+      if(d.type == 1){
+        connect(h, d.srcTag, d.target, d.targetTag) @=> h;
+      }else{
+        connVal(h, d.srcTag, d.target, d.targetTag) @=> h;
+      }
+    }
+    return h;
+  }
+
 }

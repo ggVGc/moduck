@@ -1,10 +1,13 @@
 public class Delay extends Handler{
-  /* VEvent out; */
-  second => dur wait;
   Shred @ waiter;
 
+  fun void setWait(dur d){
+    Util.iref((d / samp) $ int) @=> values["wait"];
+  }
+  setWait(second);
+
   fun void doWait(int v){
-    wait => now;
+    values["wait"].i :: samp => now;
     v => out.val;
     out.broadcast();
   }
@@ -20,7 +23,7 @@ public class Delay extends Handler{
 
   fun static Delay make(dur wait){
     Delay d;
-    wait => d.wait;
+    d.setWait(wait);
     return d;
   }
 }

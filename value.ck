@@ -14,5 +14,12 @@ public class Value extends Handler{
     Util.iref(v) @=> ret.values["value"];
     return ret;
   }
+
+  fun static Value False(){
+    return Value.make(false);
+  }
+  fun static Value True(){
+    return Value.make(true);
+  }
 }
 
