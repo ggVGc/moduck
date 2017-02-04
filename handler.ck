@@ -7,6 +7,16 @@ public class Handler{
     return values[key].i;
   }
 
+
+  fun void setVal(string key, int v){
+    IntRef.make(v) @=> values[key];
+  }
+
+
+  fun void setValRef(string key, IntRef v){
+    v @=> values[key];
+  }
+
   SrcEvent out;
 
 }

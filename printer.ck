@@ -6,10 +6,8 @@ public class Printer extends Handler{
   }
 
   fun int handle(string msg, int v){
-    if(msg == "print"){
-      print(v);
-      return true;
-    }
+    print(v);
+    return true;
   }
 
   fun static Printer make(string msg){

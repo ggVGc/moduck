@@ -1,8 +1,16 @@
 
 public class Sequencer extends Handler{
   int entries[];
-  0 => int curStep;
-  Util.iref(true) @=> values["loop"];
+  int curStep;
+
+  fun void init(int ents[], int loop){
+    0 => curStep;
+    ents @=> entries;
+    setVal("loop", loop);
+  }
+
+  init([0], true);
+
 
   /* VEvent out; */
 
@@ -24,11 +32,12 @@ public class Sequencer extends Handler{
       curStep + 1 => curStep;
       out.broadcast();
     }
+
   }
 
-  fun static Sequencer make(int entries[]){
+  fun static Sequencer make(int entries[], int loop){
     Sequencer s;
-    entries @=> s.entries;
+    s.init(entries, loop);
     return s;
   }
 }

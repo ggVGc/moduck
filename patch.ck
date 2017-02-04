@@ -23,7 +23,7 @@ public class Patch{
       if(target.values[valueName] == null){
         <<<"Invalid value: "+valueName+" - "+target>>>;
       }
-      Util.iref(src.out.val) @=> target.values[valueName];
+      IntRef.make(src.out.val) @=> target.values[valueName];
     }
   }
 

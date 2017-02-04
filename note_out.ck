@@ -21,7 +21,8 @@ public class NoteOut extends Handler{
   MidiOut midOut;
   NoteOffSender offSender;
   int channel;
-  dur duration;
+  dur minDur;
+  dur maxDur;
 
   fun int handle(string tag, int v){
     MidiMsg msg;
@@ -36,14 +37,19 @@ public class NoteOut extends Handler{
     }
     note => msg.data2;
     getVal("velocity") => msg.data3;
+    getVal("ratio") / 127.0 => float durMul;
+    maxDur - minDur => dur deltaDur;
+    minDur + deltaDur * durMul => dur duration;
     offSender.noteOff(note, duration);
     midOut.send(msg);
     return true;
   }
 
-  fun static NoteOut make(int devicePort, int channel, dur duration){
+
+  fun static NoteOut make(int devicePort, int channel, dur minDur, dur maxDur){
     NoteOut ret;
-    duration => ret.duration;
+    minDur => ret.minDur;
+    maxDur => ret.maxDur;
     channel => ret.channel;
     ret.midOut.open(devicePort) => int success;
     if(!success){
@@ -53,6 +59,7 @@ public class NoteOut extends Handler{
     channel => ret.offSender.channel;
     Util.setVal(ret, "velocity", 127);
     Util.setVal(ret, "note", 64);
+    Util.setVal(ret, "ratio", 63);
     Util.setValRef(ret, "duration", Util.toSamples(300::ms));
     return ret;
   }

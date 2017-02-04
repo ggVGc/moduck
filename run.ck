@@ -50,7 +50,15 @@ fun void CM(Handler src, ChainData targets[]){
 
 
 120 => int BPM;
-8 => int TICKS_PER_BEAT;
+32 => int TICKS_PER_BEAT;
+Util.bpmToDur(BPM) => dur TIME_PER_BEAT;
+
+TICKS_PER_BEAT => int B;
+TICKS_PER_BEAT /2 => int B2;
+TICKS_PER_BEAT / 4 => int B4;
+TICKS_PER_BEAT / 8 => int B8;
+TICKS_PER_BEAT / 16 => int B16;
+TICKS_PER_BEAT / 32 => int B32;
 
 
 Trigger startBang;
@@ -60,8 +68,9 @@ ClockGen.make(BPM * TICKS_PER_BEAT) @=> ClockGen clock;
 // Connect clock to start bang
 C1(startBang, clock, "run");
 
-Sequencer.make([70, 72, 74, 76]) @=> Sequencer noteSeq;
-Sequencer.make([5, 2, 1, 1, 2, 3, 4, 5]) @=> Sequencer noteDivSeq;
+Sequencer.make([70, 72, 74, 76], true) @=> Sequencer noteSeq;
+Sequencer.make(Util.ratios(0, 127, [1.0, .7, .6]), true) @=> Sequencer durationSeq;
+Sequencer.make([B2, B2, B2, B4, B4, B4, B2], true) @=> Sequencer noteDivSeq;
 
 PulseDiv.make(0) @=> PulseDiv divider;
 V(noteDivSeq, divider, "denom");
@@ -69,11 +78,22 @@ V(noteDivSeq, divider, "denom");
 CM( C(clock, divider), [
   X(noteSeq)
   ,X(noteDivSeq)
+  ,X(durationSeq)
 ]);
 
 
-NoteOut.make(DEVICE_PORT, MIDI_PORT, 100::ms)
+NoteOut.make(DEVICE_PORT, MIDI_PORT, 0::ms, TIME_PER_BEAT/2)
   @=> NoteOut noteOut;
+
+V(durationSeq, noteOut, "ratio");
+
+/* 
+ Patch.chain(clock, [
+   X(PulseDiv.make(1))
+   ,X(Sequencer.make(Util.concat([Util.range(127,0,1), Util.range(0,127,1)]), true))
+   ,XV(noteOut, "ratio")
+ ]);
+ */
 
 C1(noteSeq, noteOut, "note");
 

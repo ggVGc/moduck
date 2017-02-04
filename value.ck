@@ -1,6 +1,6 @@
 
 public class Value extends Handler{
-  Util.iref(0) @=> values["value"];
+  IntRef.make(0) @=> values["value"];
 
   /* VEvent out; */
   
@@ -11,7 +11,7 @@ public class Value extends Handler{
   }
   fun static Value make(int v){
     Value ret;
-    Util.iref(v) @=> ret.values["value"];
+    IntRef.make(v) @=> ret.values["value"];
     return ret;
   }
 
