@@ -6,21 +6,22 @@ public class PulseDiv extends Moduck{
     if(tag == "reset"){
       0 => accum;
     }else{
-      if(accum == getVal("divisor")){
+      if(accum == 0){
         v => out.val;
         out.broadcast();
+      }
+      accum + 1 => accum;
+      if(accum >= getVal("divisor")){
         0 => accum;
-      }else{
-        accum + 1 => accum;
       }
     }
     return true;
   }
   
-  fun static PulseDiv make(int diviso){
+  fun static PulseDiv make(int divisor){
     PulseDiv ret;
     ret.handle("reset", 0);
-    Util.setVal(ret, "divisor", diviso);
+    Util.setVal(ret, "divisor", divisor);
     return ret;
   }
 }

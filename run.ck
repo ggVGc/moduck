@@ -60,9 +60,9 @@ fun void noteDiddler(Moduck clock, dur maxNoteDur, int notes[], int noteDivs[], 
   V(noteDivSeq, divider, "divisor");
 
   CM( C(clock, divider), [
-      X(noteSeq)
-      ,X(noteDivSeq)
-      ,X(durationSeq)
+    X(noteSeq)
+    ,X(noteDivSeq)
+    ,X(durationSeq)
   ]);
 
 
@@ -88,7 +88,7 @@ TICKS_PER_BEAT / 16 => int B16;
 TICKS_PER_BEAT / 32 => int B32;
 
 
-fun void body(Moduck clock){
+fun void _body(Moduck clock){
   noteDiddler(
     clock
     ,TIME_PER_BEAT/2
@@ -98,17 +98,41 @@ fun void body(Moduck clock){
   );
 }
 
+fun void body(Moduck clock){
 
-Trigger startBang;
-ClockGen.make(BPM * TICKS_PER_BEAT) @=> ClockGen masterClock;
+  noteDiddler(clock,TIME_PER_BEAT/8
+    ,[62]
+    ,[B]
+    ,[1.0]
+  );
 
-body(masterClock);
 
-// Connect clock to start bang
-C1(startBang, masterClock, "run");
+  noteDiddler(clock,TIME_PER_BEAT/8
+    ,[65]
+    ,[B, B4, 3 * B, B2, B4, B2]
+    ,[1.0]
+  );
 
-// Stuff
-ms  => now;
-startBang.trigger("start", 1);
+  noteDiddler(clock, TIME_PER_BEAT/8
+    ,[70, 69, 72, 78]
+    ,[B2 * 3]
+    ,[1.0]
+  );
 
+}
+
+
+fun void setup(){
+  Trigger startBang;
+  ClockGen.make(BPM * TICKS_PER_BEAT) @=> ClockGen masterClock;
+
+  body(masterClock);
+
+  C1(startBang, masterClock, "run");
+  ms  => now;
+  startBang.trigger("start", 1);
+}
+
+
+setup();
 while(true) { 99::hour => now; }
