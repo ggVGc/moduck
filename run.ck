@@ -1,12 +1,24 @@
 
-1 => int DEVICE_PORT;
+3 => int DEVICE_PORT;
 0 => int MIDI_PORT;
 
-fun Handler V(Handler src, string srcEventName, Handler target, string msg){
+fun Handler V(Handler src, Handler target, string msg){
+  return Patch.connVal(src, null, target, msg);
+}
+
+fun Handler V1(Handler src, string srcEventName, Handler target, string msg){
   return Patch.connVal(src, srcEventName, target, msg);
 }
 
-fun  Handler C(Handler src, string srcEventName, Handler target, string msg){
+fun  Handler C(Handler src, Handler target){
+  return Patch.connect(src, null, target, null);
+}
+
+fun  Handler C1(Handler src, Handler target, string msg){
+  return Patch.connect(src, null, target, msg);
+}
+
+fun  Handler C2(Handler src, string srcEventName, Handler target, string msg){
   return Patch.connect(src, srcEventName, target, msg);
 }
 
@@ -22,48 +34,49 @@ fun ChainData X2(string srcTag, Handler target, string targetTag){
   return ChainData.conn(srcTag, target, targetTag);
 }
 
-fun ChainData XV(string srcTag, Handler target, string targetTag){
+fun ChainData XV(Handler target, string targetTag){
+  return ChainData.val(null, target, targetTag);
+}
+
+
+fun ChainData XV1(string srcTag, Handler target, string targetTag){
   return ChainData.val(srcTag, target, targetTag);
 }
 
 
+fun void CM(Handler src, ChainData targets[]){
+  return Patch.connectMulti(src, targets);
+}
+
+
+120 => int BPM;
+8 => int TICKS_PER_BEAT;
+
+
 Trigger startBang;
-ClockGen.make(240) @=> ClockGen clock;
-Delay.make(130::second) @=> Delay delay;
+ClockGen.make(BPM * TICKS_PER_BEAT) @=> ClockGen clock;
 
 
-// Connect clock and delay to start event
-C(startBang, null, clock, "run");
-C(startBang, null, delay, "delay");
+// Connect clock to start bang
+C1(startBang, clock, "run");
 
-/* Sequencer.make([50, 54, 53, 59, 55]) */
-Sequencer.make([45, 45, 45, 45])
-  @=> Sequencer seq;
+Sequencer.make([70, 72, 74, 76]) @=> Sequencer noteSeq;
+Sequencer.make([5, 2, 1, 1, 2, 3, 4, 5]) @=> Sequencer noteDivSeq;
 
+PulseDiv.make(0) @=> PulseDiv divider;
+V(noteDivSeq, divider, "denom");
 
-Patch.chain(clock, [
-  X1(seq, "step")
-  ,X(Offset.make(20)) 
-]) 
-  @=> Handler offsetSeq;
-
-
-/* C(seq, null, Printer.make("Seq Event"), "print"); */
-/* C(offsetSeq, null, Printer.make("Offset Seq Event"), "print"); */
-
-
-
-// Set sequencer loop to false when delay triggers
-Patch.chain(delay, [
-  X(Value.False())
-  ,XV(null, seq, "loop")
+CM( C(clock, divider), [
+  X(noteSeq)
+  ,X(noteDivSeq)
 ]);
 
-NoteOut.make(DEVICE_PORT, MIDI_PORT) @=> NoteOut noteOut;
 
-Util.setValRef(noteOut, "duration", Util.toSamples(100::ms));
+NoteOut.make(DEVICE_PORT, MIDI_PORT, 100::ms)
+  @=> NoteOut noteOut;
 
-C(seq, null, noteOut, "note");
+C1(noteSeq, noteOut, "note");
+
 /* Patch.chain(offsetSeq, [ */
 /*   X(Delay.make(80::ms)) */
 /*   ,X1(noteOut, "note") */

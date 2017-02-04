@@ -13,5 +13,6 @@ Machine.add("value.ck");
 Machine.add("trigger.ck");
 Machine.add("offset.ck");
 Machine.add("note_out.ck");
+Machine.add("pulse_div.ck");
 Machine.add("run.ck");
 

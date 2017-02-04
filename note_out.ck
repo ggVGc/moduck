@@ -21,12 +21,13 @@ public class NoteOut extends Handler{
   MidiOut midOut;
   NoteOffSender offSender;
   int channel;
+  dur duration;
 
   fun int handle(string tag, int v){
     MidiMsg msg;
     144 + channel => msg.data1; // NoteOn
     int note;
-    if(tag != null && tag == "note"){
+    if(tag == "note"){
       // Trigger with received note value
       v => note;
     }else{
@@ -35,16 +36,19 @@ public class NoteOut extends Handler{
     }
     note => msg.data2;
     getVal("velocity") => msg.data3;
-    offSender.noteOff(note, getVal("duration")::samp);
+    offSender.noteOff(note, duration);
     midOut.send(msg);
     return true;
   }
 
-  fun static NoteOut make(int devicePort, int channel){
+  fun static NoteOut make(int devicePort, int channel, dur duration){
     NoteOut ret;
+    duration => ret.duration;
     channel => ret.channel;
-    ret.midOut.open(devicePort) => int check;
-    <<<check>>>;
+    ret.midOut.open(devicePort) => int success;
+    if(!success){
+      <<< "Error: Failed opening midi device: " + devicePort >>>;
+    }
     ret.midOut @=> ret.offSender.out;
     channel => ret.offSender.channel;
     Util.setVal(ret, "velocity", 127);

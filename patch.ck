@@ -6,8 +6,9 @@ public class Patch{
       if(srcEventName != null && srcEventName != "" && srcEventName != src.out.tag){
         <<<"Invalid source event: "+srcEventName+" - "+src>>>;
       }
+      Util.strOrNull(msg) => msg;
       if(!target.handle(msg, src.out.val)){
-        <<<"Invalid event: "+Util.strOrNull(msg)+" - "+target>>>;
+        <<<"Invalid event: "+msg+" - "+target>>>;
       }
     }
   }
@@ -50,4 +51,14 @@ public class Patch{
     return h;
   }
 
+  fun static void connectMulti(Handler src, ChainData targets[]){
+    for(0 => int i; i<targets.size(); i++){
+      targets[i] @=> ChainData d;
+      if(d.type == 1){
+        connect(src, d.srcTag, d.target, d.targetTag);
+      }else{
+        connVal(src, d.srcTag, d.target, d.targetTag);
+      }
+    }
+  }
 }

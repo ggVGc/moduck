@@ -29,7 +29,7 @@ public class Util{
     if(s != null){
       return s;
     }else{
-      return "null";
+      return "nil";
     }
   }
 }

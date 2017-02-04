@@ -7,10 +7,10 @@ public class Sequencer extends Handler{
   /* VEvent out; */
 
   fun int handle(string type, int v){
-    if(type == "step"){
+    /* if(type == "step"){ */
       step(v);
       return true;
-    }
+    /* } */
   }
 
   fun void step(int ignored){
