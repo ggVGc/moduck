@@ -1,5 +1,5 @@
 
-public class Sequencer extends Handler{
+public class Sequencer extends Moduck{
   int entries[];
   int curStep;
 

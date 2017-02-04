@@ -1,4 +1,4 @@
-public class Printer extends Handler{
+public class Printer extends Moduck{
   "Printer" => string msg;
 
   fun void print(int v){

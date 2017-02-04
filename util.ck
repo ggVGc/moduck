@@ -5,13 +5,13 @@ public class Util{
   }
 
 
-  fun static Handler setVal(Handler target, string key, int v){
+  fun static Moduck setVal(Moduck target, string key, int v){
     target.setVal(key, v);
     return target;
   }
 
 
-  fun static Handler setValRef(Handler target, string key, IntRef v){
+  fun static Moduck setValRef(Moduck target, string key, IntRef v){
     target.setValRef(key, v);
     return target;
   }

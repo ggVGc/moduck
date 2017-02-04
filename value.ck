@@ -1,5 +1,5 @@
 
-public class Value extends Handler{
+public class Value extends Moduck{
   IntRef.make(0) @=> values["value"];
 
   /* VEvent out; */

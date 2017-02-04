@@ -1,5 +1,5 @@
 
-public class Handler{
+public class Moduck{
   IntRef values[10]; // Completely arbitrary
   fun int handle(string msg, int v){};
 

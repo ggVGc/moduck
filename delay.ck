@@ -1,4 +1,4 @@
-public class Delay extends Handler{
+public class Delay extends Moduck{
   Shred @ waiter;
 
   fun void setWait(dur d){

@@ -1,5 +1,5 @@
 
-public class ClockGen extends Handler{
+public class ClockGen extends Moduck{
 
   dur delta;
   Shred @ looper;

@@ -1,12 +1,12 @@
 
 public class ChainData{
   string srcTag;
-  Handler @ target;
+  Moduck @ target;
   string targetTag;
   int type;
 
 
-  fun static ChainData conn(string srcTag, Handler target, string targetTag){
+  fun static ChainData conn(string srcTag, Moduck target, string targetTag){
     ChainData ret;
     srcTag => ret.srcTag;
     target @=> ret.target;
@@ -15,7 +15,7 @@ public class ChainData{
     return ret;
   }
 
-  fun static ChainData val(string srcTag, Handler target, string targetTag){
+  fun static ChainData val(string srcTag, Moduck target, string targetTag){
     ChainData ret;
     srcTag => ret.srcTag;
     target @=> ret.target;

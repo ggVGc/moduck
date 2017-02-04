@@ -1,12 +1,12 @@
 
-public class PulseDiv extends Handler{
+public class PulseDiv extends Moduck{
   int accum;
 
   fun int handle(string tag, int v){
     if(tag == "reset"){
       0 => accum;
     }else{
-      if(accum == getVal("denom")){
+      if(accum == getVal("divisor")){
         v => out.val;
         out.broadcast();
         0 => accum;
@@ -17,10 +17,10 @@ public class PulseDiv extends Handler{
     return true;
   }
   
-  fun static PulseDiv make(int denom){
+  fun static PulseDiv make(int diviso){
     PulseDiv ret;
     ret.handle("reset", 0);
-    Util.setVal(ret, "denom", denom);
+    Util.setVal(ret, "divisor", diviso);
     return ret;
   }
 }

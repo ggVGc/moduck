@@ -17,7 +17,7 @@ class NoteOffSender{
 }
 
 
-public class NoteOut extends Handler{
+public class NoteOut extends Moduck{
   MidiOut midOut;
   NoteOffSender offSender;
   int channel;
@@ -37,7 +37,7 @@ public class NoteOut extends Handler{
     }
     note => msg.data2;
     getVal("velocity") => msg.data3;
-    getVal("ratio") / 127.0 => float durMul;
+    getVal("durRatio") / 127.0 => float durMul;
     maxDur - minDur => dur deltaDur;
     minDur + deltaDur * durMul => dur duration;
     offSender.noteOff(note, duration);
@@ -59,7 +59,7 @@ public class NoteOut extends Handler{
     channel => ret.offSender.channel;
     Util.setVal(ret, "velocity", 127);
     Util.setVal(ret, "note", 64);
-    Util.setVal(ret, "ratio", 63);
+    Util.setVal(ret, "durRatio", 63);
     Util.setValRef(ret, "duration", Util.toSamples(300::ms));
     return ret;
   }
