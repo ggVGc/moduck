@@ -77,7 +77,7 @@ public class Patch{
       }else{
         connVal(src, d.srcTag, d.target, d.targetTag);
       }
-      connect(d.target, null, connect(Delay.make(i::samp), null, out, null), null);
+      connect(d.target, null, out, null);
     }
 
     return Wrapper.make(src, out);

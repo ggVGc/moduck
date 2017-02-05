@@ -196,6 +196,7 @@ fun void routerTest(Moduck clock, NoteOut noteOut){
   Router.make(1) @=> Router router;
 
   MUtil.combine([MUtil.mul2(s1, s2), MUtil.add2(s1, s2)]) @=> Moduck combined;
+  C(combined, Printer.make("")) @=> Moduck mult;
 
   // Send router output to sequencers, and finally to noteOut
  chain(

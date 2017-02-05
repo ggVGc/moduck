@@ -7,7 +7,7 @@ public class MUtil{
     
     for(0=>int i;i<children.size();i++){
       Patch.connect(in, null, children[i], null);
-      Patch.connect(children[i], null, Patch.connect(Delay.make(i::samp),null, out,null), null);
+      Patch.connect(children[i], null, out, null);
     }
 
     return Wrapper.make(in, out);
