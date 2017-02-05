@@ -45,12 +45,16 @@ fun ChainData XV1(string srcTag, Moduck target, string targetTag){
   return ChainData.val(srcTag, target, targetTag);
 }
 
-fun Moduck CM(Moduck src, ChainData targets[]){
+fun Moduck multi(Moduck src, ChainData targets[]){
   return Patch.connectMulti(src, targets);
 }
 
 fun Sequencer seq(int ents[]){
   return Sequencer.make(ents, true);
+}
+
+fun Moduck chain(Moduck first, ChainData rest[]){
+  return Patch.chain(first, rest);
 }
 
 //  End of aliases
@@ -67,7 +71,7 @@ fun Moduck noteDiddler(dur maxNoteDur, int notes[], int noteValues[], int noteDi
   V(noteDivSeq, divider, "divisor");
   C(parent, divider) @=> Moduck divClock;
 
-  CM( divClock, [
+  multi( divClock, [
     X(noteDivSeq)
     ,X(durationSeq)
   ]);
@@ -85,7 +89,7 @@ fun Moduck noteDiddler(dur maxNoteDur, int notes[], int noteValues[], int noteDi
     noteOut @=> out;
   }
 
-  Patch.chain(divClock, [
+  chain(divClock, [
     X(noteSeq)
     ,X(Mapper.make(noteValues, 12))
     ,X1(out, "note")
@@ -121,7 +125,7 @@ fun void __body(Moduck clock){
   Scales.Major @=> int noteVals[];
   68 => int rootNote;
 
-  CM(clock, [
+  multi(clock, [
     X(noteDiddler(TIME_PER_BEAT/8
       ,[2]
       ,noteVals
@@ -172,8 +176,8 @@ fun void dualMelo(Moduck clock){
     @=> NoteOut noteOut;
 
   // Connect two looping sequencers to a clock
-  CM( clock, [
-      X(Patch.chain(PulseDiv.make(3, true),[ // Divide clock so this triggeres every third pulse
+  multi(clock, [
+      X(chain(PulseDiv.make(3, true),[ // Divide clock so this triggeres every third pulse
           X(Sequencer.make([62, 63, 65], true)) // Three notes, looping
           ,X(noteOut)
       ]))
@@ -184,25 +188,30 @@ fun void dualMelo(Moduck clock){
 
 
 fun void routerTest(Moduck clock, NoteOut noteOut){
+  seq([68,65,63]) @=> Sequencer s1;
   seq([60,62,64]) @=> Sequencer s2;
-  seq([68,65,63]) @=> Sequencer s;
   seq([0,1]) @=> Sequencer indexer;
 
-  C(s, noteOut);
-  C(s2, noteOut);
+  Router.make(1) @=> Router router;
 
-  Router.make(1) @=> Router r;
+  // Send router output to sequencers, and finally to noteOut
+  chain(
+    multi(router,[
+      X2("0", s1, null) // Connect s1 to router index 0
+      ,X2("1", s2, null) // Connect s2 to router index 1
+    ])
+    , [X(noteOut)]
+  );
 
-  C2(r, "0", s, null);
-  C2(r, "1", s2, null);
-
-  CM(clock,[
-    X(V(C(PulseDiv.make(6, false), indexer), r, "index"))
-    ,X(r)
+  multi(clock,[
+    // Send pulses, divided by 6, to sequencer controlling router index
+    X(chain(PulseDiv.make(6, false), [
+        X(indexer)                    
+        ,XV(router, "index")
+      ]
+    ))
+    ,X( router ) // Send pulses to router to be forwarded to active sequencer
   ]);
-
-
-
 }
 
 

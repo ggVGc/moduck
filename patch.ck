@@ -65,6 +65,7 @@ public class Patch{
   }
 
   fun static Moduck connectMulti(Moduck src, ChainData targets[]){
+    Repeater rep;
     for(0 => int i; i<targets.size(); i++){
       targets[i] @=> ChainData d;
       if(d.type == 1){
@@ -72,8 +73,9 @@ public class Patch{
       }else{
         connVal(src, d.srcTag, d.target, d.targetTag);
       }
+      connect(d.target, null, rep, null);
     }
 
-    return src;
+    return Wrapper.make(src, rep);
   }
 }
