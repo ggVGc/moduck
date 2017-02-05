@@ -9,3 +9,7 @@ Machine.add("patch.ck");
 Machine.add("scales.ck");
 Machine.add("run.ck");
 
+
+int a[10];
+22 => a["b"];
+<<< a.size() >>>;

@@ -15,10 +15,15 @@ public class Sequencer extends Moduck{
   /* VEvent out; */
 
   fun int handle(string type, int v){
+    if(type == "trig"){
+      entries[curStep] => out.val;
+      out.broadcast();
+    }else{
     /* if(type == "step"){ */
       step(v);
-      return true;
-    /* } */
+    }
+    return true;
+
   }
 
   fun void step(int ignored){

@@ -1,5 +1,5 @@
 
-3 => int DEVICE_PORT;
+2 => int DEVICE_PORT;
 0 => int MIDI_PORT;
 
 
@@ -194,6 +194,16 @@ fun void routerTest(Moduck clock, NoteOut noteOut){
 
   Router.make(1) @=> Router router;
 
+  Adder.make(2) @=> Adder mult;
+
+  C1(s1, mult, "0");
+  C1(s2, mult, "1");
+
+  C(mult, Printer.make("M"));
+  samp => now;
+  s1.handle("trig", 0);
+  s2.handle("trig", 0);
+
   // Send router output to sequencers, and finally to noteOut
   chain(
     multi(router,[
@@ -211,6 +221,7 @@ fun void routerTest(Moduck clock, NoteOut noteOut){
       ]
     ))
     ,X( router ) // Send pulses to router to be forwarded to active sequencer
+    ,X1(mult, "")
   ]);
 }
 

@@ -16,8 +16,12 @@ public class Patch{
         src.out.tag => msg;
       }
       if(doHandle){
+        null @=> target.out.tag;
         if(!target.handle(msg, src.out.val)){
           <<<"Invalid event: "+msg+" - "+target>>>;
+        }
+        if(target.out.tag == null){
+          src.out.tag => target.out.tag;
         }
       }
     }

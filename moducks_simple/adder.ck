@@ -1,11 +1,12 @@
-public class Multiplier extends Moduck{
+
+public class Adder extends Moduck{
   int inputCount;
 
   fun int handle(string tag, int v){
     if(tag == "" || tag == "trigger" || tag == "gate"){
-      1 => int acc;
+      0 => int acc;
       for(0 => int i; i<inputCount; i++){
-        acc * getVal(""+i) => acc;
+        acc + getVal(""+i) => acc;
       }
       acc => out.val;
       out.broadcast();
@@ -22,8 +23,8 @@ public class Multiplier extends Moduck{
     return false;
   }
 
-  fun static Multiplier make(int inputs){
-    Multiplier ret;
+  fun static Adder make(int inputs){
+    Adder ret;
     inputs => ret.inputCount;
     for(0 => int i; i<inputs; i++){
       ret.setVal(""+i, 1);
