@@ -7,6 +7,7 @@ Machine.add("clock_gen.ck");
 Machine.add("delay.ck");
 Machine.add("sequencer.ck");
 Machine.add("chain_data.ck");
+Machine.add("wrapper.ck");
 Machine.add("patch.ck");
 Machine.add("printer.ck");
 Machine.add("value.ck");
@@ -14,5 +15,7 @@ Machine.add("trigger.ck");
 Machine.add("offset.ck");
 Machine.add("note_out.ck");
 Machine.add("pulse_div.ck");
+Machine.add("mapper.ck");
+Machine.add("repeater.ck");
 Machine.add("run.ck");
 

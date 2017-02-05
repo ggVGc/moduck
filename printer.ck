@@ -5,8 +5,11 @@ public class Printer extends Moduck{
     <<< msg + "> " + v>>>;
   }
 
-  fun int handle(string msg, int v){
+  fun int handle(string tag, int v){
     print(v);
+    msg => out.tag;
+    v => out.val;
+    out.broadcast();
     return true;
   }
 

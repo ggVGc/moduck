@@ -6,18 +6,19 @@ public class Delay extends Moduck{
   }
   setWait(second);
 
-  fun void doWait(int v){
+  fun void doWait(string tag, int v){
     values["wait"].i :: samp => now;
     v => out.val;
+    tag => out.tag;
     out.broadcast();
   }
 
-  fun int handle(string _, int v){
+  fun int handle(string tag, int v){
     if(waiter != null){
       waiter.exit();
       null @=> waiter;
     }
-    spork ~ doWait(v) @=> waiter;
+    spork ~ doWait(tag, v) @=> waiter;
     return true;
   }
 

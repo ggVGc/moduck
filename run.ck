@@ -45,35 +45,48 @@ fun ChainData XV1(string srcTag, Moduck target, string targetTag){
   return ChainData.val(srcTag, target, targetTag);
 }
 
-fun void CM(Moduck src, ChainData targets[]){
+fun Moduck CM(Moduck src, ChainData targets[]){
   return Patch.connectMulti(src, targets);
 }
 
 //  End of aliases
 
-fun void noteDiddler(Moduck clock, dur maxNoteDur, int notes[], int noteDivs[], float durationRatios[]){
+fun Moduck noteDiddler(dur maxNoteDur, int notes[], int noteValues[], int noteDivs[], float durationRatios[], Moduck noteProcessor){
+  Repeater.make() @=> Repeater parent;
   Sequencer.make(notes, true) @=> Sequencer noteSeq;
   Sequencer.make(noteDivs, true) @=> Sequencer noteDivSeq;
   Sequencer.make(Util.ratios(0, 127, durationRatios), true) @=> Sequencer durationSeq;
 
   PulseDiv.make(0) @=> PulseDiv divider;
   V(noteDivSeq, divider, "divisor");
+  C(parent, divider) @=> Moduck divClock;
 
-  CM( C(clock, divider), [
-    X(noteSeq)
-    ,X(noteDivSeq)
+  CM( divClock, [
+    X(noteDivSeq)
     ,X(durationSeq)
   ]);
-
 
   NoteOut.make(DEVICE_PORT, MIDI_PORT, 0::ms, maxNoteDur)
     @=> NoteOut noteOut;
 
   V(durationSeq, noteOut, "durRatio");
 
-  C1(noteSeq, noteOut, "note");
-}
+  Moduck @ out;
 
+  if(noteProcessor != null){
+    C(noteProcessor, noteOut) @=> out;
+  }else{
+    noteOut @=> out;
+  }
+
+  Patch.chain(divClock, [
+    X(noteSeq)
+    ,X(Mapper.make(noteValues))
+    ,X1(out, "note")
+  ]);
+
+  return parent;
+}
 
 
 120 => int BPM;
@@ -89,36 +102,49 @@ TICKS_PER_BEAT / 32 => int B32;
 
 
 fun void _body(Moduck clock){
-  noteDiddler(
-    clock
-    ,TIME_PER_BEAT/2
+  noteDiddler(TIME_PER_BEAT/2
+    ,[0,1,2,3]
     ,[70, 72, 74, 76]
     ,[B2, B2, B2, B4, B4, B4, B2]
     ,[1.0, .7, .6]
+    ,null
   );
 }
 
 fun void body(Moduck clock){
 
-  noteDiddler(clock,TIME_PER_BEAT/8
-    ,[62]
-    ,[B]
-    ,[1.0]
-  );
+  [64, 66, 68, 69, 71] @=> int noteVals[];
 
-
-  noteDiddler(clock,TIME_PER_BEAT/8
-    ,[65]
-    ,[B, B4, 3 * B, B2, B4, B2]
-    ,[1.0]
-  );
-
-  noteDiddler(clock, TIME_PER_BEAT/8
-    ,[70, 69, 72, 78]
-    ,[B2 * 3]
-    ,[1.0]
-  );
-
+  CM(clock, [
+      X(noteDiddler(TIME_PER_BEAT/8
+        ,[2]
+        ,noteVals
+        ,[B]
+        ,[1.0]
+        ,null
+      ))
+      ,X(noteDiddler(TIME_PER_BEAT/8
+        ,[1]
+        ,noteVals
+        ,[B]
+        ,[1.0]
+        ,Delay.make(30::ms)
+      ))
+    ,X(noteDiddler(TIME_PER_BEAT/8
+      ,[3]
+      ,noteVals
+      ,[B, B4, 3 * B, B2, B4, B2]
+      ,[1.0]
+      ,Offset.make(-12)
+    ))
+    ,X(noteDiddler(TIME_PER_BEAT/8
+      ,[0,1,2,3]
+      ,noteVals
+      ,[B2 * 3]
+      ,[1.0]
+      ,null
+    ))
+  ]);
 }
 
 

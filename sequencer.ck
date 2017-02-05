@@ -26,9 +26,11 @@ public class Sequencer extends Moduck{
     if(curStep == entries.size() - 1){
       if(values["loop"].i){
         0 => curStep;
+        "looped" => out.tag;
         out.broadcast();
       }
     }else{
+      "stepped" => out.tag;
       curStep + 1 => curStep;
       out.broadcast();
     }

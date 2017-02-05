@@ -2,6 +2,8 @@ public class Offset extends Moduck{
   fun int handle(string tag, int v){
     v + values["offset"].i => int x;
     x => out.val;
+    <<< out.val >>>;
+    <<< out.tag  >>>;
     tag => out.tag;
     out.broadcast();
     return true;
@@ -9,7 +11,7 @@ public class Offset extends Moduck{
 
   fun static Offset make(int off){
     Offset ret;
-    Util.setVal(ret, "offset", off);
+    ret.setVal("offset", off);
     return ret;
   }
 }
