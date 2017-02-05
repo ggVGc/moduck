@@ -18,9 +18,12 @@ public class PulseDiv extends Moduck{
     return true;
   }
   
-  fun static PulseDiv make(int divisor){
+  fun static PulseDiv make(int divisor, int triggerOnFirst){
     PulseDiv ret;
     ret.handle("reset", 0);
+    if(!triggerOnFirst){
+      1 => ret.accum;
+    }
     ret.setVal("divisor", divisor);
     return ret;
   }

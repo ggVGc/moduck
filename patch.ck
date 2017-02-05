@@ -7,14 +7,18 @@ public class Patch{
   fun static void connectLoop(Moduck src, string srcEventName, Moduck target, string msg){
     while(true){
       src.out => now;
-      if(srcEventName != null && srcEventName != "" && srcEventName != src.out.tag){
-        <<<"Invalid source event: "+srcEventName+" - "+src>>>;
+      true => int doHandle;
+      if(srcEventName != null && srcEventName != src.out.tag){
+        false => doHandle;
+        /* <<<"Invalid source event: "+srcEventName+" - "+src>>>; */
       }
       if(msg == null){
         src.out.tag => msg;
       }
-      if(!target.handle(msg, src.out.val)){
-        <<<"Invalid event: "+msg+" - "+target>>>;
+      if(doHandle){
+        if(!target.handle(msg, src.out.val)){
+          <<<"Invalid event: "+msg+" - "+target>>>;
+        }
       }
     }
   }

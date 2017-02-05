@@ -49,6 +49,10 @@ fun Moduck CM(Moduck src, ChainData targets[]){
   return Patch.connectMulti(src, targets);
 }
 
+fun Sequencer seq(int ents[]){
+  return Sequencer.make(ents, true);
+}
+
 //  End of aliases
 
 fun Moduck noteDiddler(dur maxNoteDur, int notes[], int noteValues[], int noteDivs[], float durationRatios[], Moduck noteProcessor){
@@ -59,7 +63,7 @@ fun Moduck noteDiddler(dur maxNoteDur, int notes[], int noteValues[], int noteDi
   Util.ratios(0, 127, durationRatios) @=> int durations[];
   Sequencer.make(durations, true) @=> Sequencer durationSeq;
 
-  PulseDiv.make(durations[0]) @=> PulseDiv divider;
+  PulseDiv.make(durations[0], true) @=> PulseDiv divider;
   V(noteDivSeq, divider, "divisor");
   C(parent, divider) @=> Moduck divClock;
 
@@ -161,7 +165,7 @@ fun void scaleTest(Moduck clock){
   ));
 }
 
-fun void diddle(Moduck clock){
+fun void dualMelo(Moduck clock){
 
   // Create note output module, outputting notes between 0 and 500ms
   NoteOut.make(DEVICE_PORT, MIDI_PORT, 0::ms, 500::ms)
@@ -169,7 +173,7 @@ fun void diddle(Moduck clock){
 
   // Connect two looping sequencers to a clock
   CM( clock, [
-      X(Patch.chain(PulseDiv.make(3),[ // Divide clock so this triggeres every third pulse
+      X(Patch.chain(PulseDiv.make(3, true),[ // Divide clock so this triggeres every third pulse
           X(Sequencer.make([62, 63, 65], true)) // Three notes, looping
           ,X(noteOut)
       ]))
@@ -179,15 +183,40 @@ fun void diddle(Moduck clock){
 }
 
 
-fun void body(Moduck clock){
-  diddle(clock);
+fun void routerTest(Moduck clock, NoteOut noteOut){
+  seq([60,62,64]) @=> Sequencer s2;
+  seq([68,65,63]) @=> Sequencer s;
+  seq([0,1]) @=> Sequencer indexer;
+
+  C(s, noteOut);
+  C(s2, noteOut);
+
+  Router.make(1) @=> Router r;
+
+  C2(r, "0", s, null);
+  C2(r, "1", s2, null);
+
+  CM(clock,[
+    X(V(C(PulseDiv.make(6, false), indexer), r, "index"))
+    ,X(r)
+  ]);
+
+
+
+}
+
+
+fun void body(Moduck clock, NoteOut noteOut){
+  routerTest(clock, noteOut);
 }
 
 fun void setup(){
   Trigger startBang;
   ClockGen.make(BPM) @=> ClockGen masterClock;
+  NoteOut.make(DEVICE_PORT, MIDI_PORT, 0::ms, TIME_PER_BEAT/2)
+    @=> NoteOut noteOut;
 
-  body(masterClock);
+  body(masterClock, noteOut);
 
   C1(startBang, masterClock, "run");
   samp  => now;
