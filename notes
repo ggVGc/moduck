@@ -1,0 +1,3 @@
+= Events =
+  Current event system with tags is botched with concurrent event triggers.
+  Each Moduck needs to hold a dict of events instead.
