@@ -1,9 +1,7 @@
 
 public class Router extends Moduck{
   fun int handle(string tag, int v){
-    "" + getVal("index") => out.tag;
-    v => out.val;
-    out.broadcast();
+    send("" + getVal("index"), v);
     return true;
   }
   

@@ -1,9 +1,6 @@
 public class Offset extends Moduck{
   fun int handle(string tag, int v){
-    v + values["offset"].i => int x;
-    x => out.val;
-    tag => out.tag;
-    out.broadcast();
+    send(tag, v + values["offset"].i);
     return true;
   }
 

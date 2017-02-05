@@ -171,14 +171,39 @@ fun void scaleTest(Moduck clock){
 
 fun void dualMelo(Moduck clock, NoteOut noteOut){
   // Connect two looping sequencers to a clock
-  multi(clock, [
-      X(chain(PulseDiv.make(3, true),[ // Divide clock so this triggeres every third pulse
-          X(Sequencer.make([66, 67, 69], true)) // Three notes, looping
-          ,X(noteOut)
-      ]))
-      ,X(C(Sequencer.make([60], true), noteOut)) // Play note 60 every clock tick
-    ]
-  );
+
+  Sequencer.make([60, 64], true) @=> Sequencer s;
+
+
+  C(clock,s);
+  C(s,noteOut);
+
+  C(s, Printer.make("S: "));
+
+  Delay.make(120001::samp) @=> Delay delay;
+  Value.make(50) @=> Value val;
+  C(delay, val);
+  C1(val, s, Pulse.Set());
+
+  /* PulseDiv.make(123213213, true) @=> PulseDiv div; */
+  /* C(clock, div); */
+  /* C(div, delay); */
+  delay.handle("DIDDLES", 0);
+
+}
+
+fun void testConnectDouble(Moduck clock, NoteOut noteOut){
+  Sequencer.make([60, 62], true) @=> Sequencer s;
+
+  C(s, Printer.make(""));
+  C(clock, s);
+
+
+ chain(C(clock, PulseDiv.make(10000, true)), [
+   X(Delay.make(2::second))
+   ,X(Value.make(50))
+   ,X1(s, Pulse.Set())
+ ]);
 }
 
 
@@ -216,6 +241,7 @@ fun void routerTest(Moduck clock, NoteOut noteOut){
 
 
 fun void body(Moduck clock, NoteOut noteOut){
+  /* testConnectDouble(clock, noteOut); */
   dualMelo(clock, noteOut);
 }
 

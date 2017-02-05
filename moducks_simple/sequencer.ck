@@ -1,25 +1,31 @@
 
 public class Sequencer extends Moduck{
   int entries[];
-  int curStep;
 
   fun void init(int ents[], int loop){
-    0 => curStep;
+    setVal("curStep", 0);
     ents @=> entries;
     setVal("loop", loop);
+    setVal("targetStep", 0);
   }
 
   init([0], true);
 
   fun int handle(string tag, int v){
     if(tag == Pulse.Trigger()){
-      entries[curStep] => out.val;
-      out.broadcast();
+      send("seqOut", entries[getVal("curStep")]);
+      return true;
+    }
+
+    if(tag == Pulse.Set()){
+      v => entries[getVal("targetStep")];
+      /* <<<"Seq setvalue">>>; */
+      send("valueSet", getVal("targetStep"));
       return true;
     }
 
     if(tag == Pulse.Reset()){
-      0 => curStep;
+      setVal("curStep", 0);
       return true;
     }
 
@@ -31,17 +37,19 @@ public class Sequencer extends Moduck{
   }
 
   fun void step(int ignored){
-    entries[curStep] => out.val;
-    if(curStep == entries.size() - 1){
+    getVal("curStep") => int cur;
+
+    entries[cur] => int v;
+    if(cur == entries.size() - 1){
       if(values["loop"].i){
-        0 => curStep;
-        "looped" => out.tag;
-        out.broadcast();
+        setVal("curStep", 0);
+      /* <<<"Seq looped">>>; */
+        send("looped", v);
       }
     }else{
-      "stepped" => out.tag;
-      curStep + 1 => curStep;
-      out.broadcast();
+      send("stepped", v);
+      /* <<<"Seq Stepped">>>; */
+      setVal("curStep", cur + 1);
     }
 
   }

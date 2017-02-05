@@ -1,15 +1,14 @@
 public class Printer extends Moduck{
   "Printer" => string msg;
 
-  fun void print(int v){
-    <<< msg + "> " + v>>>;
+  fun void print(string tag, int v){
+    /* <<<now>>>; */
+    <<< msg + "> " + Util.strOrNull(tag)+":"+v>>>;
   }
 
   fun int handle(string tag, int v){
-    print(v);
-    tag => out.tag;
-    v => out.val;
-    out.broadcast();
+    print(tag, v);
+    send(null, v);
     return true;
   }
 

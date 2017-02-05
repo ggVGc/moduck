@@ -7,8 +7,7 @@ public class Multiplier extends Moduck{
       for(0 => int i; i<inputCount; i++){
         acc * getVal(""+i) => acc;
       }
-      acc => out.val;
-      out.broadcast();
+      send(null, acc);
       return true;
     }
 

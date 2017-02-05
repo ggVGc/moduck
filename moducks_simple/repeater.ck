@@ -1,29 +1,25 @@
 
 public class Repeater extends Moduck{
   string relabel;
-  now => time lastTime;
   fun int handle(string tag, int v){
+    string newTag;
     if(relabel != null){
-      relabel => out.tag;
+      relabel => newTag;
     }else{
-      tag => out.tag;
+      tag => newTag;
     }
 
-    // Delay event if multiple are received in the same frame
-    // Otherwise receivers miss all events except the first
-    if(now == lastTime){
-      samp => now;
-    }
-
-    now => lastTime;
-
-    v => out.val;
-    out.broadcast();
+    send(newTag, v);
     return true;
   }
 
   fun static Repeater make(){
     Repeater ret;
+    return ret;
+  }
+  fun static Repeater withTag(string tag){
+    Repeater.make() @=> Repeater ret;
+    tag => ret.relabel;
     return ret;
   }
 }

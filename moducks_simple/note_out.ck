@@ -25,6 +25,7 @@ public class NoteOut extends Moduck{
   dur maxDur;
 
   fun int handle(string tag, int v){
+    /* <<< "NOTEOUT:" +tag +":"+v>>>; */
     MidiMsg msg;
     144 + channel => msg.data1; // NoteOn
     int note;

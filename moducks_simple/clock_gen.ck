@@ -7,7 +7,7 @@ public class ClockGen extends Moduck{
   fun void loop(){
     while(true){
       delta => now;
-      out.broadcast();
+      send(Pulse.Clock(), 0);
     }
   }
 

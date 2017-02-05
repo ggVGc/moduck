@@ -10,7 +10,7 @@ public class MUtil{
       Patch.connect(children[i], null, out, null);
     }
 
-    return Wrapper.make(in, out);
+    return Wrapper.make(in, out.out);
   }
 
 

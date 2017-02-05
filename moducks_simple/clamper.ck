@@ -3,13 +3,11 @@ public class Clamper extends Moduck{
     getVal("min") => int min;
     getVal("max") => int max;
     if(v < min){
-      min => out.val;
+      min => v;
     }else if(v>max){
-      max => out.val;
-    }else{
-      v => out.val;
+      max => v;
     }
-    out.broadcast();
+    send(null, v);
     return true;
   }
 

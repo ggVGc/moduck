@@ -4,7 +4,7 @@
 
 public class Patch{
   // msg defaults to src tag if passed as null
-  fun static void connectLoop(Moduck src, string srcEventName, Moduck target, string msg){
+  fun static void connectLoop(Moduck src, string srcEventName, Moduck target, string targetMsg){
     while(true){
       src.out => now;
       true => int doHandle;
@@ -12,9 +12,13 @@ public class Patch{
         false => doHandle;
         /* <<<"Invalid source event: "+srcEventName+" - "+src>>>; */
       }
+
+      targetMsg => string msg;
+
       if(msg == null){
         src.out.tag => msg;
       }
+
       if(doHandle){
         null @=> target.out.tag;
         if(!target.handle(msg, src.out.val)){
@@ -43,13 +47,13 @@ public class Patch{
 
   fun static Moduck connect(Moduck src, string srcEventName, Moduck target, string msg){
     spork ~ connectLoop(src, srcEventName, target, msg);
-    return Wrapper.make(src, target);
+    return Wrapper.make(src, target.out);
   }
 
 
   fun static Moduck connVal(Moduck src, string srcEventName, Moduck target, string msg){
     spork ~ connectValLoop(src, srcEventName, target, msg);
-    return Wrapper.make(src, target);
+    return Wrapper.make(src, target.out);
   }
 
 
@@ -65,7 +69,7 @@ public class Patch{
         connVal(h, d.srcTag, d.target, d.targetTag) @=> h;
       }
     }
-    return h;
+    return Wrapper.make(first, h.out);
   }
 
   fun static Moduck connectMulti(Moduck src, ChainData targets[]){
@@ -80,6 +84,6 @@ public class Patch{
       connect(d.target, null, out, null);
     }
 
-    return Wrapper.make(src, out);
+    return Wrapper.make(src, out.out);
   }
 }

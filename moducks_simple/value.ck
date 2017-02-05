@@ -5,8 +5,7 @@ public class Value extends Moduck{
   /* VEvent out; */
   
   fun int handle(string _, int __){
-    values["value"].i => out.val;
-    out.broadcast();
+    send(null, values["value"].i);
     return true;
   }
   fun static Value make(int v){
