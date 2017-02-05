@@ -190,7 +190,7 @@ fun void setup(){
   body(masterClock);
 
   C1(startBang, masterClock, "run");
-  ms  => now;
+  samp  => now;
   startBang.trigger("start", 1);
 }
 

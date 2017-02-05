@@ -21,7 +21,7 @@ public class PulseDiv extends Moduck{
   fun static PulseDiv make(int divisor){
     PulseDiv ret;
     ret.handle("reset", 0);
-    Util.setVal(ret, "divisor", divisor);
+    ret.setVal("divisor", divisor);
     return ret;
   }
 }

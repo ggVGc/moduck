@@ -1,22 +1,11 @@
-Machine.add("intref.ck");
-Machine.add("vevent.ck");
-Machine.add("src_event.ck");
-Machine.add("handler.ck");
+Machine.add("types/intref.ck");
+Machine.add("types/vevent.ck");
+Machine.add("types/src_event.ck");
 Machine.add("util.ck");
-Machine.add("clock_gen.ck");
-Machine.add("delay.ck");
-Machine.add("sequencer.ck");
-Machine.add("chain_data.ck");
-Machine.add("wrapper.ck");
+Machine.add("moducks.ck");
+samp => now;
+Machine.add("types/chain_data.ck");
 Machine.add("patch.ck");
-Machine.add("printer.ck");
-Machine.add("value.ck");
-Machine.add("trigger.ck");
-Machine.add("offset.ck");
-Machine.add("note_out.ck");
-Machine.add("pulse_div.ck");
-Machine.add("mapper.ck");
-Machine.add("repeater.ck");
 Machine.add("scales.ck");
 Machine.add("run.ck");
 
