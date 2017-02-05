@@ -169,16 +169,11 @@ fun void scaleTest(Moduck clock){
   ));
 }
 
-fun void dualMelo(Moduck clock){
-
-  // Create note output module, outputting notes between 0 and 500ms
-  NoteOut.make(DEVICE_PORT, MIDI_PORT, 0::ms, 500::ms)
-    @=> NoteOut noteOut;
-
+fun void dualMelo(Moduck clock, NoteOut noteOut){
   // Connect two looping sequencers to a clock
   multi(clock, [
       X(chain(PulseDiv.make(3, true),[ // Divide clock so this triggeres every third pulse
-          X(Sequencer.make([62, 63, 65], true)) // Three notes, looping
+          X(Sequencer.make([66, 67, 69], true)) // Three notes, looping
           ,X(noteOut)
       ]))
       ,X(C(Sequencer.make([60], true), noteOut)) // Play note 60 every clock tick
@@ -221,7 +216,7 @@ fun void routerTest(Moduck clock, NoteOut noteOut){
 
 
 fun void body(Moduck clock, NoteOut noteOut){
-  routerTest(clock, noteOut);
+  dualMelo(clock, noteOut);
 }
 
 fun void setup(){
