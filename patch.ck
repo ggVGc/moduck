@@ -20,13 +20,15 @@ public class Patch{
       }
 
       if(doHandle){
-        null @=> target.out.tag;
+        /* null @=> target.out.tag; */
         if(!target.handle(msg, src.out.val)){
           <<<"Invalid event: "+msg+" - "+target>>>;
         }
-        if(target.out.tag == null){
-          src.out.tag => target.out.tag;
-        }
+        /* 
+         if(target.out.tag == null){
+           src.out.tag => target.out.tag;
+         }
+         */
       }
     }
   }
@@ -47,13 +49,13 @@ public class Patch{
 
   fun static Moduck connect(Moduck src, string srcEventName, Moduck target, string msg){
     spork ~ connectLoop(src, srcEventName, target, msg);
-    return Wrapper.make(src, target.out);
+    return Wrapper.make(src, target);
   }
 
 
   fun static Moduck connVal(Moduck src, string srcEventName, Moduck target, string msg){
     spork ~ connectValLoop(src, srcEventName, target, msg);
-    return Wrapper.make(src, target.out);
+    return Wrapper.make(src, target);
   }
 
 
@@ -69,7 +71,7 @@ public class Patch{
         connVal(h, d.srcTag, d.target, d.targetTag) @=> h;
       }
     }
-    return Wrapper.make(first, h.out);
+    return Wrapper.make(first, h);
   }
 
   fun static Moduck connectMulti(Moduck src, ChainData targets[]){
@@ -84,6 +86,6 @@ public class Patch{
       connect(d.target, null, out, null);
     }
 
-    return Wrapper.make(src, out.out);
+    return Wrapper.make(src, out);
   }
 }

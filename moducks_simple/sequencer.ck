@@ -40,18 +40,21 @@ public class Sequencer extends Moduck{
     getVal("curStep") => int cur;
 
     entries[cur] => int v;
+    false => int looped;
     if(cur == entries.size() - 1){
       if(values["loop"].i){
         setVal("curStep", 0);
       /* <<<"Seq looped">>>; */
-        send("looped", v);
+        true => looped;
       }
     }else{
-      send("stepped", v);
       /* <<<"Seq Stepped">>>; */
       setVal("curStep", cur + 1);
     }
-
+    send("stepped", v);
+    if(looped){
+      send("looped", v);
+    }
   }
 
   fun static Sequencer make(int entries[], int loop){

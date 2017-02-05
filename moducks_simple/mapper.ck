@@ -18,7 +18,7 @@ public class Mapper extends Moduck{
         rest -1 => rest;
       }
     }
-    send(null, entries[k] + rest*offs);
+    send(tag, entries[k] + rest*offs);
     return true;
   }
 

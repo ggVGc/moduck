@@ -3,7 +3,7 @@ public class Delay extends Moduck{
 
   fun void doWait(string tag, int v){
     values["delay"].i :: samp => now;
-    <<< now >>>;
+    /* <<< now >>>; */
     send(tag, v);
   }
 

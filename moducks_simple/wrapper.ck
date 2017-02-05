@@ -7,10 +7,10 @@ public class Wrapper extends Moduck{
   }
 
 
-  fun static Wrapper make(Moduck src, SrcEvent outEv){
+  fun static Wrapper make(Moduck src, Moduck target){
     Wrapper ret;
     src @=> ret.src;
-    outEv @=> ret.out;
+    target.out @=> ret.out;
     return ret;
   }
 }

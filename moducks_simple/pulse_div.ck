@@ -11,7 +11,7 @@ public class PulseDiv extends Moduck{
       }
     }else{
       if(accum == 0){
-        send(null, v);
+        send(tag, v);
       }
       accum + 1 => accum;
       if(accum >= getVal("divisor")){

@@ -1,36 +1,70 @@
 
+// This entire thing is a huge hack to make sure no events fire at the same time
+// which causes various issues
+// It's probably completely broken in some other way
+class Dispatcher{
+  now => time lastSendTime;
+  now => time lastDelayedSend;
+  0 => int offset;
+
+
+  fun void delaySend(SrcEvent out, string tag, int val){
+    if(now - lastDelayedSend > 200::samp){
+      /* <<<"Resetting delayed send">>>; */
+      1 => offset;
+    }else{
+      1+offset => offset;
+    }
+
+    offset::samp => now;
+    /* <<<"DelayedOut: "+ Util.strOrNull(tag) +":"+val>>>; */
+    val => out.val;
+    tag => out.tag;
+    out.broadcast();
+    now => lastDelayedSend;
+  }
+
+  fun void send(SrcEvent out, string tag, int val){
+    if(now - lastSendTime < 10::samp){
+      spork ~ delaySend(out, tag, val);
+      /* <<<"Delayed:"+Util.strOrNull(tag)+":"+val>>>; */
+    }else{
+    /* <<<"Out: "+ tag+":"+val>>>; */
+      val => out.val;
+      tag => out.tag;
+      out.broadcast();
+      /* <<<"Normal:"+Util.strOrNull(tag)+":"+val>>>; */
+    }
+    now => lastSendTime;
+  }
+
+  fun static Dispatcher make(){
+    Dispatcher ret;
+    return ret;
+  }
+}
+
 public class Moduck{
   IntRef values[10]; // Completely arbitrary
   SrcEvent out;
 
-  now => time lastSendTime;
+  now => time lastSend;
+
+  static Dispatcher @ dispatcher;
+
+
+  fun void send(string tag, int v){
+    /* if(tag == null){ */
+    /*   srcMsg => tag; */
+    /* } */
+    if(now - lastSend < 10::samp){
+      10::samp => now;
+    }
+    now => lastSend;
+    dispatcher.send(out, tag, v);
+  }
 
   fun int handle(string msg, int v){};
-
-  fun void delaySend(string tag, int val){
-    samp => now;
-    /* <<<"DelayedOut: "+ Util.strOrNull(tag) +":"+val>>>; */
-    tag => out.tag;
-    val => out.val;
-    out.broadcast();
-  }
-
-  fun void send(string tag, int val){
-    // Delay event if multiple are received in the same frame
-    // Otherwise receivers miss all events except the first
-    if(tag == null){
-      out.tag => tag;
-    }
-    if(now == lastSendTime){
-      spork ~ delaySend(tag, val);
-    }else{
-      val => out.val;
-      tag => out.tag;
-    /* <<<"Out: "+ tag+":"+val>>>; */
-      out.broadcast();
-    }
-    now => lastSendTime;
-  }
 
   fun int getVal(string key){
     return values[key].i;
@@ -45,6 +79,10 @@ public class Moduck{
   fun void setValRef(string key, IntRef v){
     v @=> values[key];
   }
-
-
 }
+
+Dispatcher.make() @=> Moduck.dispatcher;
+
+
+
+

@@ -7,7 +7,7 @@ public class Clamper extends Moduck{
     }else if(v>max){
       max => v;
     }
-    send(null, v);
+    send(tag, v);
     return true;
   }
 
