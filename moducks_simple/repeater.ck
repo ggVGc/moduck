@@ -1,7 +1,13 @@
 
 public class Repeater extends Moduck{
+  string relabel;
   fun int handle(string tag, int v){
-    tag => out.tag;
+    if(relabel != null){
+      relabel => out.tag;
+    }else{
+      tag => out.tag;
+    }
+
     v => out.val;
     out.broadcast();
     return true;

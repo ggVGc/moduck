@@ -60,7 +60,7 @@ public class NoteOut extends Moduck{
     ret.setVal("velocity", 127);
     ret.setVal("note", 64);
     ret.setVal("durRatio", 63);
-    ret.setValRef("duration", Util.toSamples(300::ms));
+    ret.setVal("duration", Util.toSamples(300::ms));
     return ret;
   }
 }

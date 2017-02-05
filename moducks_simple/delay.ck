@@ -1,13 +1,8 @@
 public class Delay extends Moduck{
   Shred @ waiter;
 
-  fun void setWait(dur d){
-    Util.toSamples(d) @=> values["wait"];
-  }
-  setWait(second);
-
   fun void doWait(string tag, int v){
-    values["wait"].i :: samp => now;
+    values["delay"].i :: samp => now;
     v => out.val;
     tag => out.tag;
     out.broadcast();
@@ -22,9 +17,9 @@ public class Delay extends Moduck{
     return true;
   }
 
-  fun static Delay make(dur wait){
+  fun static Delay make(dur delay){
     Delay d;
-    d.setWait(wait);
+    d.setVal("delay", Util.toSamples(delay));
     return d;
   }
 }

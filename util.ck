@@ -5,8 +5,8 @@ public class Util{
   }
 
 
-  fun static IntRef toSamples(dur d){
-    return IntRef.make((d / samp) $ int);
+  fun static int toSamples(dur d){
+    return (d / samp) $ int;
   }
 
   fun static string strOrNull(string s){
