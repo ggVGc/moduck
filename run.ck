@@ -82,7 +82,7 @@ fun Moduck noteDiddler(dur maxNoteDur, int notes[], int noteValues[], int noteDi
 
   Patch.chain(divClock, [
     X(noteSeq)
-    ,X(Mapper.make(noteValues))
+    ,X(Mapper.make(noteValues, 12))
     ,X1(out, "note")
   ]);
 
@@ -150,13 +150,13 @@ fun void __body(Moduck clock){
 
 
 fun void scaleTest(Moduck clock){
-  62 => int rootNote;
+  72 => int rootNote;
   C(clock, noteDiddler(TIME_PER_BEAT/4
-    ,[0,1,2,3,4,5,6]
-    ,Scales.MinorNatural
+    ,[-7, -9, -10, -11, -10, -9, -8, -7, -4, -2, 0,1,2,3,4,5,6,7,8, 9]
+    ,Scales.MinorHarmonic
     ,[B]
     ,[1.0]
-    ,Offset.make(rootNote)
+    ,C(Offset.make(rootNote), Printer.make(""))
   ));
 }
 

@@ -7,7 +7,7 @@ public class Printer extends Moduck{
 
   fun int handle(string tag, int v){
     print(v);
-    msg => out.tag;
+    tag => out.tag;
     v => out.val;
     out.broadcast();
     return true;
