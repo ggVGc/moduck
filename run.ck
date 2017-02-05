@@ -55,9 +55,10 @@ fun Moduck noteDiddler(dur maxNoteDur, int notes[], int noteValues[], int noteDi
   Repeater.make() @=> Repeater parent;
   Sequencer.make(notes, true) @=> Sequencer noteSeq;
   Sequencer.make(noteDivs, true) @=> Sequencer noteDivSeq;
-  Sequencer.make(Util.ratios(0, 127, durationRatios), true) @=> Sequencer durationSeq;
+  Util.ratios(0, 127, durationRatios) @=> int durations[];
+  Sequencer.make(durations, true) @=> Sequencer durationSeq;
 
-  PulseDiv.make(0) @=> PulseDiv divider;
+  PulseDiv.make(durations[0]) @=> PulseDiv divider;
   V(noteDivSeq, divider, "divisor");
   C(parent, divider) @=> Moduck divClock;
 
@@ -111,42 +112,57 @@ fun void _body(Moduck clock){
   );
 }
 
-fun void body(Moduck clock){
-
-  [64, 66, 68, 69, 71] @=> int noteVals[];
+fun void __body(Moduck clock){
+  Scales.Major @=> int noteVals[];
+  68 => int rootNote;
 
   CM(clock, [
-      X(noteDiddler(TIME_PER_BEAT/8
-        ,[2]
-        ,noteVals
-        ,[B]
-        ,[1.0]
-        ,null
-      ))
-      ,X(noteDiddler(TIME_PER_BEAT/8
-        ,[1]
-        ,noteVals
-        ,[B]
-        ,[1.0]
-        ,Delay.make(30::ms)
-      ))
+    X(noteDiddler(TIME_PER_BEAT/8
+      ,[2]
+      ,noteVals
+      ,[B]
+      ,[1.0]
+      ,Offset.make(rootNote)
+    ))
+    ,X(noteDiddler(TIME_PER_BEAT/8
+      ,[1]
+      ,noteVals
+      ,[B]
+      ,[1.0]
+      ,C(Offset.make(rootNote), Delay.make(30::ms))
+    ))
     ,X(noteDiddler(TIME_PER_BEAT/8
       ,[3]
       ,noteVals
       ,[B, B4, 3 * B, B2, B4, B2]
       ,[1.0]
-      ,Offset.make(-12)
+      ,Offset.make(rootNote-12)
     ))
     ,X(noteDiddler(TIME_PER_BEAT/8
-      ,[0,1,2,3]
+      ,[1,3,2,5]
       ,noteVals
-      ,[B2 * 3]
-      ,[1.0]
-      ,null
+      ,[B2* 3]
+      ,[.2, .3, .4, .5, .6, .8, .9, .1, .2]
+      ,Offset.make(rootNote+14)
     ))
   ]);
 }
 
+
+fun void scaleTest(Moduck clock){
+  62 => int rootNote;
+  C(clock, noteDiddler(TIME_PER_BEAT/4
+    ,[0,1,2,3,4,5,6]
+    ,Scales.MinorNatural
+    ,[B]
+    ,[1.0]
+    ,Offset.make(rootNote)
+  ));
+}
+
+fun void body(Moduck clock){
+  scaleTest(clock);
+}
 
 fun void setup(){
   Trigger startBang;

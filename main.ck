@@ -17,5 +17,6 @@ Machine.add("note_out.ck");
 Machine.add("pulse_div.ck");
 Machine.add("mapper.ck");
 Machine.add("repeater.ck");
+Machine.add("scales.ck");
 Machine.add("run.ck");
 
