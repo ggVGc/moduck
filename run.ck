@@ -53,6 +53,7 @@ fun Moduck CM(Moduck src, ChainData targets[]){
 
 fun Moduck noteDiddler(dur maxNoteDur, int notes[], int noteValues[], int noteDivs[], float durationRatios[], Moduck noteProcessor){
   Repeater.make() @=> Repeater parent;
+  
   Sequencer.make(notes, true) @=> Sequencer noteSeq;
   Sequencer.make(noteDivs, true) @=> Sequencer noteDivSeq;
   Util.ratios(0, 127, durationRatios) @=> int durations[];
@@ -160,13 +161,31 @@ fun void scaleTest(Moduck clock){
   ));
 }
 
+fun void diddle(Moduck clock){
+
+  // Create note output module, outputting notes between 0 and 500ms
+  NoteOut.make(DEVICE_PORT, MIDI_PORT, 0::ms, 500::ms)
+    @=> NoteOut noteOut;
+
+  // Connect two looping sequencers to a clock
+  CM( clock, [
+      X(Patch.chain(PulseDiv.make(3),[ // Divide clock so this triggeres every third pulse
+          X(Sequencer.make([62, 63, 65], true)) // Three notes, looping
+          ,X(noteOut)
+      ]))
+      ,X(C(Sequencer.make([60], true), noteOut)) // Play note 60 every clock tick
+    ]
+  );
+}
+
+
 fun void body(Moduck clock){
-  scaleTest(clock);
+  diddle(clock);
 }
 
 fun void setup(){
   Trigger startBang;
-  ClockGen.make(BPM * TICKS_PER_BEAT) @=> ClockGen masterClock;
+  ClockGen.make(BPM) @=> ClockGen masterClock;
 
   body(masterClock);
 

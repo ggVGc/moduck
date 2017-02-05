@@ -28,12 +28,12 @@ public class NoteOut extends Moduck{
     MidiMsg msg;
     144 + channel => msg.data1; // NoteOn
     int note;
-    if(tag == "note"){
-      // Trigger with received note value
-      v => note;
-    }else{
+    if(tag == "trigger"){
       // Only gate, use set note val
       getVal("note")  => note;
+    }else{
+      // Trigger with received note value
+      v => note;
     }
     note => msg.data2;
     getVal("velocity") => msg.data3;
