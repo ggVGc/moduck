@@ -187,6 +187,7 @@ fun void dualMelo(Moduck clock){
 }
 
 
+
 fun void routerTest(Moduck clock, NoteOut noteOut){
   seq([68,65,63]) @=> Sequencer s1;
   seq([60,62,64]) @=> Sequencer s2;
@@ -194,35 +195,27 @@ fun void routerTest(Moduck clock, NoteOut noteOut){
 
   Router.make(1) @=> Router router;
 
-  Adder.make(2) @=> Adder mult;
-
-  C1(s1, mult, "0");
-  C1(s2, mult, "1");
-
-  C(mult, Printer.make("M"));
-  samp => now;
-  s1.handle("trig", 0);
-  s2.handle("trig", 0);
+  MUtil.combine([MUtil.mul2(s1, s2), MUtil.add2(s1, s2)]) @=> Moduck combined;
 
   // Send router output to sequencers, and finally to noteOut
-  chain(
-    multi(router,[
-      X2("0", s1, null) // Connect s1 to router index 0
-      ,X2("1", s2, null) // Connect s2 to router index 1
-    ])
-    , [X(noteOut)]
-  );
+ chain(
+   multi(router,[
+     X2("0", s1, null) // Connect s1 to router index 0
+     ,X2("1", s2, null) // Connect s2 to router index 1
+   ])
+   , [X(noteOut)]
+ );
 
-  multi(clock,[
-    // Send pulses, divided by 6, to sequencer controlling router index
-    X(chain(PulseDiv.make(6, false), [
-        X(indexer)                    
-        ,XV(router, "index")
-      ]
-    ))
-    ,X( router ) // Send pulses to router to be forwarded to active sequencer
-    ,X1(mult, "")
-  ]);
+ multi(clock,[
+   // Send pulses, divided by 6, to sequencer controlling router index
+   X(chain(PulseDiv.make(6, false), [
+       X(indexer)                    
+       ,XV(router, "index")
+     ]
+   ))
+   ,X( router ) // Send pulses to router to be forwarded to active sequencer
+   ,X1(combined, "")
+ ]);
 }
 
 

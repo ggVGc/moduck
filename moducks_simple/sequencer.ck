@@ -11,17 +11,21 @@ public class Sequencer extends Moduck{
 
   init([0], true);
 
-
-  /* VEvent out; */
-
-  fun int handle(string type, int v){
-    if(type == "trig"){
+  fun int handle(string tag, int v){
+    if(tag == Pulse.Trigger()){
       entries[curStep] => out.val;
       out.broadcast();
-    }else{
-    /* if(type == "step"){ */
-      step(v);
+      return true;
     }
+
+    if(tag == Pulse.Reset()){
+      0 => curStep;
+      return true;
+    }
+
+    /* if(tag == "step"){ */
+      step(v);
+    /* } */
     return true;
 
   }

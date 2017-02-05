@@ -2,7 +2,7 @@ public class Multiplier extends Moduck{
   int inputCount;
 
   fun int handle(string tag, int v){
-    if(tag == "" || tag == "trigger" || tag == "gate"){
+    if(tag == "" || tag == Pulse.Trigger()){
       1 => int acc;
       for(0 => int i; i<inputCount; i++){
         acc * getVal(""+i) => acc;

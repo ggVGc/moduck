@@ -28,7 +28,7 @@ public class NoteOut extends Moduck{
     MidiMsg msg;
     144 + channel => msg.data1; // NoteOn
     int note;
-    if(tag == "trigger"){
+    if(tag == Pulse.Trigger()){
       // Only gate, use set note val
       getVal("note")  => note;
     }else{
