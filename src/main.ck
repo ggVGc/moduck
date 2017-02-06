@@ -3,6 +3,8 @@ Machine.add("types/vevent.ck");
 Machine.add("types/src_event.ck");
 Machine.add("pulses.ck");
 Machine.add("util.ck");
+Machine.add("moducks_simple/moduck_base.ck");
+Machine.add("event_handler.ck");
 Machine.add("moducks.ck");
 samp => now;
 Machine.add("types/chain_data.ck");

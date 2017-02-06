@@ -283,16 +283,20 @@ fun void body(Moduck startBang, Moduck clock, NoteOut noteOut){
 }
 
 fun void setup(){
-  Trigger startBang;
-  ClockGen.make(BPM * TICKS_PER_BEAT) @=> ClockGen masterClock;
+  Trigger.make("start") @=> Trigger startBang;
+  ClockGen.make(Util.bpmToDur( BPM * TICKS_PER_BEAT))
+    @=> ClockGen masterClock;
+
   NoteOut.make(0, 0, 0::ms, TIME_PER_BEAT/2)
     @=> NoteOut noteOut;
 
-  body(startBang, masterClock, noteOut);
+  /* body(startBang, masterClock, noteOut); */
 
-  C1(startBang, masterClock, "run");
+  C2(startBang, "start", masterClock, "run");
+  C2(masterClock, Pulse.Clock(), Printer.make(""), Pulse.Trigger());
+
   100::samp  => now;
-  startBang.trigger("start", 1);
+  startBang.trigger(1);
 }
 
 

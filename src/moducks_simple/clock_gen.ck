@@ -1,31 +1,39 @@
 
-public class ClockGen extends Moduck{
+class Run extends EventHandler{
   dur delta;
   Shred @ looper;
 
   fun void loop(){
     while(true){
       delta => now;
-      send(Pulse.Clock(), 0);
+      parent.send(Pulse.Clock(), 0);
     }
   }
 
-  fun int handle(string msg, int v){
-    if(msg == "run"){
-      if(looper != null){
-        looper.exit();
-        null @=> looper;
-      }
-      if(v){
-        spork ~ loop() @=> looper;
-      }
-      return true;
+  fun void handle(int v){
+    if(looper != null){
+      looper.exit();
+      null @=> looper;
+    }
+    if(v){
+      spork ~ loop() @=> looper;
     }
   }
 
-  fun static ClockGen make(int bpm){
+  fun static Run make(dur delta){
+    Run ret;
+    delta => ret.delta;
+    return ret;
+  }
+}
+
+
+public class ClockGen extends Moduck{
+  event(Pulse.Clock());
+
+  fun static ClockGen make(dur delta){
     ClockGen ret;
-    Util.bpmToDur(bpm) => ret.delta;
+    ret.handler("run", Run.make(delta));
     return ret;
   }
 }

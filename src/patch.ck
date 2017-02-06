@@ -1,54 +1,44 @@
-
-
-
-
 public class Patch{
   // msg defaults to src tag if passed as null
   fun static void connectLoop(Moduck src, string srcEventName, Moduck target, string targetMsg){
     while(true){
-      src.out => now;
-      true => int doHandle;
-      if(srcEventName != null && srcEventName != src.out.tag){
-        false => doHandle;
-        /* <<<"Invalid source event: "+srcEventName+" - "+src>>>; */
-      }
-
+      src.outs[srcEventName] @=> VEvent ev;
+      ev => now;
       targetMsg => string msg;
-
       if(msg == null){
-        src.out.tag => msg;
+        srcEventName => msg;
       }
-
-      if(doHandle){
-        /* null @=> target.out.tag; */
-        if(!target.handle(msg, src.out.val)){
-          <<<"Invalid event: "+msg+" - "+target>>>;
-        }
-        /* 
-         if(target.out.tag == null){
-           src.out.tag => target.out.tag;
-         }
-         */
+      if(!target.doHandle(msg, ev.val)){
+        <<<"Invalid event: "+msg+" - "+target>>>;
       }
     }
   }
 
 
   fun static void connectValLoop(Moduck src, string srcEventName, Moduck target, string valueName){
-    while(true){
-      src.out => now;
-      if(srcEventName != null && srcEventName != "" && srcEventName != src.out.tag){
-        <<<"Invalid source event: "+srcEventName+" - "+src>>>;
-      }
-      if(target.values[valueName] == null){
-        <<<"Invalid value: "+valueName+" - "+target>>>;
-      }
-      IntRef.make(src.out.val) @=> target.values[valueName];
-    }
+    /* 
+     while(true){
+       src.out => now;
+       if(srcEventName != null && srcEventName != "" && srcEventName != src.out.tag){
+         <<<"Invalid source event: "+srcEventName+" - "+src>>>;
+       }
+       if(target.values[valueName] == null){
+         <<<"Invalid value: "+valueName+" - "+target>>>;
+       }
+       IntRef.make(src.out.val) @=> target.values[valueName];
+     }
+     */
   }
 
   fun static Moduck connect(Moduck src, string srcEventName, Moduck target, string msg){
-    spork ~ connectLoop(src, srcEventName, target, msg);
+    if(srcEventName == null){
+      for(0=>int i;i<src.handlerKeys.size();i++){
+        src.handlerKeys[i] => string k;
+        spork ~ connectLoop(src, k, target, msg);
+      }
+    }else{
+      spork ~ connectLoop(src, srcEventName, target, msg);
+    }
     return Wrapper.make(src, target);
   }
 

@@ -1,60 +1,35 @@
 
-// This entire thing is a huge hack to make sure no events fire at the same time
-// which causes various issues
-// It's probably completely broken in some other way
-class Dispatcher{
-  now => time lastSendTime;
-  now => time lastDelayedSend;
-  0 => int offset;
+public class Moduck extends ModuckBase{
+  EventHandler handlers[0];
+  string handlerKeys[0];
 
-
-  fun void delaySend(SrcEvent out, string tag, int val){
-    if(now - lastDelayedSend > 200::samp){
-      /* <<<"Resetting delayed send">>>; */
-      1 => offset;
-    }else{
-      1+offset => offset;
-    }
-
-    offset::samp => now;
-    /* <<<"DelayedOut: "+ Util.strOrNull(tag) +":"+val>>>; */
-    val => out.val;
-    tag => out.tag;
-    out.broadcast();
-    now => lastDelayedSend;
+  fun void handler(string tag, EventHandler h){
+    handlerKeys << tag;
+    this @=> h.parent;
+    h @=> handlers[tag];
   }
-
-  fun void send(SrcEvent out, string tag, int val){
-    if(now == lastSendTime){
-      spork ~ delaySend(out, tag, val);
-      /* <<<"Delayed:"+Util.strOrNull(tag)+":"+val>>>; */
-    }else{
-    /* <<<"Out: "+ tag+":"+val>>>; */
-      val => out.val;
-      tag => out.tag;
-      out.broadcast();
-      /* <<<"Normal:"+Util.strOrNull(tag)+":"+val>>>; */
-    }
-    now => lastSendTime;
-  }
-
-  fun static Dispatcher make(){
-    Dispatcher ret;
-    return ret;
-  }
-}
-
-public class Moduck{
-  IntRef values[10]; // Completely arbitrary
-  SrcEvent out;
-
-  static Dispatcher @ dispatcher;
 
   fun void send(string tag, int v){
-    dispatcher.send(out, tag, v);
+    outs[tag] @=> VEvent ev;
+    if(ev == null){
+      <<<"Invalid event send: "+tag>>>;
+    }else{
+      v => ev.val;
+      ev.broadcast();
+    }
   }
 
-  fun int handle(string msg, int v){};
+  fun int doHandle(string msg, int v){
+    handlers[msg] @=> EventHandler handler;
+    if(handler == null){
+      <<<"Invalid event: "+msg>>>;
+      return false;
+    }else{
+      handler.handle(v);
+      return true;
+    }
+  }
+
 
   fun int getVal(string key){
     return values[key].i;
@@ -70,8 +45,6 @@ public class Moduck{
     v @=> values[key];
   }
 }
-
-Dispatcher.make() @=> Moduck.dispatcher;
 
 
 
