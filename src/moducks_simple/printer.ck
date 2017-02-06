@@ -3,9 +3,9 @@ include(macros.m4)
 
 
 
-MAKE_EV_HANDLER(Print,
+genHandler( Print,{
   <<<msg + ">" + ":" + v >>>;
-,
+},
 string msg;)
 
 

@@ -1,9 +1,9 @@
 
 include(macros.m4)
 
-MAKE_EV_HANDLER(Trig,
+genHandler( Trig, {
   parent.send(Pulse.Trigger(), v + parent.getVal("offset"));
-,
+},
 ;)
 
 

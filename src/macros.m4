@@ -17,12 +17,12 @@ define(ASSERT,
     if(!($1)){<<<"Assertion Failure: $1 -- `FILIN'">>>;})
 
 
-define(MAKE_EV_HANDLER,
+define(genHandler,
   class $1 extends EventHandler{
     `esyscmd(../intersperse.py ";" "$3")';
-    fun void handle(int v){
+    fun void handle(int v)
       $2
-    }
+    
 
     fun static $1 make(`esyscmd(../intersperse.py `","' "$3")'){
       $1 ret;
