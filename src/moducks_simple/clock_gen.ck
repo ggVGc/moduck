@@ -1,6 +1,5 @@
 
 public class ClockGen extends Moduck{
-
   dur delta;
   Shred @ looper;
 
