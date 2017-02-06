@@ -25,7 +25,7 @@ class Dispatcher{
   }
 
   fun void send(SrcEvent out, string tag, int val){
-    if(now - lastSendTime < 10::samp){
+    if(now == lastSendTime){
       spork ~ delaySend(out, tag, val);
       /* <<<"Delayed:"+Util.strOrNull(tag)+":"+val>>>; */
     }else{
@@ -48,19 +48,9 @@ public class Moduck{
   IntRef values[10]; // Completely arbitrary
   SrcEvent out;
 
-  now => time lastSend;
-
   static Dispatcher @ dispatcher;
 
-
   fun void send(string tag, int v){
-    /* if(tag == null){ */
-    /*   srcMsg => tag; */
-    /* } */
-    if(now - lastSend < 10::samp){
-      10::samp => now;
-    }
-    now => lastSend;
     dispatcher.send(out, tag, v);
   }
 

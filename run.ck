@@ -1,6 +1,8 @@
 
-2 => int DEVICE_PORT;
-0 => int MIDI_PORT;
+/* 
+ 2 => int DEVICE_PORT;
+ 0 => int MIDI_PORT;
+ */
 
 
 // Aliases
@@ -59,7 +61,7 @@ fun Moduck chain(Moduck first, ChainData rest[]){
 
 //  End of aliases
 
-fun Moduck noteDiddler(dur maxNoteDur, int notes[], int noteValues[], int noteDivs[], float durationRatios[], Moduck noteProcessor){
+fun Moduck noteDiddler(int port, dur maxNoteDur, int notes[], int noteValues[], int noteDivs[], float durationRatios[], Moduck noteProcessor){
   Repeater.make() @=> Repeater parent;
   
   Sequencer.make(notes, true) @=> Sequencer noteSeq;
@@ -76,7 +78,7 @@ fun Moduck noteDiddler(dur maxNoteDur, int notes[], int noteValues[], int noteDi
     ,X(durationSeq)
   ]);
 
-  NoteOut.make(DEVICE_PORT, MIDI_PORT, 0::ms, maxNoteDur)
+  NoteOut.make(port, 0, 0::ms, maxNoteDur)
     @=> NoteOut noteOut;
 
   V(durationSeq, noteOut, "durRatio");
@@ -111,56 +113,143 @@ TICKS_PER_BEAT / 16 => int B16;
 TICKS_PER_BEAT / 32 => int B32;
 
 
+
+8 => int PORT_0_COAST;
+9 => int PORT_SYSTEM_1;
+
+
+fun void song1(Moduck startBang, Moduck clock, Moduck _){
+  /* Scales.Major @=> int scale[]; */
+  TIME_PER_BEAT/2 => dur maxNoteLen;
+
+  Offset.make(-12) @=> Offset offsetter;
+
+  noteDiddler(PORT_SYSTEM_1, maxNoteLen, 
+    [1,3,5,3,4,2,6,4]
+    ,[10]
+    ,[B2]
+    ,[1.0]
+    ,C(offsetter, Offset.make(6))
+  ) @=> Moduck melo;
+
+
+  noteDiddler(PORT_0_COAST, maxNoteLen, 
+    [1,3,5,3,4,2,6,4]
+    ,[10]
+    ,[B4]
+    ,[1.0]
+    ,offsetter
+  ) @=> Moduck bass;
+
+  chain(clock, [
+    X(PulseDiv.make(B2*2, true))
+    /* ,X(seq([-12, -12, -15, -9])) */
+    ,X(seq([-12, -12, -12, -12, -10, -9, -7, -14]))
+    ,XV(offsetter, "offset")
+  ]);
+  
+
+
+  multi(clock,[X(bass), X(melo)]);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 fun void _body(Moduck clock){
-  noteDiddler(TIME_PER_BEAT/2
-    ,[0,1,2,3]
-    ,[70, 72, 74, 76]
-    ,[B2, B2, B2, B4, B4, B4, B2]
-    ,[1.0, .7, .6]
-    ,null
-  );
+  /* 
+   noteDiddler(TIME_PER_BEAT/2
+     ,[0,1,2,3]
+     ,[70, 72, 74, 76]
+     ,[B2, B2, B2, B4, B4, B4, B2]
+     ,[1.0, .7, .6]
+     ,null
+   );
+   */
 }
 
 fun void __body(Moduck clock){
   Scales.Major @=> int noteVals[];
   68 => int rootNote;
 
-  multi(clock, [
-    X(noteDiddler(TIME_PER_BEAT/8
-      ,[2]
-      ,noteVals
-      ,[B]
-      ,[1.0]
-      ,Offset.make(rootNote)
-    ))
-    ,X(noteDiddler(TIME_PER_BEAT/8
-      ,[1]
-      ,noteVals
-      ,[B]
-      ,[1.0]
-      ,C(Offset.make(rootNote), Delay.make(30::ms))
-    ))
-    ,X(noteDiddler(TIME_PER_BEAT/8
-      ,[3]
-      ,noteVals
-      ,[B, B4, 3 * B, B2, B4, B2]
-      ,[1.0]
-      ,Offset.make(rootNote-12)
-    ))
-    ,X(noteDiddler(TIME_PER_BEAT/8
-      ,[1,3,2,5]
-      ,noteVals
-      ,[B2* 3]
-      ,[.2, .3, .4, .5, .6, .8, .9, .1, .2]
-      ,Offset.make(rootNote+14)
-    ))
-  ]);
+  /* 
+   multi(clock, [
+     X(noteDiddler(TIME_PER_BEAT/8
+       ,[2]
+       ,noteVals
+       ,[B]
+       ,[1.0]
+       ,Offset.make(rootNote)
+     ))
+     ,X(noteDiddler(TIME_PER_BEAT/8
+       ,[1]
+       ,noteVals
+       ,[B]
+       ,[1.0]
+       ,C(Offset.make(rootNote), Delay.make(30::ms))
+     ))
+     ,X(noteDiddler(TIME_PER_BEAT/8
+       ,[3]
+       ,noteVals
+       ,[B, B4, 3 * B, B2, B4, B2]
+       ,[1.0]
+       ,Offset.make(rootNote-12)
+     ))
+     ,X(noteDiddler(TIME_PER_BEAT/8
+       ,[1,3,2,5]
+       ,noteVals
+       ,[B2* 3]
+       ,[.2, .3, .4, .5, .6, .8, .9, .1, .2]
+       ,Offset.make(rootNote+14)
+     ))
+   ]);
+   */
 }
 
 
 fun void scaleTest(Moduck clock){
   72 => int rootNote;
-  C(clock, noteDiddler(TIME_PER_BEAT/4
+  C(clock, noteDiddler(0, TIME_PER_BEAT/4
     ,[-7, -9, -10, -11, -10, -9, -8, -7, -4, -2, 0,1,2,3,4,5,6,7,8, 9]
     ,Scales.MinorHarmonic
     ,[B]
@@ -175,13 +264,11 @@ fun void dualMelo(Moduck clock, NoteOut noteOut){
   Sequencer.make([60, 58], true) @=> Sequencer s;
 
   multi(clock, [
-      /* 
-       X(chain(PulseDiv.make(3, true),[ // Divide clock so this triggeres every third pulse
-           X(Sequencer.make([66, 67, 69], true)) // Three notes, looping
-           ,X(noteOut)
-       ]))
-       */
-      X(C2(s, "stepped", noteOut, null)) // Play note 60 every clock tick
+     X(chain(PulseDiv.make(3, true),[ // Divide clock so this triggeres every third pulse
+         X(Sequencer.make([66, 67, 69], true)) // Three notes, looping
+         ,X(noteOut)
+     ]))
+     ,X(C2(s, "stepped", noteOut, null)) // Play note 60 every clock tick
     ]
   );
 
@@ -244,18 +331,19 @@ fun void routerTest(Moduck clock, NoteOut noteOut){
 }
 
 
-fun void body(Moduck clock, NoteOut noteOut){
+fun void body(Moduck startBang, Moduck clock, NoteOut noteOut){
+  song1(startBang, clock, noteOut);
   /* testConnectDouble(clock, noteOut); */
-  dualMelo(clock, noteOut);
+  /* dualMelo(clock, noteOut); */
 }
 
 fun void setup(){
   Trigger startBang;
-  ClockGen.make(BPM) @=> ClockGen masterClock;
-  NoteOut.make(DEVICE_PORT, MIDI_PORT, 0::ms, TIME_PER_BEAT/2)
+  ClockGen.make(BPM * TICKS_PER_BEAT) @=> ClockGen masterClock;
+  NoteOut.make(0, 0, 0::ms, TIME_PER_BEAT/2)
     @=> NoteOut noteOut;
 
-  body(masterClock, noteOut);
+  body(startBang, masterClock, noteOut);
 
   C1(startBang, masterClock, "run");
   100::samp  => now;

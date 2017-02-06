@@ -53,6 +53,7 @@ public class Sequencer extends Moduck{
     }
     send("stepped", v);
     if(looped){
+      10::samp => now;
       send("looped", v);
     }
   }
