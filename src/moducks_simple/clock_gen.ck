@@ -1,6 +1,6 @@
+include(macros.m4)
 
-class Run extends EventHandler{
-  dur delta;
+genHandler(RunHandler, "run",
   Shred @ looper;
 
   fun void loop(){
@@ -9,8 +9,7 @@ class Run extends EventHandler{
       parent.send(Pulse.Clock(), 0);
     }
   }
-
-  fun void handle(int v){
+  HANDLE{
     if(looper != null){
       looper.exit();
       null @=> looper;
@@ -18,22 +17,16 @@ class Run extends EventHandler{
     if(v){
       spork ~ loop() @=> looper;
     }
-  }
-
-  fun static Run make(dur delta){
-    Run ret;
-    delta => ret.delta;
-    return ret;
-  }
-}
+  },
+  dur delta;
+)
 
 
 public class ClockGen extends Moduck{
-  OUT(Pulse.Clock());
-
   fun static ClockGen make(dur delta){
     ClockGen ret;
-    ret.IN("run", Run.make(delta));
+    OUT(Pulse.Clock());
+    IN(RunHandler, (delta));
     return ret;
   }
 }

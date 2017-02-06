@@ -6,7 +6,7 @@ public class ModuckBase{
   string outKeys[0];
 
   
-  fun void OUT(string tag){
+  fun void addOut(string tag){
     outKeys << tag;
     VEvent ev;
     ev @=> outs[tag];

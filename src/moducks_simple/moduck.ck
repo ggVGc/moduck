@@ -4,7 +4,7 @@ public class Moduck extends ModuckBase {
   EventHandler handlers[0];
   string handlerKeys[0];
 
-  fun void IN(string tag, EventHandler h){
+  fun void addIn(string tag, EventHandler h){
     handlerKeys << tag;
     this @=> h.parent;
     h @=> handlers[tag];

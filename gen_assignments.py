@@ -4,9 +4,14 @@ import sys
 
 spl = sys.argv[1].split(";")
 
-vals = [x.strip().split(" ")[-1] for x in spl]
+vals = [x.strip().split(" ") for x in spl]
 
 for v in vals:
-  if v != '':
-    print("%s => ret.%s;" % (v, v))
+  name = v[-1]
+  if name!= '':
+    varType = v[0]
+    op = "@=>"
+    if varType == "string" or varType == "int":
+      op = "=>"
+    print("%s %s ret.%s;" % (name, op, name))
 

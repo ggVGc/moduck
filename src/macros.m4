@@ -19,21 +19,28 @@ define(ASSERT,
 
 define(genHandler,
   class $1 extends EventHandler{
-    `esyscmd(../intersperse.py ";" "$3")';
-    fun void handle(int v)
-      $2
+    `esyscmd(../intersperse.py ";" "$4")';
+    dnl fun void handle(int v)
+      $3
     
 
-    fun static $1 make(`esyscmd(../intersperse.py `","' "$3")'){
+    fun static $1 make(`esyscmd(../intersperse.py `","' "$4")'){
       $1 ret;
-      `esyscmd(../gen_assignments.py "$3")'
+      `esyscmd(../gen_assignments.py "$4")'
       return ret;
+    }
+
+    fun void add(Moduck parent){
+      parent.addIn($2, this);
     }
   }
 )
 
 
+define(IN, $1.make $2 .add(ret);)
+define(OUT, ret.addOut($1);)
 
+define(HANDLE, fun void handle(int v))
 
 
 
