@@ -1,55 +1,29 @@
-public class Delay extends Moduck{
+include(macros.m4)
+
+
+genHandler(TrigHandler, Pulse.Trigger(),
   Shred @ waiter;
-
-  fun void doWait(string tag, int v){
-    values["delay"].i :: samp => now;
+  fun void doWait(int v){
+    parent.getVal("delay") :: samp => now;
     /* <<< now >>>; */
-    send(tag, v);
+    parent.send(Pulse.Trigger(), v);
   }
-
-  fun int handle(string tag, int v){
+  HANDLE{
     if(waiter != null){
       waiter.exit();
       null @=> waiter;
     }
-    spork ~ doWait(tag, v) @=> waiter;
-    return true;
-  }
+    spork ~ doWait(v) @=> waiter;
+  },
+;
+)
 
+public class Delay extends Moduck{
   fun static Delay make(dur delay){
-    Delay d;
-    d.setVal("delay", Util.toSamples(delay));
-    return d;
+    Delay ret;
+    ret.setVal("delay", Util.toSamples(delay));
+    OUT(Pulse.Trigger());
+    IN(TrigHandler, ());
+    return ret;
   }
 }
-
-
-
-/* 
- public class Delay extends Moduck{
-   null => Shred @ waiter;
- 
-   false => int waited;
-   fun void doWait(string tag, int v){
-     values["delay"].i :: samp => now;
-     true => waited;
-   }
- 
-   fun int handle(string tag, int v){
-     if(waiter == null){
-       spork ~ doWait(tag, v) @=> waiter;
-     }else{
-       if(waited){
-         send(tag, v);
-       }
-     }
-     return true;
-   }
- 
-   fun static Delay make(dur delay){
-     Delay d;
-     d.setVal("delay", Util.toSamples(delay));
-     return d;
-   }
- }
- */

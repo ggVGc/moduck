@@ -293,7 +293,7 @@ fun void setup(){
   /* body(startBang, masterClock, noteOut); */
 
   C2(startBang, "start", masterClock, "run");
-  C(masterClock, Printer.make(""));
+  /* C(masterClock, Printer.make("")); */
 
   100::samp  => now;
   startBang.trigger(1);
