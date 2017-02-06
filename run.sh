@@ -2,4 +2,4 @@
 
 
 cd build
-chuck main.ck
+chuck $@ main.ck

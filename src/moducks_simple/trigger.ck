@@ -3,9 +3,10 @@ public class Trigger extends Moduck{
   fun void trigger(int v){
     send(tag, v);
   }
+
   fun static Trigger make(string tag){
     Trigger ret;
-    ret.event(tag);
+    ret.OUT(tag);
     tag => ret.tag;
     return ret;
   }

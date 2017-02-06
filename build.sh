@@ -14,3 +14,4 @@ do
   mv tmp "${file%.*}.ck"
 done < <(find . -name '*.ck' -print0)
 
+cp intersperse.py build

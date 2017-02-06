@@ -29,11 +29,11 @@ class Run extends EventHandler{
 
 
 public class ClockGen extends Moduck{
-  event(Pulse.Clock());
+  OUT(Pulse.Clock());
 
   fun static ClockGen make(dur delta){
     ClockGen ret;
-    ret.handler("run", Run.make(delta));
+    ret.IN("run", Run.make(delta));
     return ret;
   }
 }

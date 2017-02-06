@@ -1,20 +1,12 @@
 
+include(macros.m4)
 
 
-class Print extends EventHandler{
-  string msg;
 
-  fun void handle(int v){
-    <<< msg + "> " +":"+v>>>;
-  }
-
-  fun static Print make(string msg){
-    Print ret;
-    msg => ret.msg;
-    return ret;
-  }
-}
-
+MAKE_EV_HANDLER(Print,
+  <<<msg + ">" + ":" + v >>>;
+,
+string msg;)
 
 
 
@@ -23,7 +15,7 @@ public class Printer extends Moduck{
 
   fun static Printer make(string msg){
     Printer ret;
-    ret.handler(Pulse.Trigger(), Print.make(msg));
+    ret.IN(Pulse.Trigger(), Print.make(msg));
     return ret;
   }
 }

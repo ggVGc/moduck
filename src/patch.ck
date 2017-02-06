@@ -1,16 +1,16 @@
 public class Patch{
   // msg defaults to src tag if passed as null
-  fun static void connectLoop(Moduck src, string srcEventName, Moduck target, string targetMsg){
+  fun static void connectLoop(Moduck src, string srcEventName, Moduck target, string targetEventName){
     while(true){
       src.outs[srcEventName] @=> VEvent ev;
       ev => now;
-      targetMsg => string msg;
-      if(msg == null){
-        srcEventName => msg;
-      }
-      if(!target.doHandle(msg, ev.val)){
-        <<<"Invalid event: "+msg+" - "+target>>>;
-      }
+      /* 
+       targetMsg => string msg;
+       if(msg == null){
+         srcEventName => msg;
+       }
+       */
+      target.doHandle(targetEventName, ev.val);
     }
   }
 
@@ -30,15 +30,14 @@ public class Patch{
      */
   }
 
-  fun static Moduck connect(Moduck src, string srcEventName, Moduck target, string msg){
+  fun static Moduck connect(Moduck src, string srcEventName, Moduck target, string targetEventName){
     if(srcEventName == null){
-      for(0=>int i;i<src.handlerKeys.size();i++){
-        src.handlerKeys[i] => string k;
-        spork ~ connectLoop(src, k, target, msg);
-      }
-    }else{
-      spork ~ connectLoop(src, srcEventName, target, msg);
+      src.outKeys[0] => srcEventName;
     }
+    if(targetEventName == null){
+      target.handlerKeys[0] => targetEventName;
+    }
+    spork ~ connectLoop(src, srcEventName, target, targetEventName);
     return Wrapper.make(src, target);
   }
 

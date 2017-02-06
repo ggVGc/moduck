@@ -2,4 +2,4 @@
 
 shopt -s globstar
 
-ls src/** | entr -cr bash -c "./build.sh && ./run.sh"
+ls src/** | entr -cr bash -c "./build.sh && ./run.sh $@"
