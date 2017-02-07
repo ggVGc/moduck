@@ -213,17 +213,17 @@ fun void dualMelo(Moduck clock, NoteOut noteOut){
          X(Sequencer.make([66, 67, 69], true)) // Three notes, looping
          ,X(noteOut)
      ]))
-     ,X(C2(s, "stepped", noteOut, null)) // Play note 60 every clock tick
+     ,X(C2(s, Pulse.Stepped(), noteOut, null)) // Play note 60 every clock tick
     ]
   );
 
-  C2(s, "looped", Printer.make("DID"), null);
+  C2(s, Pulse.Looped(), Printer.make("Looped"), null);
 
   chain(C(clock, PulseDiv.make(99999999, true)), [
     X(Delay.make(2::second))
     ,X(Value.make(50))
     ,X1(s, Pulse.Set())
-    ,X2("valueSet", Delay.make(5::second), null) // will keep triggering, but doesn't matter
+    ,X2(Pulse.Set(), Delay.make(5::second), null) // will keep triggering, but doesn't matter
     ,X(Value.make(55))
     ,X1(s, Pulse.Set())
   ]);
@@ -277,17 +277,18 @@ fun void routerTest(Moduck clock, NoteOut noteOut){
 
 
 fun void body(Moduck startBang, Moduck clock, NoteOut noteOut){
-  routerTest(clock, noteOut);
+  /* routerTest(clock, noteOut); */
   /* song1(startBang, clock, noteOut); */
   /* testConnectDouble(clock, noteOut); */
-  /* dualMelo(clock, noteOut); */
+  dualMelo(clock, noteOut);
 }
 
 
 fun void setup(){
   Trigger.make("start") @=> Trigger startBang;
   /* ClockGen.make(Util.bpmToDur(BPM)) */
-  ClockGen.make(Util.bpmToDur( BPM * TICKS_PER_BEAT))
+  /* ClockGen.make(Util.bpmToDur( BPM * TICKS_PER_BEAT)) */
+  ClockGen.make(Util.bpmToDur( BPM ))
     @=> ClockGen masterClock;
 
   NoteOut.make(MIDI_OUT_ZYNADDSUBFX, 0, 200::ms, TIME_PER_BEAT/2)
