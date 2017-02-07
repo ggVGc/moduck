@@ -37,6 +37,7 @@ deviceHints = [
   ,["yoke:  7", "yoke 7"]
   ,["yoke:  8", "yoke 8"]
   ,["yoke:  9", "yoke 9"]
+  ,["ms-20"]
   ,["jack"]
   ,["zynaddsubfx"]
 ]
@@ -52,7 +53,7 @@ with open(sys.argv[1], "w") as outFile:
       name = d[1]
     def w(inOut,p):
       outFile.write("define(MIDI_%s_%s, %s)\n" % 
-          (inOut.upper(), name.upper().replace(" ","_"), p))
+          (inOut.upper(), name.upper().replace(" ","_").replace("-", "_"), p))
     if portIn != -1:
       w("in", portIn)
     else:

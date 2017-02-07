@@ -63,13 +63,13 @@ TICKS_PER_BEAT / 32 => int B32;
 
 
 
-fun void song1(Moduck startBang, Moduck clock, Moduck _){
+fun void song1(int bassOutPort, int meloOutPort, Moduck startBang, Moduck clock, Moduck _){
   /* Scales.Major @=> int scale[]; */
-  TIME_PER_BEAT/2 => dur maxNoteLen;
+  TIME_PER_BEAT/8 => dur maxNoteLen;
 
   Offset.make(-12) @=> Offset offsetter;
 
-  noteDiddler(0, maxNoteLen, 
+  noteDiddler(meloOutPort, maxNoteLen, 
     [1,3,5,3,4,2,6,4]
     ,[10]
     ,[B2]
@@ -78,7 +78,7 @@ fun void song1(Moduck startBang, Moduck clock, Moduck _){
   ) @=> Moduck melo;
 
 
-  noteDiddler(MIDI_OUT_ZYNADDSUBFX, maxNoteLen, 
+  noteDiddler(bassOutPort, maxNoteLen, 
     [1,3,5,3,4,2,6,4]
     ,[10]
     ,[B4]
@@ -278,20 +278,20 @@ fun void routerTest(Moduck clock, NoteOut noteOut){
 
 fun void body(Moduck startBang, Moduck clock, NoteOut noteOut){
   /* routerTest(clock, noteOut); */
-  /* song1(startBang, clock, noteOut); */
+  song1(MIDI_OUT_MS_20, 0, startBang, clock, noteOut);
   /* testConnectDouble(clock, noteOut); */
-  dualMelo(clock, noteOut);
+  /* dualMelo(clock, noteOut); */
 }
 
 
 fun void setup(){
   Trigger.make("start") @=> Trigger startBang;
   /* ClockGen.make(Util.bpmToDur(BPM)) */
-  /* ClockGen.make(Util.bpmToDur( BPM * TICKS_PER_BEAT)) */
-  ClockGen.make(Util.bpmToDur( BPM ))
+  ClockGen.make(Util.bpmToDur( BPM * TICKS_PER_BEAT))
+  /* ClockGen.make(Util.bpmToDur( BPM )) */
     @=> ClockGen masterClock;
 
-  NoteOut.make(MIDI_OUT_ZYNADDSUBFX, 0, 200::ms, TIME_PER_BEAT/2)
+  NoteOut.make(0, 0, 200::ms, TIME_PER_BEAT/2)
     @=> NoteOut noteOut;
 
   body(startBang, masterClock, noteOut);
