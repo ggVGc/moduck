@@ -38,13 +38,13 @@ fun Moduck noteDiddler(int port, dur maxNoteDur, int notes[], int noteValues[], 
     noteOut @=> out;
   }
 
-  chain(divClock, [
-    X(noteSeq)
-    ,X(Mapper.make(noteValues, 12))
-    ,X(out)
-  ]);
 
-  return parent;
+  return Wrapper.make(parent, 
+    chain(divClock, [
+      X(noteSeq)
+      ,X(Mapper.make(noteValues, 12))
+      ,X(out)
+    ]));
 }
 
 
@@ -95,9 +95,7 @@ fun void song1(Moduck startBang, Moduck clock, Moduck _){
   
 
 
-  /* multi(clock,[X(bass), X(melo)]); */
-  C(clock, bass);
-  C(clock, melo);
+  C(multi(clock,[X(bass), X(melo)]), Printer.make(""));
 }
 
 
@@ -273,13 +271,14 @@ fun void routerTest(Moduck clock, NoteOut noteOut){
      ]
    ))
    ,X( router ) // Send pulses to router to be forwarded to active sequencer
-   ,X1(combined, "")
+   ,X(combined)
  ]);
 }
 
 
 fun void body(Moduck startBang, Moduck clock, NoteOut noteOut){
-  song1(startBang, clock, noteOut);
+  routerTest(clock, noteOut);
+  /* song1(startBang, clock, noteOut); */
   /* testConnectDouble(clock, noteOut); */
   /* dualMelo(clock, noteOut); */
 }

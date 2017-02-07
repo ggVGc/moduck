@@ -2,6 +2,9 @@ public class Patch{
   fun static void connectLoop(Moduck src, string srcEventName, Moduck target, string targetEventName){
     while(true){
       src.outs[srcEventName] @=> VEvent ev;
+      if(ev == null){
+        <<<"Null event from "+src+":"+srcEventName>>>;
+      }
       ev => now;
       target.doHandle(targetEventName, ev.val);
     }
@@ -26,12 +29,20 @@ public class Patch{
     if(srcEventName == null){
       src.outKeys[0] => srcEventName;
     }
+    if(src.outs[srcEventName] == null){
+      <<<"Error: Invalid source event: "+srcEventName+" - "+src>>>;
+    }
+
     if(target.handlerKeys.size() == 0){
       <<<"Error: No target inputs:"+target>>>;
     }
     if(targetEventName == null){
       target.handlerKeys[0] => targetEventName;
     }
+    if(target.handlers[targetEventName] == null){
+      <<<"Error: Invalid target event: "+targetEventName+" - "+target>>>;
+    }
+    /* <<<"Connecting "+src+"<>"+srcEventName+" to "+target+"<>"+targetEventName>>>; */
     spork ~ connectLoop(src, srcEventName, target, targetEventName);
     return Wrapper.make(src, target);
   }
@@ -70,12 +81,12 @@ public class Patch{
       targets[i] @=> ChainData d;
       if(d.type == 1){
         connect(src, d.srcTag, d.target, d.targetTag);
+        connect(d.target, d.targetTag, out, Pulse.Trigger());
       }else{
         connVal(src, d.srcTag, d.target, d.targetTag);
       }
-      connect(d.target, d.srcTag, out, Pulse.Trigger());
     }
 
-    return Wrapper.make(src, out);
+    return src;
   }
 }

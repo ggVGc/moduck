@@ -2,8 +2,8 @@
 public class MUtil{
 
   fun static Moduck combine(Moduck children[]){
-    Repeater in;
-    Repeater out;
+    Repeater.make() @=> Repeater in;
+    Repeater.make() @=> Repeater out;
     
     for(0=>int i;i<children.size();i++){
       Patch.connect(in, null, children[i], null);

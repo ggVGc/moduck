@@ -1,30 +1,39 @@
-public class Multiplier extends Moduck{
-  int inputCount;
 
-  fun int handle(string tag, int v){
-    if(tag == "" || tag == Pulse.Trigger()){
-      1 => int acc;
-      for(0 => int i; i<inputCount; i++){
-        acc * getVal(""+i) => acc;
-      }
-      send(tag, acc);
-      return true;
-    }
+include(macros.m4)
 
+genHandler(TrigHandler, Pulse.Trigger(),
+  HANDLE{
+    1 => int acc;
     for(0 => int i; i<inputCount; i++){
-      if(""+i == tag){
-        setVal(""+i, v);
-        return true;
-      }
+      acc * parent.getVal(""+i) => acc;
     }
+    parent.send(Pulse.Trigger(), acc);
+  },
+  int inputCount;
+)
 
-    return false;
+
+class SetHandler extends EventHandler{ 
+  int ind;
+  fun void handle(int v){
+    parent.setVal(""+ind, v);
   }
+  fun static SetHandler make(int ind){
+    SetHandler ret;
+    ind => ret.ind;
+    return ret;
+  }
+}
 
-  fun static Multiplier make(int inputs){
+
+
+public class Multiplier extends Moduck{
+  fun static Multiplier make(int inputCount){
     Multiplier ret;
-    inputs => ret.inputCount;
-    for(0 => int i; i<inputs; i++){
+    OUT(Pulse.Trigger());
+    IN(TrigHandler, (inputCount))
+    for(0 => int i; i<inputCount; i++){
+      ret.addIn(""+i, SetHandler.make(i));
       ret.setVal(""+i, 1);
     }
     return ret;
