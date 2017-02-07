@@ -6,7 +6,7 @@
 rm -rf build
 mkdir build
 
-python2 ./generateMidiPorts.py build/midiPorts.m4
+python ./generateMidiPorts.py build/midiPorts.m4
 
 cp "songs/$1.ck" build/_cur_song
 
