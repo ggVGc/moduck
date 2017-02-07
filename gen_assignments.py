@@ -11,7 +11,8 @@ for v in vals:
   if name!= '':
     varType = v[0]
     op = "@=>"
-    if varType == "string" or varType == "int":
+    if varType == "string" or varType == "int" and not "[" in name:
       op = "=>"
+    name = name.replace("[", "").replace("]", "")
     print("%s %s ret.%s;" % (name, op, name))
 

@@ -293,14 +293,10 @@ fun void setup(){
   NoteOut.make(MIDI_OUT_ZYNADDSUBFX, 0, 0::ms, TIME_PER_BEAT/2)
     @=> NoteOut noteOut;
 
-  /* body(startBang, masterClock, noteOut); */
+  body(startBang, masterClock, noteOut);
 
   C2(startBang, "start", masterClock, "run");
 
-  chain(masterClock, [
-    X(Value.make(67))
-    ,X(noteOut)
-  ]);
 
   100::samp  => now;
   startBang.trigger(1);

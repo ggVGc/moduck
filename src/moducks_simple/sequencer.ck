@@ -1,68 +1,77 @@
+include(macros.m4)
 
-public class Sequencer extends Moduck{
-  int entries[];
-
-  fun void init(int ents[], int loop){
-    setVal("curStep", 0);
-    ents @=> entries;
-    setVal("loop", loop);
-    setVal("targetStep", 0);
-  }
-
-  init([0], true);
-
-  fun int handle(string tag, int v){
-    if(tag == Pulse.Trigger()){
-      send("seqOut", entries[getVal("curStep")]);
-      return true;
-    }
-
-    if(tag == Pulse.Set()){
-      v => entries[getVal("targetStep")];
-      /* <<<"Seq setvalue">>>; */
-      send("valueSet", getVal("targetStep"));
-      return true;
-    }
-
-    if(tag == Pulse.Reset()){
-      setVal("curStep", 0);
-      return true;
-    }
-
-    /* if(tag == "step"){ */
-      step(v);
-    /* } */
-    return true;
-
+genHandler(TrigHandler, Pulse.Trigger(),
+  fun void init(){
+    parent.setVal("curStep", 0);
+    parent.setVal("loop", loop);
+    parent.setVal("targetStep", 0);
   }
 
   fun void step(int ignored){
-    getVal("curStep") => int cur;
+    parent.getVal("curStep") => int cur;
 
     entries[cur] => int v;
     false => int looped;
     if(cur == entries.size() - 1){
-      if(values["loop"].i){
-        setVal("curStep", 0);
+      if(parent.getVal("loop")){
+        parent.setVal("curStep", 0);
       /* <<<"Seq looped">>>; */
         true => looped;
       }
     }else{
       /* <<<"Seq Stepped">>>; */
-      setVal("curStep", cur + 1);
+      parent.setVal("curStep", cur + 1);
     }
-    send("stepped", v);
+    parent.send(Pulse.Stepped(), v);
     if(looped){
-      10::samp => now;
-      send("looped", v);
+      parent.send(Pulse.Looped(), v);
     }
   }
 
+  HANDLE{
+    parent.send(Pulse.Trigger(), entries[parent.getVal("curStep")]);
+  },
+  int entries[];
+  int loop;
+)
+
+
+public class Sequencer extends Moduck{
+
+
+
+
   fun static Sequencer make(int entries[], int loop){
-    Sequencer s;
-    s.init(entries, loop);
-    return s;
+    Sequencer ret;
+    OUT(Pulse.Trigger());
+    OUT(Pulse.Stepped());
+    OUT(Pulse.Looped());
+
+    IN(TrigHandler, (entries, loop));
+
+    return ret;
   }
 }
 
 
+
+
+  /* fun int handle(string tag, int v){ */
+  /*   if(tag == Pulse.Set()){ */
+  /*     v => entries[getVal("targetStep")]; */
+  /*     /* <<<"Seq setvalue">>>; */
+  /*     send("valueSet", getVal("targetStep")); */
+  /*     return true; */
+  /*   } */
+  /*  */
+  /*   if(tag == Pulse.Reset()){ */
+  /*     setVal("curStep", 0); */
+  /*     return true; */
+  /*   } */
+  /*  */
+  /*   /* if(tag == "step"){ */ 
+  /*     step(v); */
+  /*   /* } */
+  /*   return true; */
+  /*  */
+  /* } */
