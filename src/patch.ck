@@ -1,38 +1,33 @@
 public class Patch{
-  // msg defaults to src tag if passed as null
   fun static void connectLoop(Moduck src, string srcEventName, Moduck target, string targetEventName){
     while(true){
       src.outs[srcEventName] @=> VEvent ev;
       ev => now;
-      /* 
-       targetMsg => string msg;
-       if(msg == null){
-         srcEventName => msg;
-       }
-       */
       target.doHandle(targetEventName, ev.val);
     }
   }
 
 
   fun static void connectValLoop(Moduck src, string srcEventName, Moduck target, string valueName){
-    /* 
-     while(true){
-       src.out => now;
-       if(srcEventName != null && srcEventName != "" && srcEventName != src.out.tag){
-         <<<"Invalid source event: "+srcEventName+" - "+src>>>;
-       }
+    while(true){
+      src.outs[srcEventName] @=> VEvent ev;
+      ev => now;
        if(target.values[valueName] == null){
          <<<"Invalid value: "+valueName+" - "+target>>>;
        }
-       IntRef.make(src.out.val) @=> target.values[valueName];
-     }
-     */
+       target.setVal(valueName, ev.val);
+    }
   }
 
   fun static Moduck connect(Moduck src, string srcEventName, Moduck target, string targetEventName){
+    if(src.outKeys.size() == 0){
+      <<<"Error: No source outputs:"+src>>>;
+    }
     if(srcEventName == null){
       src.outKeys[0] => srcEventName;
+    }
+    if(target.handlerKeys.size() == 0){
+      <<<"Error: No target inputs:"+target>>>;
     }
     if(targetEventName == null){
       target.handlerKeys[0] => targetEventName;
@@ -42,8 +37,14 @@ public class Patch{
   }
 
 
-  fun static Moduck connVal(Moduck src, string srcEventName, Moduck target, string msg){
-    spork ~ connectValLoop(src, srcEventName, target, msg);
+  fun static Moduck connVal(Moduck src, string srcEventName, Moduck target, string key){
+    if(src.outKeys.size() == 0){
+      <<<"Error: No source outputs:"+src>>>;
+    }
+    if(srcEventName == null){
+      src.outKeys[0] => srcEventName;
+    }
+    spork ~ connectValLoop(src, srcEventName, target, key);
     return Wrapper.make(src, target);
   }
 
@@ -64,7 +65,7 @@ public class Patch{
   }
 
   fun static Moduck connectMulti(Moduck src, ChainData targets[]){
-    Repeater out;
+    Repeater.make() @=> Repeater out;
     for(0 => int i; i<targets.size(); i++){
       targets[i] @=> ChainData d;
       if(d.type == 1){
@@ -72,7 +73,7 @@ public class Patch{
       }else{
         connVal(src, d.srcTag, d.target, d.targetTag);
       }
-      connect(d.target, null, out, null);
+      connect(d.target, d.srcTag, out, Pulse.Trigger());
     }
 
     return Wrapper.make(src, out);

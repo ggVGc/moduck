@@ -1,25 +1,19 @@
 
-public class Repeater extends Moduck{
-  string relabel;
-  fun int handle(string tag, int v){
-    string newTag;
-    if(relabel != null){
-      relabel => newTag;
-    }else{
-      tag => newTag;
-    }
+include(macros.m4)
 
-    send(newTag, v);
-    return true;
+genHandler(TrigHandler, Pulse.Trigger(),
+  HANDLE{
+    parent.send(Pulse.Trigger(), v);
   }
+  ;
+)
 
+
+public class Repeater extends Moduck{
   fun static Repeater make(){
     Repeater ret;
-    return ret;
-  }
-  fun static Repeater withTag(string tag){
-    Repeater.make() @=> Repeater ret;
-    tag => ret.relabel;
+    OUT(Pulse.Trigger());
+    IN(TrigHandler, ());
     return ret;
   }
 }

@@ -2,12 +2,9 @@ include(macros.m4)
 
 genHandler(TrigHandler, Pulse.Trigger(),
   fun void init(){
-    parent.setVal("curStep", 0);
-    parent.setVal("loop", loop);
-    parent.setVal("targetStep", 0);
   }
 
-  fun void step(int ignored){
+  fun void step(){
     parent.getVal("curStep") => int cur;
 
     entries[cur] => int v;
@@ -29,6 +26,7 @@ genHandler(TrigHandler, Pulse.Trigger(),
   }
 
   HANDLE{
+    step();
     parent.send(Pulse.Trigger(), entries[parent.getVal("curStep")]);
   },
   int entries[];
@@ -37,12 +35,11 @@ genHandler(TrigHandler, Pulse.Trigger(),
 
 
 public class Sequencer extends Moduck{
-
-
-
-
   fun static Sequencer make(int entries[], int loop){
     Sequencer ret;
+    ret.setVal("curStep", 0);
+    ret.setVal("loop", loop);
+    ret.setVal("targetStep", 0);
     OUT(Pulse.Trigger());
     OUT(Pulse.Stepped());
     OUT(Pulse.Looped());

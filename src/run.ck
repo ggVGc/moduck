@@ -4,6 +4,8 @@
  0 => int MIDI_PORT;
  */
 
+include(midiPorts.m4)
+
 include(aliases.m4)
 
 fun Moduck noteDiddler(int port, dur maxNoteDur, int notes[], int noteValues[], int noteDivs[], float durationRatios[], Moduck noteProcessor){
@@ -18,10 +20,14 @@ fun Moduck noteDiddler(int port, dur maxNoteDur, int notes[], int noteValues[], 
   V(noteDivSeq, divider, "divisor");
   C(parent, divider) @=> Moduck divClock;
 
-  multi( divClock, [
-    X(noteDivSeq)
-    ,X(durationSeq)
-  ]);
+  /* 
+   multi( divClock, [
+     X(noteDivSeq)
+     ,X(durationSeq)
+   ]);
+   */
+  C(divClock, noteDivSeq);
+  C(divClock, durationSeq);
 
   NoteOut.make(port, 0, 0::ms, maxNoteDur)
     @=> NoteOut noteOut;
@@ -39,7 +45,8 @@ fun Moduck noteDiddler(int port, dur maxNoteDur, int notes[], int noteValues[], 
   chain(divClock, [
     X(noteSeq)
     ,X(Mapper.make(noteValues, 12))
-    ,X1(out, "note")
+    /* ,X1(out, "note") */
+    ,X(out)
   ]);
 
   return parent;
@@ -59,8 +66,6 @@ TICKS_PER_BEAT / 32 => int B32;
 
 
 
-8 => int PORT_0_COAST;
-9 => int PORT_SYSTEM_1;
 
 
 fun void song1(Moduck startBang, Moduck clock, Moduck _){
@@ -69,7 +74,7 @@ fun void song1(Moduck startBang, Moduck clock, Moduck _){
 
   Offset.make(-12) @=> Offset offsetter;
 
-  noteDiddler(PORT_SYSTEM_1, maxNoteLen, 
+  noteDiddler(MIDI_OUT_ZYNADDSUBFX, maxNoteLen, 
     [1,3,5,3,4,2,6,4]
     ,[10]
     ,[B2]
@@ -78,7 +83,7 @@ fun void song1(Moduck startBang, Moduck clock, Moduck _){
   ) @=> Moduck melo;
 
 
-  noteDiddler(PORT_0_COAST, maxNoteLen, 
+  noteDiddler(MIDI_OUT_ZYNADDSUBFX, maxNoteLen, 
     [1,3,5,3,4,2,6,4]
     ,[10]
     ,[B4]
@@ -95,7 +100,9 @@ fun void song1(Moduck startBang, Moduck clock, Moduck _){
   
 
 
-  multi(clock,[X(bass), X(melo)]);
+  /* multi(clock,[X(bass), X(melo)]); */
+  C(clock, bass);
+  C(clock, melo);
 }
 
 
@@ -282,21 +289,37 @@ fun void body(Moduck startBang, Moduck clock, NoteOut noteOut){
   /* dualMelo(clock, noteOut); */
 }
 
-include(midiPorts.m4)
 
 fun void setup(){
   Trigger.make("start") @=> Trigger startBang;
-  ClockGen.make(Util.bpmToDur(BPM))
-  /* ClockGen.make(Util.bpmToDur( BPM * TICKS_PER_BEAT)) */
+  /* ClockGen.make(Util.bpmToDur(BPM)) */
+  ClockGen.make(Util.bpmToDur( BPM * TICKS_PER_BEAT))
     @=> ClockGen masterClock;
 
-  NoteOut.make(MIDI_OUT_ZYNADDSUBFX, 0, 0::ms, TIME_PER_BEAT/2)
+  NoteOut.make(MIDI_OUT_ZYNADDSUBFX, 0, 200::ms, TIME_PER_BEAT/2)
     @=> NoteOut noteOut;
 
   body(startBang, masterClock, noteOut);
 
   C2(startBang, "start", masterClock, "run");
 
+  /* 
+   chain(masterClock,[
+     X(Sequencer.make([70,74,76],true))
+     ,X(Repeater.make())
+     ,X(noteOut)
+   ]);
+   */
+
+  /* 
+   C(masterClock, noteDiddler(MIDI_OUT_ZYNADDSUBFX, 100::ms, 
+     [1,3,5,3,4,2,6,4]
+     ,[10]
+     ,[B2]
+     ,[1.0]
+     ,null
+   ));
+   */
 
   100::samp  => now;
   startBang.trigger(1);

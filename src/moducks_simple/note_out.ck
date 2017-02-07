@@ -45,6 +45,7 @@ genHandler(TrigHandler, Pulse.Trigger(),
         v => note;
       /* } */
 
+      parent.send(Pulse.Trigger(), v);
 
       note => msg.data2;
       parent.getVal("velocity") => msg.data3;
@@ -65,6 +66,7 @@ genHandler(TrigHandler, Pulse.Trigger(),
 public class NoteOut extends Moduck{
   fun static NoteOut make(int devicePort, int channel, dur minDur, dur maxDur){
     NoteOut ret;
+    OUT(Pulse.Trigger());
     ret.setVal("velocity", 127);
     ret.setVal("note", 64);
     ret.setVal("durRatio", 63);

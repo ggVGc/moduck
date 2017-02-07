@@ -1,10 +1,9 @@
 
-public class Mapper extends Moduck{
+include(macros.m4)
 
-  int entries[];
-
-  fun int handle(string tag, int v){
-    getVal("offsetPerPeriod") => int offs;
+genHandler(TrigHandler, Pulse.Trigger(),
+  HANDLE{
+    parent.getVal("offsetPerPeriod") => int offs;
     int k;
     int rest;
     if(v >= 0){
@@ -18,14 +17,18 @@ public class Mapper extends Moduck{
         rest -1 => rest;
       }
     }
-    send(tag, entries[k] + rest*offs);
-    return true;
-  }
+    parent.send(Pulse.Trigger(), entries[k] + rest*offs);
+  },
+  int entries[];
+)
 
+
+public class Mapper extends Moduck{
   fun static Mapper make(int entries[], int offsetPerPeriod){
     Mapper ret;
-    entries @=> ret.entries;
     ret.setVal("offsetPerPeriod", offsetPerPeriod);
+    OUT(Pulse.Trigger());
+    IN(TrigHandler, (entries));
     return ret;
   }
 }

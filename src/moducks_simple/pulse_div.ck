@@ -34,15 +34,16 @@ public class PulseDiv extends Moduck{
   fun static PulseDiv make(int divisor, int triggerOnFirst){
     PulseDiv ret;
     Shared shared;
+    ret.setVal("divisor", divisor);
+    ret.setVal("triggerOnFirst", triggerOnFirst);
 
     OUT(Pulse.Trigger());
 
-    IN(ResetHandler,(shared));
     IN(TrigHandler,(shared));
+    IN(ResetHandler,(shared));
 
-    ret.setVal("divisor", divisor);
-    ret.setVal("triggerOnFirst", triggerOnFirst);
     ret.doHandle(Pulse.Reset(), 0);
+
     return ret;
   }
 }
