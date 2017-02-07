@@ -1,22 +1,9 @@
-
-
 fun void runForever(){
   while(true) { 99::hour => now; }
 }
 
-
-
-int B;
-int B2;
-int B4;
-int B8;
-int B16;
-int B32;
-
-
 include(aliases.m4)
 include(_all_parts.m4)
-
 
 120 => int BPM;
 32 => int TICKS_PER_BEAT;
@@ -36,7 +23,6 @@ fun void body(Moduck startBang, Moduck masterClock){
 }
 
 
-
 fun Trigger setup(){
   Trigger.make("start") @=> Trigger startBang;
   ClockGen.make(Util.bpmToDur( BPM * TICKS_PER_BEAT))
@@ -44,30 +30,7 @@ fun Trigger setup(){
 
   C2(startBang, "start", masterClock, "run");
 
-
-
-
   body(startBang, masterClock);
-
-
-
-  /* 
-   chain(masterClock,[
-     X(Sequencer.make([70,74,76],true))
-     ,X(Repeater.make())
-     ,X(noteOut)
-   ]);
-   */
-
-  /* 
-   C(masterClock, noteDiddler(MIDI_OUT_ZYNADDSUBFX, 100::ms, 
-     [1,3,5,3,4,2,6,4]
-     ,[10]
-     ,[B2]
-     ,[1.0]
-     ,null
-   ));
-   */
   samp  => now;
   return startBang;
 }
