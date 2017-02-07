@@ -297,11 +297,10 @@ fun void setup(){
 
   C2(startBang, "start", masterClock, "run");
 
-  Value.make(50) @=> Moduck v;
-  C(masterClock, v);
-  C(v, noteOut);
-  C(v, Printer.make("D"));
-  /* C(masterClock, Printer.make("")); */
+  chain(masterClock, [
+    X(Value.make(67))
+    ,X(noteOut)
+  ]);
 
   100::samp  => now;
   startBang.trigger(1);

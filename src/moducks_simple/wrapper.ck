@@ -5,6 +5,7 @@ public class Wrapper extends Moduck{
     src.handlerKeys @=> ret.handlerKeys;
     src.handlers @=> ret.handlers;
     target.outs @=> ret.outs;
+    target.outKeys @=> ret.outKeys;
     return ret;
   }
 }
