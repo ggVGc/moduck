@@ -1,6 +1,7 @@
 include(macros.m4)
 
-genHandler(ResetHandler, Pulse.Reset(), HANDLE{
+genHandler(ResetHandler, Pulse.Reset(),
+  HANDLE{
     if(parent.getVal("triggerOnFirst")){
       0 => shared.accum;
     }else{
@@ -10,7 +11,8 @@ genHandler(ResetHandler, Pulse.Reset(), HANDLE{
   Shared shared;
 )
 
-genHandler(TrigHandler, Pulse.Trigger(), HANDLE{
+genHandler(TrigHandler, Pulse.Trigger(),
+  HANDLE{
     if(shared.accum == 0){
       parent.send(Pulse.Trigger(), v);
     }

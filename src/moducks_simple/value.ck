@@ -1,16 +1,19 @@
+include(macros.m4)
+
+genHandler(TrigHandler, Pulse.Trigger(),
+  HANDLE{
+    parent.send(Pulse.Trigger(), parent.getVal("value"));
+  },
+  ;
+)
+
 
 public class Value extends Moduck{
-  IntRef.make(0) @=> values["value"];
-
-  /* VEvent out; */
-  
-  fun int handle(string tag, int __){
-    send(tag, values["value"].i);
-    return true;
-  }
   fun static Value make(int v){
     Value ret;
-    IntRef.make(v) @=> ret.values["value"];
+    OUT(Pulse.Trigger());
+    ret.setVal("value", v);
+    IN(TrigHandler, ());
     return ret;
   }
 

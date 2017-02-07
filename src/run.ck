@@ -282,17 +282,25 @@ fun void body(Moduck startBang, Moduck clock, NoteOut noteOut){
   /* dualMelo(clock, noteOut); */
 }
 
+include(midiPorts.m4)
+
 fun void setup(){
   Trigger.make("start") @=> Trigger startBang;
-  ClockGen.make(Util.bpmToDur( BPM * TICKS_PER_BEAT))
+  ClockGen.make(Util.bpmToDur(BPM))
+  /* ClockGen.make(Util.bpmToDur( BPM * TICKS_PER_BEAT)) */
     @=> ClockGen masterClock;
 
-  NoteOut.make(0, 0, 0::ms, TIME_PER_BEAT/2)
+  NoteOut.make(MIDI_OUT_ZYNADDSUBFX, 0, 0::ms, TIME_PER_BEAT/2)
     @=> NoteOut noteOut;
 
   /* body(startBang, masterClock, noteOut); */
 
   C2(startBang, "start", masterClock, "run");
+
+  Value.make(50) @=> Moduck v;
+  C(masterClock, v);
+  C(v, noteOut);
+  C(v, Printer.make("D"));
   /* C(masterClock, Printer.make("")); */
 
   100::samp  => now;

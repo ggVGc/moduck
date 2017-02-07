@@ -21,12 +21,15 @@ class NoteOffSender{
 genHandler(TrigHandler, Pulse.Trigger(), 
     MidiOut midOut;
     NoteOffSender offSender;
-    channel => offSender.channel;
-    midOut.open(devicePort) => int success;
-    if(!success){
-      <<< "Error: Failed opening midi device: " + devicePort >>>;
+
+    fun void init(){
+      channel => offSender.channel;
+      midOut.open(devicePort) => int success;
+      if(!success){
+        <<< "Error: Failed opening midi device: " + devicePort >>>;
+      }
+      midOut @=> offSender.out;
     }
-    midOut @=> offSender.out;
 
     HANDLE{
       /* <<< "NOTEOUT:" +tag +":"+v>>>; */
@@ -65,7 +68,6 @@ public class NoteOut extends Moduck{
     ret.setVal("velocity", 127);
     ret.setVal("note", 64);
     ret.setVal("durRatio", 63);
-    ret.setVal("duration", Util.toSamples(300::ms));
     IN(TrigHandler, (devicePort, channel, minDur, maxDur));
     return ret;
   }

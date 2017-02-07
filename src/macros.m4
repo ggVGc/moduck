@@ -27,6 +27,7 @@ define(genHandler,
     fun static $1 make(`esyscmd(../intersperse.py `","' "$4")'){
       $1 ret;
       `esyscmd(../gen_assignments.py "$4")'
+      ret.init();
       return ret;
     }
 
