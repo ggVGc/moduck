@@ -8,7 +8,7 @@ mkdir build
 
 python2 ./generateMidiPorts.py build/midiPorts.m4
 
-cp "songs/$1.ck" build/_cur_song.ck
+cp "songs/$1.ck" build/_cur_song
 
 cp -r src/* build
 

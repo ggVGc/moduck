@@ -1,5 +1,9 @@
 
-define(120, 100)
+
+
+110 => BPM;
+<<<B4>>>;
+
 
 define(BASS_PORT, MIDI_OUT_MS_20)
 define(MELO_PORT, 0)
