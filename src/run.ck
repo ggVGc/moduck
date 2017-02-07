@@ -20,14 +20,10 @@ fun Moduck noteDiddler(int port, dur maxNoteDur, int notes[], int noteValues[], 
   V(noteDivSeq, divider, "divisor");
   C(parent, divider) @=> Moduck divClock;
 
-  /* 
-   multi( divClock, [
-     X(noteDivSeq)
-     ,X(durationSeq)
-   ]);
-   */
-  C(divClock, noteDivSeq);
-  C(divClock, durationSeq);
+  multi( divClock, [
+    X(noteDivSeq)
+    ,X(durationSeq)
+  ]);
 
   NoteOut.make(port, 0, 0::ms, maxNoteDur)
     @=> NoteOut noteOut;
@@ -45,7 +41,6 @@ fun Moduck noteDiddler(int port, dur maxNoteDur, int notes[], int noteValues[], 
   chain(divClock, [
     X(noteSeq)
     ,X(Mapper.make(noteValues, 12))
-    /* ,X1(out, "note") */
     ,X(out)
   ]);
 
@@ -74,7 +69,7 @@ fun void song1(Moduck startBang, Moduck clock, Moduck _){
 
   Offset.make(-12) @=> Offset offsetter;
 
-  noteDiddler(MIDI_OUT_ZYNADDSUBFX, maxNoteLen, 
+  noteDiddler(0, maxNoteLen, 
     [1,3,5,3,4,2,6,4]
     ,[10]
     ,[B2]

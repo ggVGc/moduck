@@ -34,6 +34,22 @@ genHandler(TrigHandler, Pulse.Trigger(),
 )
 
 
+genHandler(SetHandler, Pulse.Set(),
+  HANDLE{
+    v => entries[parent.getVal("targetStep")];
+    parent.send(Pulse.Set(), parent.getVal("targetStep"));
+  },
+  int entries[];
+)
+
+genHandler(Reset, Pulse.Reset(),
+  HANDLE{
+    parent.setVal("curStep", 0);
+  },
+  ;
+)
+
+
 public class Sequencer extends Moduck{
   fun static Sequencer make(int entries[], int loop){
     Sequencer ret;
@@ -43,32 +59,12 @@ public class Sequencer extends Moduck{
     OUT(Pulse.Trigger());
     OUT(Pulse.Stepped());
     OUT(Pulse.Looped());
+    OUT(Pulse.Set());
 
     IN(TrigHandler, (entries, loop));
+    IN(SetHandler, (entries));
 
     return ret;
   }
 }
 
-
-
-
-  /* fun int handle(string tag, int v){ */
-  /*   if(tag == Pulse.Set()){ */
-  /*     v => entries[getVal("targetStep")]; */
-  /*     /* <<<"Seq setvalue">>>; */
-  /*     send("valueSet", getVal("targetStep")); */
-  /*     return true; */
-  /*   } */
-  /*  */
-  /*   if(tag == Pulse.Reset()){ */
-  /*     setVal("curStep", 0); */
-  /*     return true; */
-  /*   } */
-  /*  */
-  /*   /* if(tag == "step"){ */ 
-  /*     step(v); */
-  /*   /* } */
-  /*   return true; */
-  /*  */
-  /* } */
