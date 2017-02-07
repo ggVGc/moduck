@@ -2,4 +2,7 @@
 
 shopt -s globstar
 
-ls src/** | entr -cr bash -c "./build.sh && ./run.sh $@"
+songName="$1"
+shift
+
+ls {src,songs,parts}/** | entr -cr bash -c "./build.sh $songName && ./run.sh $*"

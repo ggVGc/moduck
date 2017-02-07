@@ -1,56 +1,16 @@
 
-/* 
- 2 => int DEVICE_PORT;
- 0 => int MIDI_PORT;
- */
-
-include(midiPorts.m4)
-
 include(aliases.m4)
+include(_all_parts.m4)
 
-fun Moduck noteDiddler(int port, dur maxNoteDur, int notes[], int noteValues[], int noteDivs[], float durationRatios[], Moduck noteProcessor){
-  Repeater.make() @=> Repeater parent;
-  
-  Sequencer.make(notes, true) @=> Sequencer noteSeq;
-  Sequencer.make(noteDivs, true) @=> Sequencer noteDivSeq;
-  Util.ratios(0, 127, durationRatios) @=> int durations[];
-  Sequencer.make(durations, true) @=> Sequencer durationSeq;
-
-  PulseDiv.make(durations[0], true) @=> PulseDiv divider;
-  V(noteDivSeq, divider, "divisor");
-  C(parent, divider) @=> Moduck divClock;
-
-  multi( divClock, [
-    X(noteDivSeq)
-    ,X(durationSeq)
-  ]);
-
-  NoteOut.make(port, 0, 0::ms, maxNoteDur)
-    @=> NoteOut noteOut;
-
-  V(durationSeq, noteOut, "durRatio");
-
-  Moduck @ out;
-
-  if(noteProcessor != null){
-    C(noteProcessor, noteOut) @=> out;
-  }else{
-    noteOut @=> out;
-  }
-
-
-  return Wrapper.make(parent, 
-    chain(divClock, [
-      X(noteSeq)
-      ,X(Mapper.make(noteValues, 12))
-      ,X(out)
-    ]));
+fun void runForever(){
+  while(true) { 99::hour => now; }
 }
+
 
 
 120 => int BPM;
 32 => int TICKS_PER_BEAT;
-Util.bpmToDur(BPM) => dur TIME_PER_BEAT;
+dur TIME_PER_BEAT;
 
 TICKS_PER_BEAT => int B;
 TICKS_PER_BEAT /2 => int B2;
@@ -58,87 +18,6 @@ TICKS_PER_BEAT / 4 => int B4;
 TICKS_PER_BEAT / 8 => int B8;
 TICKS_PER_BEAT / 16 => int B16;
 TICKS_PER_BEAT / 32 => int B32;
-
-
-
-
-
-fun void song1(int bassOutPort, int meloOutPort, Moduck startBang, Moduck clock, Moduck _){
-  /* Scales.Major @=> int scale[]; */
-  TIME_PER_BEAT/8 => dur maxNoteLen;
-
-  Offset.make(-12) @=> Offset offsetter;
-
-  noteDiddler(meloOutPort, maxNoteLen, 
-    [1,3,5,3,4,2,6,4]
-    ,[10]
-    ,[B2]
-    ,[1.0]
-    ,C(offsetter, Offset.make(6))
-  ) @=> Moduck melo;
-
-
-  noteDiddler(bassOutPort, maxNoteLen, 
-    [1,3,5,3,4,2,6,4]
-    ,[10]
-    ,[B4]
-    ,[1.0]
-    ,offsetter
-  ) @=> Moduck bass;
-
-  chain(clock, [
-    X(PulseDiv.make(B2*2, true))
-    /* ,X(seq([-12, -12, -15, -9])) */
-    ,X(seq([-12, -12, -12, -12, -10, -9, -7, -14]))
-    ,XV(offsetter, "offset")
-  ]);
-  
-
-
-  C(multi(clock,[X(bass), X(melo)]), Printer.make(""));
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 fun void _body(Moduck clock){
@@ -275,28 +154,31 @@ fun void routerTest(Moduck clock, NoteOut noteOut){
  ]);
 }
 
+define(BPM, 120)
+define(TICKS_PER_BEAT, 32)
 
-fun void body(Moduck startBang, Moduck clock, NoteOut noteOut){
-  /* routerTest(clock, noteOut); */
-  song1(MIDI_OUT_MS_20, 0, startBang, clock, noteOut);
-  /* testConnectDouble(clock, noteOut); */
-  /* dualMelo(clock, noteOut); */
+
+fun void body(Moduck startBang, Moduck masterClock){
+  include(midiPorts.m4)
+  include(_cur_song.ck)
 }
 
 
-fun void setup(){
+fun Trigger setup(){
   Trigger.make("start") @=> Trigger startBang;
-  /* ClockGen.make(Util.bpmToDur(BPM)) */
   ClockGen.make(Util.bpmToDur( BPM * TICKS_PER_BEAT))
-  /* ClockGen.make(Util.bpmToDur( BPM )) */
     @=> ClockGen masterClock;
 
-  NoteOut.make(0, 0, 200::ms, TIME_PER_BEAT/2)
-    @=> NoteOut noteOut;
-
-  body(startBang, masterClock, noteOut);
-
+  body(startBang, masterClock);
   C2(startBang, "start", masterClock, "run");
+  TICKS_PER_BEAT => B;
+  TICKS_PER_BEAT /2 => B2;
+  TICKS_PER_BEAT / 4 => B4;
+  TICKS_PER_BEAT / 8 => B8;
+  TICKS_PER_BEAT / 16 => B16;
+  TICKS_PER_BEAT / 32 => B32;
+  Util.bpmToDur(BPM) => TIME_PER_BEAT;
+
 
   /* 
    chain(masterClock,[
@@ -315,11 +197,11 @@ fun void setup(){
      ,null
    ));
    */
-
-  100::samp  => now;
-  startBang.trigger(1);
+  samp  => now;
+  return startBang;
 }
 
+setup().trigger(0);
+runForever();
 
-setup();
-while(true) { 99::hour => now; }
+
