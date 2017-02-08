@@ -28,5 +28,8 @@ multi(bass, [
 
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 59aca1b499f8027a3f7b760e6c61f0a94075aa42
 multi(masterClock,[X(bass)]);
