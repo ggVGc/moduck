@@ -25,17 +25,20 @@ fun void body(Moduck startBang, Moduck masterClock){
 
 fun Trigger setup(){
   Trigger.make("start") @=> Trigger startBang;
-  ClockGen.make(Util.bpmToDur( BPM * TICKS_PER_BEAT))
-    @=> ClockGen masterClock;
 
-  C2(startBang, "start", masterClock, "run");
+  Repeater.make() @=> Repeater clockProxy;
+  body(startBang, clockProxy);
 
-  body(startBang, masterClock);
+  chain(startBang, [
+    X2("start", ClockGen.make(Util.bpmToDur( BPM * TICKS_PER_BEAT)),"run")
+    ,X(clockProxy)
+  ]);
+
   samp  => now;
   return startBang;
 }
 
-setup().trigger(0);
+setup().trigger(1);
 runForever();
 
 

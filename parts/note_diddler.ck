@@ -1,7 +1,7 @@
-fun Moduck noteDiddler(int port, dur maxNoteDur, int notes[], int noteValues[], int noteDivs[], float durationRatios[], Moduck noteProcessor){
+fun Moduck noteDiddler(int port, dur maxNoteDur, int noteValues[], int noteIndices[], int noteDivs[], float durationRatios[], Moduck noteProcessor){
   Repeater.make() @=> Repeater parent;
   
-  Sequencer.make(notes, true) @=> Sequencer noteSeq;
+  Sequencer.make(noteIndices, true) @=> Sequencer noteSeq;
   Sequencer.make(noteDivs, true) @=> Sequencer noteDivSeq;
   Util.ratios(0, 127, durationRatios) @=> int durations[];
   Sequencer.make(durations, true) @=> Sequencer durationSeq;

@@ -45,7 +45,6 @@ genHandler(TrigHandler, Pulse.Trigger(),
         v => note;
       /* } */
 
-      parent.send(Pulse.Trigger(), v);
 
       note => msg.data2;
       parent.getVal("velocity") => msg.data3;
@@ -54,6 +53,7 @@ genHandler(TrigHandler, Pulse.Trigger(),
       minDur + deltaDur * durMul => dur duration;
       offSender.noteOff(note, duration);
       midOut.send(msg);
+      parent.send(Pulse.Trigger(), v);
   },
   int devicePort;
   int channel;

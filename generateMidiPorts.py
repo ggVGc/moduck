@@ -38,8 +38,11 @@ deviceHints = [
   ,["yoke:  8", "yoke 8"]
   ,["yoke:  9", "yoke 9"]
   ,["ms-20"]
+  ,["system-1"]
   ,["jack"]
   ,["zynaddsubfx"]
+  ,["microbrute"]
+  ,["usb midi"]
 ]
 
 
