@@ -44,18 +44,16 @@ multi(diddles, [
 ]);
 
 
-fun void play(){
-  multi(masterClock,[
-    X(noteDivider)
-    ,X(C(Delay.make(samp), gateDivider)) // Always trigger gate after note change
-    ,X(C(fourFour(B, 60), drums))
-  ]);
-}
+multi(masterClock,[
+  X(noteDivider)
+  ,X(C(Delay.make(samp), gateDivider)) // Always trigger gate after note change
+  ,X(C(fourFour(B, 90), drums))
+  ,X(C(C(Delay.make(D32), fourFour(B, 70)), drums))
+  ,X(C(C(Delay.make(D16), fourFour(B, 60)), drums))
+]);
 
 
+false => PLAY;
 
-if( 1 ){
-  play();
-}
 
 

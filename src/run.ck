@@ -7,10 +7,17 @@ include(aliases.m4)
 include(song_macros.m4)
 include(_all_parts.m4)
 
-  120 => int BPM;
+120 => int BPM;
 32 => int TICKS_PER_BEAT;
+true => int PLAY;
 
-define(TIME_PER_BEAT, Util.bpmToDur(`BPM'))
+define(TIME_PER_BEAT, Util.bpmToDur(`BPM')) // dnl `
+define(D, TIME_PER_BEAT)
+define(D2, (TIME_PER_BEAT/2))
+define(D4, D2/2)
+define(D8, D4/2)
+define(D16, D8/2)
+define(D32, D16/2)
 
 define(B, TICKS_PER_BEAT)
 define(B2, B/2)
@@ -43,6 +50,9 @@ chain(startBang, [
 samp  => now;
 
 startBang.trigger(1);
-runForever();
+if(PLAY){
+  runForever();
+}
+
 
 
