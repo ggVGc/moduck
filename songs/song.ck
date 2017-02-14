@@ -1,35 +1,61 @@
 
 
 
-120 => BPM;
+138 => BPM;
 
 
-define(BASS_PORT, MIDI_OUT_MS_20)
-define(MELO_PORT, MIDI_OUT_SYSTEM_1)
-
-TIME_PER_BEAT/2 => dur maxNoteLen;
-
-Offset.make(2*12) @=> Offset offsetter;
-
-noteDiddler(MIDI_OUT_SYSTEM_1, maxNoteLen, 
-  [1,3,5,3,4,2,6,4]
-  ,[10]
-  ,[B]
-  ,[1.0]
-  ,C(offsetter, Offset.make(6))
-) @=> Moduck bass;
+output(bass, MIDI_OUT_IAC_1, 8) 
+output(bass2, MIDI_OUT_IAC_1, 32) 
+output(drums, MIDI_OUT_IAC_2, 4)
 
 
-multi(bass, [
-  X(NoteOut.make(MIDI_OUT_MS_20, 0, 0::ms, maxNoteLen))
-  ,X(C(Offset.make(3), NoteOut.make(MIDI_OUT_MICROBRUTE, 0, 0::ms, maxNoteLen)))
-  ,X(C(Offset.make(6), NoteOut.make(MIDI_OUT_USB_MIDI, 0, 0::ms, maxNoteLen)))
+def( rootNotes, S([0, -4, -2, -3], true) )
+// [B, B2, B4, B2, B2] @=> int gateLens[];
+[B4, B2, B4] @=> int gateLens[];
+// [B*4, B4, B*2, B*2, B*2, B*2] @=> int noteLens[];
+[B*8, B*4, B2, B*3+B2] @=> int noteLens[];
+
+def(gateDivider, seqDiv(gateLens))
+def(noteDivider, seqDiv(noteLens))
+
+chain(noteDivider, [
+  X(Buffer.make(1)) // Skip stepping note on first trigger
+  ,X1(rootNotes, Pulse.Step())
+]);
+
+multi(gateDivider, [
+  X1(rootNotes, Pulse.Trigger())
 ]);
 
 
+chain(rootNotes, [
+  X(Mapper.make(Scales.MinorNatural, 12))
+  ,X(octaves(4))
+  ,X(Offset.make(-3))
+  // ,X(Printer.make("NoteOut: "))
+  ,X(Delay.make(TIME_PER_BEAT/4))
+  // ,X(Offset.make(3))
+]) @=> Moduck diddles;
 
-<<<<<<< HEAD
+multi(diddles, [
+  X(bass)
+  // ,X(C(Delay.make(80::ms), bass))
+  // ,X(C(Delay.make(200::ms), bass))
+]);
 
-=======
->>>>>>> 59aca1b499f8027a3f7b760e6c61f0a94075aa42
-multi(masterClock,[X(bass)]);
+
+fun void play(){
+  multi(masterClock,[
+    X(noteDivider)
+    ,X(C(Delay.make(samp), gateDivider)) // Always trigger gate after note change
+    ,X(C(fourFour(B, 60), drums))
+  ]);
+}
+
+
+
+if( 1 ){
+  play();
+}
+
+

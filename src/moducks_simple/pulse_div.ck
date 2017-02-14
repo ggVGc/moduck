@@ -2,19 +2,16 @@ include(macros.m4)
 
 genHandler(ResetHandler, Pulse.Reset(),
   HANDLE{
-    if(parent.getVal("triggerOnFirst")){
-      0 => shared.accum;
-    }else{
-      1 => shared.accum;
-    }
+    parent.getVal("startOffset") => shared.accum;
   },
   Shared shared;
 )
 
 genHandler(TrigHandler, Pulse.Trigger(),
   HANDLE{
-    if(shared.accum == 0){
+    if(shared.accum == 0 || shared.accum >= parent.getVal("divisor")){
       parent.send(Pulse.Trigger(), v);
+      0 => shared.accum;
     }
     shared.accum + 1 => shared.accum;
     if(shared.accum >= parent.getVal("divisor")){
@@ -31,16 +28,25 @@ class Shared{
 
 
 public class PulseDiv extends Moduck{
-  fun static PulseDiv make(int divisor, int triggerOnFirst){
+  Shared shared;
+  /*
+    fun void onValChange(string key, int v){
+      <<< "DivChange", v>>>;
+      if(key == "divisor" && shared.accum >= getVal("divisor")){
+        0 => shared.accum;
+      }
+    }
+   */
+  
+  fun static PulseDiv make(int divisor, int startOffset){
     PulseDiv ret;
-    Shared shared;
     ret.setVal("divisor", divisor);
-    ret.setVal("triggerOnFirst", triggerOnFirst);
+    ret.setVal("startOffset", startOffset);
 
     OUT(Pulse.Trigger());
 
-    IN(TrigHandler,(shared));
-    IN(ResetHandler,(shared));
+    IN(TrigHandler,(ret.shared));
+    IN(ResetHandler,(ret.shared));
 
     ret.doHandle(Pulse.Reset(), 0);
 

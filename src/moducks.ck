@@ -16,3 +16,4 @@ Machine.add("moducks_simple/router.ck");
 Machine.add("moducks_simple/multiplier.ck");
 Machine.add("moducks_simple/adder.ck");
 Machine.add("moducks_simple/clamper.ck");
+Machine.add("moducks_simple/buffer.ck");

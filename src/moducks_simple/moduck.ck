@@ -11,15 +11,6 @@ public class Moduck extends ModuckBase {
     h @=> handlers[tag];
   }
 
-  fun void send(string tag, int v){
-    outs[tag] @=> VEvent ev;
-    if(ev == null){
-      <<<"Invalid event send: "+tag>>>;
-    }else{
-      v => ev.val;
-      ev.broadcast();
-    }
-  }
 
   fun int doHandle(string msg, int v){
     handlers[msg] @=> EventHandler handler;
@@ -33,19 +24,6 @@ public class Moduck extends ModuckBase {
   }
 
 
-  fun int getVal(string key){
-    return values[key].i;
-  }
-
-
-  fun void setVal(string key, int v){
-    IntRef.make(v) @=> values[key];
-  }
-
-
-  fun void setValRef(string key, IntRef v){
-    v @=> values[key];
-  }
 }
 
 

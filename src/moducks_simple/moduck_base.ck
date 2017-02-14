@@ -13,20 +13,49 @@ public class ModuckBase{
   }
 
   fun void send(string tag, int v){
-    v => outs[tag].val;
-    outs[tag].broadcast();
+    outs[tag] @=> VEvent ev;
+    if(ev == null){
+      <<<"Invalid event send: "+tag>>>;
+    }else{
+      v => ev.val;
+      ev.broadcast();
+    }
   }
+
 
   fun int getVal(string key){
     return values[key].i;
   }
 
-  fun void setVal(string key, int v){
-    IntRef.make(v) @=> values[key];
+  // fun void onValChange(string key, int v){}
+
+  fun int getVal(string key){
+    return values[key].i;
   }
 
+
+  fun void setVal(string key, int v){
+    setValRef(key, IntRef.make(v));
+  }
+
+
   fun void setValRef(string key, IntRef v){
+    /*
+      <<<now>>>;
+      <<<"Setting val "+key+" = "+v+" ">>>;
+     */
     v @=> values[key];
+    outs[key] @=> VEvent @ ev;
+    if(ev == null){
+      VEvent newEv;
+      newEv @=> ev;
+      ev @=> outs[key];
+    }
+
+    
+    send(key, v.i);
+    // onValChange(key, v.i);
+
   }
 }
 

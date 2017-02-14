@@ -7,6 +7,7 @@ portNames = [
   ,'Scarlett 18i8 USB'
   ,'MS-20 mini SYNTH'
   ,'MicroBrute'
+  ,'IAC'
 ]
 
 
@@ -16,7 +17,7 @@ available_ports = midiout.get_ports()
 outPorts = []
 for portInd, name in enumerate(available_ports):
   for targetName in portNames:
-    if targetName == name.strip():
+    if targetName in name.strip():
       outPorts.append((name, portInd))
       break
 

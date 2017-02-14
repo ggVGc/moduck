@@ -43,6 +43,12 @@ deviceHints = [
   ,["zynaddsubfx"]
   ,["microbrute"]
   ,["usb midi"]
+  ,["IAC Driver", "IAC_1"]
+  ,["IAC Driver IAC Bus 2", "IAC_2"]
+  ,["IAC Driver IAC Bus 3", "IAC_3"]
+  ,["IAC Driver IAC Bus 4", "IAC_4"]
+  ,["IAC Driver IAC Bus 5", "IAC_5"]
+  ,["IAC Driver IAC Bus 6", "IAC_6"]
 ]
 
 

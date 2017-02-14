@@ -8,4 +8,6 @@ public class Pulse{
   fun static string Clock(){ return "clock"; }
   fun static string Looped(){ return "looped"; }
   fun static string Stepped(){ return "stepped"; }
+  fun static string Step(){ return "step"; }
+  fun static string StepTrigger(){ return "steptrigger"; }
 }

@@ -1,37 +1,59 @@
 include(macros.m4)
 
-genHandler(TrigHandler, Pulse.Trigger(),
-  fun void init(){
-  }
 
-  fun void step(){
-    parent.getVal("curStep") => int cur;
+fun void doStep(ModuckBase parent, int entries[], int loop){
+  parent.getVal("curStep") => int cur;
 
-    entries[cur] => int v;
-    false => int looped;
-    if(cur == entries.size() - 1){
-      if(parent.getVal("loop")){
-        parent.setVal("curStep", 0);
-      /* <<<"Seq looped">>>; */
-        true => looped;
-      }
-    }else{
-      /* <<<"Seq Stepped">>>; */
-      parent.setVal("curStep", cur + 1);
+  entries[cur] => int v;
+  false => int looped;
+  if(cur == entries.size() - 1){
+    if(parent.getVal("loop")){
+      parent.setVal("curStep", 0);
+    /* <<<"Seq looped">>>; */
+      true => looped;
     }
-    parent.send(Pulse.Stepped(), v);
-    if(looped){
-      parent.send(Pulse.Looped(), v);
-    }
+  }else{
+    /* <<<"Seq Stepped">>>; */
+    parent.setVal("curStep", cur + 1);
   }
+  parent.send(Pulse.Stepped(), v);
+  if(looped){
+    parent.send(Pulse.Looped(), v);
+  }
+}
+
+genHandler(StepTrigHandler, Pulse.StepTrigger(),
+  fun void init(){}
 
   HANDLE{
-    step();
     parent.send(Pulse.Trigger(), entries[parent.getVal("curStep")]);
+    doStep(parent, entries, loop);
   },
   int entries[];
   int loop;
 )
+
+
+genHandler(StepHandler, Pulse.Step(),
+  fun void init(){}
+
+  HANDLE{
+    doStep(parent, entries, loop);
+  },
+  int entries[];
+  int loop;
+)
+
+
+genHandler(TrigHandler, Pulse.Trigger(),
+  fun void init(){}
+
+  HANDLE{
+    parent.send(Pulse.Trigger(), entries[parent.getVal("curStep")]);
+  },
+  int entries[];
+)
+
 
 
 genHandler(SetHandler, Pulse.Set(),
@@ -61,10 +83,13 @@ public class Sequencer extends Moduck{
     OUT(Pulse.Looped());
     OUT(Pulse.Set());
 
-    IN(TrigHandler, (entries, loop));
+    IN(StepTrigHandler, (entries, loop));
+    IN(StepHandler, (entries, loop));
+    IN(TrigHandler, (entries));
     IN(SetHandler, (entries));
 
     return ret;
   }
+
 }
 

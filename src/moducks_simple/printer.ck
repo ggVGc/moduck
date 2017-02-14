@@ -2,10 +2,14 @@
 include(macros.m4)
 
 
+fun void print(string msg, int v){
+    <<< msg + ">" + ":" + v + " - ", Math.floor(now/samp) $ int >>>;
+}
+
 
 genHandler(PrintHandler, "print",
   fun void handle(int v){
-    <<<msg + ">" + ":" + v >>>;
+    print(msg, v);
     parent.send(Pulse.Trigger(), v);
   },
   string msg;
