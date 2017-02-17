@@ -35,19 +35,25 @@ genHandler(TrigHandler, P_Trigger,
       /* <<< "NOTEOUT:" +tag +":"+v>>>; */
       MidiMsg msg;
       144 + channel => msg.data1; // NoteOn
-      int note;
 
       /* if(tag == P_Trigger){ */
         // TODO: Implement again
         /* parent.getVal("note")  => note; */
       /* }else{ */
         // Trigger with received note value
-        v => note;
+        // v => note;
       /* } */
 
+      int note;
+      if(valueIsVelocity){
+        parent.getVal("note") => note;
+        v => msg.data3;
+      }else{
+        v => note;
+        parent.getVal("velocity") => msg.data3;
+      }
 
       note => msg.data2;
-      parent.getVal("velocity") => msg.data3;
       parent.getVal("durRatio") / 127.0 => float durMul;
       maxDur - minDur => dur deltaDur;
       minDur + deltaDur * durMul => dur duration;
@@ -59,18 +65,19 @@ genHandler(TrigHandler, P_Trigger,
   int channel;
   dur minDur;
   dur maxDur;
+  int valueIsVelocity;
 )
 
 
 
 public class NoteOut extends Moduck{
-  fun static NoteOut make(int devicePort, int channel, dur minDur, dur maxDur){
+  fun static NoteOut make(int devicePort, int channel, dur minDur, dur maxDur, int valueIsVelocity){
     NoteOut ret;
     OUT(P_Trigger);
     ret.setVal("velocity", 110);
     ret.setVal("note", 64);
     ret.setVal("durRatio", 127);
-    IN(TrigHandler, (devicePort, channel, minDur, maxDur));
+    IN(TrigHandler, (devicePort, channel, minDur, maxDur, valueIsVelocity));
     return ret;
   }
 }

@@ -34,12 +34,12 @@ public class ModuckBase{
   }
 
 
-  fun void setVal(string key, int v){
-    setValRef(key, IntRef.make(v));
+  fun ModuckBase setVal(string key, int v){
+    return setValRef(key, IntRef.make(v));
   }
 
 
-  fun void setValRef(string key, IntRef v){
+  fun ModuckBase setValRef(string key, IntRef v){
     /*
       <<<now>>>;
       <<<"Setting val "+key+" = "+v+" ">>>;
@@ -55,7 +55,7 @@ public class ModuckBase{
     
     send(key, v.i);
     // onValChange(key, v.i);
-
+    return this;
   }
 }
 

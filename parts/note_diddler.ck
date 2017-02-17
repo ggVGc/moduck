@@ -15,7 +15,7 @@ fun Moduck noteDiddler(int port, dur maxNoteDur, int noteValues[], int noteIndic
     ,X(durationSeq)
   ]);
 
-  NoteOut.make(port, 0, 0::ms, maxNoteDur)
+  NoteOut.make(port, 0, 0::ms, maxNoteDur, false)
     @=> NoteOut noteOut;
 
   V(durationSeq, noteOut, "durRatio");

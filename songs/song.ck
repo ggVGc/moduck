@@ -4,14 +4,16 @@
 138 => BPM;
 
 
-output(bass, MIDI_OUT_IAC_1, 0, 8) 
-output(bass2, MIDI_OUT_IAC_1, 0, 32) 
+output(bass, MIDI_OUT_IAC_1, 0, 8, false) 
+output(bass2, MIDI_OUT_IAC_1, 0, 32, false) 
+output(drums2, MIDI_OUT_IAC_2, 1, 4, false)
 
-output(drums, MIDI_OUT_IAC_2, 0, 4)
-output(hatsDrums, MIDI_OUT_IAC_2, 0, 4)
 
-output(drums2, MIDI_OUT_IAC_2, 1, 4)
+output(clapOut, MIDI_OUT_IAC_2, 1, 4, true)
+clapOut.set("note", 4);
 
+output(kick, MIDI_OUT_IAC_2, 0, 4, false)
+kick.set("velocity", 96);
 
 
 def( rootNotes, S([0, -4, -2, -3], true) )
@@ -24,73 +26,76 @@ def(gateDivider, seqDiv(gateLens))
 def(noteDivider, seqDiv(noteLens))
 
 noteDivider
-  .c(Buffer.make(1)) // Skip stepping note on first trigger
-  .c(rootNotes, P_Step);
+  => mk(Buffer, 1).c // Skip stepping note on first trigger
+  => rootNotes.to(P_Step).c
+;
 
 
-gateDivider.c(rootNotes, P_Trigger);
+gateDivider => rootNotes.to(P_Trigger).c;
+
 
 
 def(diddles,
   rootNotes
-    .c(Mapper.make(Scales.MinorNatural, 12))
-    .c(octaves(4))
-    .c(Offset.make(-3))
+    => mk(Mapper, Scales.MinorNatural, 12).c
+    => octaves(4).c
+    => mk(Offset, -3).c
     // ,X(Printer.make("NoteOut: "))
-    .c(mk(Delay, TIME_PER_BEAT/4))
+    => mk(Delay, TIME_PER_BEAT/4).c
     // ,X(Offset.make(3))
 )
 
-diddles.multi([
-  X(bass)
+
+
+
+diddles
+  => bass.c
   // ,X(C(Delay.make(80::ms), bass))
   // ,X(C(Delay.make(200::ms), bass))
-]);
+;
 
 fun ModuckP claps(){
   return
     fourFour(B*2, 4)
-    .c(Delay.make(D2));
+    => mk(Delay, D2).c;
 }
 
 
-fun Moduck hats(){
-  def(hatsVels, S(Util.ratios(0,115,[1.0, 0.7]), true))
-  V(hatsVels, hatsDrums, "velocity");
-  samp => now;
-  hatsVels.doHandle(P_StepTrigger, 0);
-  C(hatsDrums, hatsVels);
+127 => int hatsVel;
 
+fun ModuckP hats(){
   return
-    fourFour(B, 7)
-    .multi([
-      X(Delay.make(D2))
-      ,X(Delay.make(D8))
-    ])
-    .c(hatsDrums);
-
+    P(multi(fourFour(B, 0), [
+      X(mk(Delay, D8) => mk(Value, 100).c)
+      ,X(mk(Delay, D2) => mk(Value, 110).c)
+    ]))
+  ;
 }
 
 
+
+def(hatsOut,
+  mk(NoteOut, MIDI_OUT_IAC_2, 0, 0::ms, D4, true)
+  .set("note", 2)
+)
 
 
 masterClock
   .b(noteDivider)
   // ,X(C(Delay.make(samp), gateDivider)) // Always trigger gate after note change
-  .b( fourFour(B, 0).c(drums) )
+  .b( fourFour(B*3, 0) => kick.c )
   // ,X(C(C(Delay.make(D32), fourFour(B, 70)), drums))
   // ,X(C(C(Delay.make(D32), fourFour(B, 60)), drums))
   // ,X(C(Delay.make(D2),
-  .b( mk(Delay, D4).c(hats()) )
+  .b( mk(Delay, D2) => hats().c => hatsOut.c )
   .b(
     claps()
-      .b( mk(Value, 110).v(drums, "velocity") )
-      // .c(Patch.thru( V(Value.make(110), drums, "velocity")))
-      .c(drums)
+    => mk(Sequencer, [70, 60, 66], true).c
+    => clapOut.c
   )
 ;
 
 
 
 
-1 => PLAY;
+0 => PLAY;

@@ -7,7 +7,6 @@ public class Moduck extends ModuckBase {
   fun void addIn(string tag, EventHandler h){
     handlerKeys << tag;
     this @=> h.parent;
-    /* h.init(); */
     h @=> handlers[tag];
   }
 
@@ -22,7 +21,6 @@ public class Moduck extends ModuckBase {
       return true;
     }
   }
-
 
 }
 
