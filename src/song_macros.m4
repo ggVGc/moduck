@@ -1,7 +1,9 @@
 
-define(octaves, Offset.make($1*12))
-define(output, NoteOut.make($2, 0, 0::ms, TIME_PER_BEAT/$3) @=> NoteOut $1;)
+define(octaves, ModuckP.make(Offset.make($1*12)))
+define(output, ModuckP.make(NoteOut.make($2, $3, 0::ms, TIME_PER_BEAT/$4)) @=> ModuckP $1;)
 
-define(S, Sequencer.make($@))
+define(S, ModuckP.make(Sequencer.make($@)))
 define(SQ, Sequencer)
-define(def, $2 @=> Moduck $1;)
+define(def, ModuckP.make(
+$2
+) @=> ModuckP $1;)

@@ -9,6 +9,7 @@ Machine.add("moducks.ck");
 samp => now;
 Machine.add("types/chain_data.ck");
 Machine.add("patch.ck");
+Machine.add("moduck_patcher.ck");
 Machine.add("scales.ck");
 Machine.add("moduck_util.ck");
 Machine.add("run.ck");

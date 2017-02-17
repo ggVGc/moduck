@@ -3,6 +3,7 @@ fun void runForever(){
   while(true) { 99::hour => now; }
 }
 
+include(pulses.m4)
 include(aliases.m4)
 include(song_macros.m4)
 include(_all_parts.m4)
@@ -32,9 +33,10 @@ define(B32, B16/2)
 
 
 
-Trigger.make("start") @=> Trigger startBang;
+Trigger.make("start") @=> Trigger _startBang;
+P(_startBang) @=> ModuckP startBang;
 
-Repeater.make() @=> Repeater masterClock;
+ModuckP.make(Repeater.make()) @=> ModuckP masterClock;
 
 
 include(midiPorts.m4)
@@ -42,14 +44,14 @@ include(_cur_song)
 <<< "=== Song setup done ===">>>;
 
 
-chain(startBang, [
+chain(_startBang, [
   X2("start", ClockGen.make(Util.bpmToDur( BPM * TICKS_PER_BEAT)),"run")
   ,X(masterClock)
 ]);
 
 samp  => now;
 
-startBang.trigger(1);
+_startBang.trigger(1);
 if(PLAY){
   runForever();
 }

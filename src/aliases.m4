@@ -1,6 +1,12 @@
 
 define(V, Patch.connVal($1, null, $2, $3))
 
+define(P, ModuckP.make($1))
+
+define(wrap, P(Wrapper.make($1, $2)))
+
+define(mk, ModuckP.make($1.make(`shift($@)')))
+
 
 fun Moduck V1(Moduck src, string srcEventName, Moduck target, string msg){
   return Patch.connVal(src, srcEventName, target, msg);

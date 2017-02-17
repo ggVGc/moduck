@@ -87,6 +87,17 @@ public class Patch{
       }
     }
 
-    return src;
+    return Wrapper.make(src, out);
   }
+
+  fun static Moduck thru(Moduck other){
+    Repeater.make() @=> Repeater inp;
+    Delay.make(samp) @=> Delay out;
+    Patch.connectMulti(inp, [
+      ChainData.conn(null, other, null)
+      ,ChainData.conn(null, out, null)
+    ]);
+    return Wrapper.make(inp, out);
+  }
+
 }

@@ -67,9 +67,9 @@ public class NoteOut extends Moduck{
   fun static NoteOut make(int devicePort, int channel, dur minDur, dur maxDur){
     NoteOut ret;
     OUT(Pulse.Trigger());
-    ret.setVal("velocity", 127);
+    ret.setVal("velocity", 110);
     ret.setVal("note", 64);
-    ret.setVal("durRatio", 63);
+    ret.setVal("durRatio", 127);
     IN(TrigHandler, (devicePort, channel, minDur, maxDur));
     return ret;
   }

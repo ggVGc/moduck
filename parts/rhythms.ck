@@ -1,6 +1,6 @@
 
-fun Moduck fourFour(int beatLen, int val){
-  return C(S([val], true), PulseDiv.make(beatLen, 0));
+fun ModuckP fourFour(int beatLen, int val){
+  return P(C(S([val], true), PulseDiv.make(beatLen, 0)));
 }
 
 
