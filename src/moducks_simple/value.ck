@@ -1,8 +1,8 @@
 include(macros.m4)
 
-genHandler(TrigHandler, Pulse.Trigger(),
+genHandler(TrigHandler, P_Trigger,
   HANDLE{
-    parent.send(Pulse.Trigger(), parent.getVal("value"));
+    parent.send(P_Trigger, parent.getVal("value"));
   },
   ;
 )
@@ -11,7 +11,7 @@ genHandler(TrigHandler, Pulse.Trigger(),
 public class Value extends Moduck{
   fun static Value make(int v){
     Value ret;
-    OUT(Pulse.Trigger());
+    OUT(P_Trigger);
     ret.setVal("value", v);
     IN(TrigHandler, ());
     return ret;

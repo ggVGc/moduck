@@ -2,12 +2,12 @@
 include(macros.m4)
 
 
-genHandler(TrigHandler, Pulse.Trigger(),
+genHandler(TrigHandler, P_Trigger,
   HANDLE{
     buf[size-1] @=> IntRef curVal;
     if(curVal != null){
       // <<<"SPitting out: "+curVal.i>>>;
-      parent.send(Pulse.Trigger(), curVal.i);
+      parent.send(P_Trigger, curVal.i);
     }
     for(0=>int i;i<size-1;i++){
       buf[i] @=> buf[i+1];
@@ -27,7 +27,7 @@ public class Buffer extends Moduck{
     for(0=>int i;i<size;i++){
       null @=> buf[i];
     }
-    OUT(Pulse.Trigger());
+    OUT(P_Trigger);
     IN(TrigHandler,(buf, size));
     return ret;
   }

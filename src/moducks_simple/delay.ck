@@ -1,12 +1,12 @@
 include(macros.m4)
 
 
-genHandler(TrigHandler, Pulse.Trigger(),
+genHandler(TrigHandler, P_Trigger,
   Shred @ waiter;
   fun void doWait(int v){
     parent.getVal("delay") :: samp => now;
     /* <<< now >>>; */
-    parent.send(Pulse.Trigger(), v);
+    parent.send(P_Trigger, v);
   }
   HANDLE{
     if(waiter != null){
@@ -22,7 +22,7 @@ public class Delay extends Moduck{
   fun static Delay make(dur delay){
     Delay ret;
     ret.setVal("delay", Util.toSamples(delay));
-    OUT(Pulse.Trigger());
+    OUT(P_Trigger);
     IN(TrigHandler, ());
     return ret;
   }

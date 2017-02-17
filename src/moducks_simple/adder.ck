@@ -1,13 +1,13 @@
 
 include(macros.m4)
 
-genHandler(TrigHandler, Pulse.Trigger(),
+genHandler(TrigHandler, P_Trigger,
   HANDLE{
     0 => int acc;
     for(0 => int i; i<inputCount; i++){
       acc + parent.getVal(""+i) => acc;
     }
-    parent.send(Pulse.Trigger(), acc);
+    parent.send(P_Trigger, acc);
   },
   int inputCount;
 )
@@ -30,7 +30,7 @@ class SetHandler extends EventHandler{
 public class Adder extends Moduck{
   fun static Adder make(int inputCount){
     Adder ret;
-    OUT(Pulse.Trigger());
+    OUT(P_Trigger);
     IN(TrigHandler, (inputCount))
     for(0 => int i; i<inputCount; i++){
       ret.addIn(""+i, SetHandler.make(i));

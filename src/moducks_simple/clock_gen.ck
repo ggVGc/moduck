@@ -6,7 +6,7 @@ genHandler(RunHandler, "run",
   fun void loop(){
     while(true){
       delta => now;
-      parent.send(Pulse.Clock(), 0);
+      parent.send(P_Clock, 0);
     }
   }
   HANDLE{
@@ -25,7 +25,7 @@ genHandler(RunHandler, "run",
 public class ClockGen extends Moduck{
   fun static ClockGen make(dur delta){
     ClockGen ret;
-    OUT(Pulse.Clock());
+    OUT(P_Clock);
     IN(RunHandler, (delta));
     return ret;
   }

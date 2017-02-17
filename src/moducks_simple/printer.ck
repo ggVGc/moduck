@@ -10,7 +10,7 @@ fun void print(string msg, int v){
 genHandler(PrintHandler, "print",
   fun void handle(int v){
     print(msg, v);
-    parent.send(Pulse.Trigger(), v);
+    parent.send(P_Trigger, v);
   },
   string msg;
 )
@@ -20,7 +20,7 @@ genHandler(PrintHandler, "print",
 public class Printer extends Moduck{
   fun static Printer make(string msg){
     Printer ret;
-    OUT(Pulse.Trigger());
+    OUT(P_Trigger);
     IN(PrintHandler, (msg));
     return ret;
   }

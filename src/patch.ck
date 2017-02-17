@@ -1,3 +1,5 @@
+include(pulses.m4)
+
 public class Patch{
   fun static void connectLoop(Moduck src, string srcEventName, Moduck target, string targetEventName){
     while(true){
@@ -81,7 +83,7 @@ public class Patch{
       targets[i] @=> ChainData d;
       if(d.type == 1){
         connect(src, d.srcTag, d.target, d.targetTag);
-        connect(d.target, d.targetTag, out, Pulse.Trigger());
+        connect(d.target, d.targetTag, out, P_Trigger);
       }else{
         connVal(src, d.srcTag, d.target, d.targetTag);
       }

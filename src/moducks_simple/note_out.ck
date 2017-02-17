@@ -18,7 +18,7 @@ class NoteOffSender{
 }
 
 
-genHandler(TrigHandler, Pulse.Trigger(), 
+genHandler(TrigHandler, P_Trigger, 
     MidiOut midOut;
     NoteOffSender offSender;
 
@@ -37,7 +37,7 @@ genHandler(TrigHandler, Pulse.Trigger(),
       144 + channel => msg.data1; // NoteOn
       int note;
 
-      /* if(tag == Pulse.Trigger()){ */
+      /* if(tag == P_Trigger){ */
         // TODO: Implement again
         /* parent.getVal("note")  => note; */
       /* }else{ */
@@ -53,7 +53,7 @@ genHandler(TrigHandler, Pulse.Trigger(),
       minDur + deltaDur * durMul => dur duration;
       offSender.noteOff(note, duration);
       midOut.send(msg);
-      parent.send(Pulse.Trigger(), v);
+      parent.send(P_Trigger, v);
   },
   int devicePort;
   int channel;
@@ -66,7 +66,7 @@ genHandler(TrigHandler, Pulse.Trigger(),
 public class NoteOut extends Moduck{
   fun static NoteOut make(int devicePort, int channel, dur minDur, dur maxDur){
     NoteOut ret;
-    OUT(Pulse.Trigger());
+    OUT(P_Trigger);
     ret.setVal("velocity", 110);
     ret.setVal("note", 64);
     ret.setVal("durRatio", 127);

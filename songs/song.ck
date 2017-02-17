@@ -25,10 +25,10 @@ def(noteDivider, seqDiv(noteLens))
 
 noteDivider
   .c(Buffer.make(1)) // Skip stepping note on first trigger
-  .c(rootNotes, Pulse.Step());
+  .c(rootNotes, P_Step);
 
 
-gateDivider.c(rootNotes, Pulse.Trigger());
+gateDivider.c(rootNotes, P_Trigger);
 
 
 def(diddles,

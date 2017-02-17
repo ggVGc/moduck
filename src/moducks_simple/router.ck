@@ -2,7 +2,7 @@ include(macros.m4)
 
 include(constants.m4)
 
-genHandler(TrigHandler, Pulse.Trigger(),
+genHandler(TrigHandler, P_Trigger,
   HANDLE{
     parent.send("" + parent.getVal("index"), v);
   }

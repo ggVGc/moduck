@@ -1,9 +1,9 @@
 
 include(macros.m4)
 
-genHandler(TrigHandler, Pulse.Trigger(),
+genHandler(TrigHandler, P_Trigger,
   HANDLE{
-    parent.send(Pulse.Trigger(), v);
+    parent.send(P_Trigger, v);
   }
   ;
 )
@@ -12,7 +12,7 @@ genHandler(TrigHandler, Pulse.Trigger(),
 public class Repeater extends Moduck{
   fun static Repeater make(){
     Repeater ret;
-    OUT(Pulse.Trigger());
+    OUT(P_Trigger);
     IN(TrigHandler, ());
     return ret;
   }

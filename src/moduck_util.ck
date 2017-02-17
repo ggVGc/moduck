@@ -1,4 +1,6 @@
 
+include(pulses.m4)
+
 public class MUtil{
 
   fun static Moduck combine(Moduck children[]){
@@ -19,8 +21,8 @@ public class MUtil{
     Patch.connect(a, null, mult, "0");
     Patch.connect(b, null, mult, "1");
     samp => now;
-    a.doHandle(Pulse.Trigger(), 0);
-    b.doHandle(Pulse.Trigger(), 0);
+    a.doHandle(P_Trigger, 0);
+    b.doHandle(P_Trigger, 0);
     return mult;
   }
 
@@ -30,9 +32,9 @@ public class MUtil{
     Patch.connect(b, null, mult, "1");
     Patch.connect(c, null, mult, "2");
     samp => now;
-    a.doHandle(Pulse.Trigger(), 0);
-    b.doHandle(Pulse.Trigger(), 0);
-    c.doHandle(Pulse.Trigger(), 0);
+    a.doHandle(P_Trigger, 0);
+    b.doHandle(P_Trigger, 0);
+    c.doHandle(P_Trigger, 0);
     return mult;
   }
 
@@ -42,8 +44,8 @@ public class MUtil{
     Patch.connect(a, null, add, "0");
     Patch.connect(b, null, add, "1");
     samp => now;
-    a.doHandle(Pulse.Trigger(), 0);
-    b.doHandle(Pulse.Trigger(), 0);
+    a.doHandle(P_Trigger, 0);
+    b.doHandle(P_Trigger, 0);
     return add;
   }
 
@@ -53,9 +55,9 @@ public class MUtil{
     Patch.connect(b, null, add, "1");
     Patch.connect(c, null, add, "2");
     samp => now;
-    a.doHandle(Pulse.Trigger(), 0);
-    b.doHandle(Pulse.Trigger(), 0);
-    c.doHandle(Pulse.Trigger(), 0);
+    a.doHandle(P_Trigger, 0);
+    b.doHandle(P_Trigger, 0);
+    c.doHandle(P_Trigger, 0);
     return add;
   }
 

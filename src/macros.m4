@@ -1,4 +1,9 @@
+
+include(pulses.m4)
+
 ifdef(`MACROS_INCLUDED',,`define(MACROS_INCLUDED,1)dnl
+
+
 define(BOOL, int)
 define(TRUE, 1)
 define(FALSE, 0)

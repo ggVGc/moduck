@@ -16,17 +16,17 @@ fun void doStep(ModuckBase parent, int entries[], int loop){
     /* <<<"Seq Stepped">>>; */
     parent.setVal("curStep", cur + 1);
   }
-  parent.send(Pulse.Stepped(), v);
+  parent.send(P_Stepped, v);
   if(looped){
-    parent.send(Pulse.Looped(), v);
+    parent.send(P_Looped, v);
   }
 }
 
-genHandler(StepTrigHandler, Pulse.StepTrigger(),
+genHandler(StepTrigHandler, P_StepTrigger,
   fun void init(){}
 
   HANDLE{
-    parent.send(Pulse.Trigger(), entries[parent.getVal("curStep")]);
+    parent.send(P_Trigger, entries[parent.getVal("curStep")]);
     doStep(parent, entries, loop);
   },
   int entries[];
@@ -34,7 +34,7 @@ genHandler(StepTrigHandler, Pulse.StepTrigger(),
 )
 
 
-genHandler(StepHandler, Pulse.Step(),
+genHandler(StepHandler, P_Step,
   fun void init(){}
 
   HANDLE{
@@ -45,26 +45,26 @@ genHandler(StepHandler, Pulse.Step(),
 )
 
 
-genHandler(TrigHandler, Pulse.Trigger(),
+genHandler(TrigHandler, P_Trigger,
   fun void init(){}
 
   HANDLE{
-    parent.send(Pulse.Trigger(), entries[parent.getVal("curStep")]);
+    parent.send(P_Trigger, entries[parent.getVal("curStep")]);
   },
   int entries[];
 )
 
 
 
-genHandler(SetHandler, Pulse.Set(),
+genHandler(SetHandler, P_Set,
   HANDLE{
     v => entries[parent.getVal("targetStep")];
-    parent.send(Pulse.Set(), parent.getVal("targetStep"));
+    parent.send(P_Set, parent.getVal("targetStep"));
   },
   int entries[];
 )
 
-genHandler(Reset, Pulse.Reset(),
+genHandler(Reset, P_Reset,
   HANDLE{
     parent.setVal("curStep", 0);
   },
@@ -78,10 +78,10 @@ public class Sequencer extends Moduck{
     ret.setVal("curStep", 0);
     ret.setVal("loop", loop);
     ret.setVal("targetStep", 0);
-    OUT(Pulse.Trigger());
-    OUT(Pulse.Stepped());
-    OUT(Pulse.Looped());
-    OUT(Pulse.Set());
+    OUT(P_Trigger);
+    OUT(P_Stepped);
+    OUT(P_Looped);
+    OUT(P_Set);
 
     IN(StepTrigHandler, (entries, loop));
     IN(StepHandler, (entries, loop));
