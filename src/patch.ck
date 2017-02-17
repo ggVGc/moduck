@@ -24,7 +24,16 @@ public class Patch{
     }
   }
 
+
   fun static Moduck connect(Moduck src, string srcEventName, Moduck target, string targetEventName){
+    if(targetEventName != null && target.hasValueKey(targetEventName)){
+      return connVal(src, srcEventName, target, targetEventName);
+    }else{
+      return connectOut(src, srcEventName, target, targetEventName);
+    }
+  }
+
+  fun static Moduck connectOut(Moduck src, string srcEventName, Moduck target, string targetEventName){
     if(src.outKeys.size() == 0){
       <<<"Error: No source outputs:"+src>>>;
     }
@@ -68,10 +77,10 @@ public class Patch{
     first @=> Moduck h;
     for(0 => int i; i<rest.size(); i++){
       rest[i] @=> ChainData d;
-      if(d.type == 1){
-        connect(h, d.srcTag, d.target, d.targetTag) @=> h;
-      }else{
+      if(d.isValConnection){
         connVal(h, d.srcTag, d.target, d.targetTag) @=> h;
+      }else{
+        connect(h, d.srcTag, d.target, d.targetTag) @=> h;
       }
     }
     return Wrapper.make(first, h);
@@ -81,11 +90,11 @@ public class Patch{
     Repeater.make() @=> Repeater out;
     for(0 => int i; i<targets.size(); i++){
       targets[i] @=> ChainData d;
-      if(d.type == 1){
+      if(d.isValConnection){
+        connVal(src, d.srcTag, d.target, d.targetTag);
+      }else{
         connect(src, d.srcTag, d.target, d.targetTag);
         connect(d.target, d.targetTag, out, P_Trigger);
-      }else{
-        connVal(src, d.srcTag, d.target, d.targetTag);
       }
     }
 

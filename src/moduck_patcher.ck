@@ -1,36 +1,26 @@
 
 class Connector{
-  Moduck @ target;
-  string fromTag;
-  string toTag;
-  int isMulti;
+  ChainData data;
 
-  fun ModuckP connect(Moduck other){
-    return ModuckP.make(Patch.connect(other, fromTag, target, toTag));
-  }
 
   fun ModuckP c(Moduck other){
-    return connect(other);
+    return ModuckP.make(Patch.connect(other, data.srcTag, data.target, data.targetTag));
   }
 
   fun Connector from(string v){
-    v @=> fromTag;
+    v @=> data.srcTag;
   }
 
 
   fun Connector to(string v){
-    v @=> toTag;
+    v @=> data.targetTag;
   }
 
-  fun static Connector make(Moduck m, int isMulti, string fromTag, string toTag){
+  fun static Connector make(Moduck m, string fromTag, string toTag){
     Connector ret;
-    fromTag @=> ret.fromTag;
-    toTag @=> ret.toTag;
-    m @=> ret.target;
-    isMulti => ret.isMulti;
+    ChainData.conn(fromTag, m, toTag) @=> ret.data;
     return ret;
   }
-
 }
 
 
@@ -56,13 +46,18 @@ public class ModuckP extends Moduck{
 
   /*
     fun ModuckP connect(Moduck other){
-      return Connector.make(this, false, null, null).connect(other);
+      return Connector.make(this, null, null).c(other);
     }
    */
 
 
   fun ModuckP c(Moduck other){
-    return Connector.make(this, false, null, null).connect(other);
+    return Connector.make(this, null, null).c(other);
+  }
+
+
+  fun Connector cc(Moduck other){
+    return c(other).from(null);
   }
 
   /*
@@ -72,13 +67,6 @@ public class ModuckP extends Moduck{
     }
    */
 
-  fun ModuckP v(string srcTag, Moduck target, string targetValTag){
-    return ModuckP.make(Patch.connVal(this, srcTag, target, targetValTag));
-  }
-
-  fun ModuckP v(Moduck target, string targetValTag){
-    return v(null, target, targetValTag);
-  }
 
   /*
     fun ModuckP multi(ChainData targets[]){
@@ -106,20 +94,21 @@ public class ModuckP extends Moduck{
     return this;
   }
 
-  /*
-    fun ModuckP mult(Moduck other){
-      return ModuckP.make(Patch.connectMulti(this, [ChainData.conn(null, other, null)]));
+  fun ModuckP multi(Connector targets[]){
+    ChainData datas[targets.size()];
+    for(0=>int i; i<targets.size();i++){
+      targets[i].data @=> datas[i];
     }
-    fun ModuckP m(Moduck other){return mult(other);}
-   */
+    return ModuckP.make(Patch.connectMulti(this, datas));
+  }
 
 
   fun Connector from(string tag){
-    return Connector.make(this, false, tag, null);
+    return Connector.make(this, tag, null);
   }
 
   fun Connector to(string tag){
-    return Connector.make(this, false, null, tag);
+    return Connector.make(this, null, tag);
   }
 
 
@@ -135,11 +124,11 @@ public class ModuckP extends Moduck{
 
   /*
     fun static Connector From(string tag){
-      return Connector.make(null, false, tag, null);
+      return Connector.make(null, tag, null);
     }
 
     fun static Connector To(string tag){
-      return Connector.make(null, false, null, tag);
+      return Connector.make(null, null, tag);
     }
    */
 

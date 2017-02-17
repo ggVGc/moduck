@@ -12,8 +12,10 @@ output(drums2, MIDI_OUT_IAC_2, 1, 4, false)
 output(clapOut, MIDI_OUT_IAC_2, 1, 4, true)
 clapOut.set("note", 4);
 
-output(kick, MIDI_OUT_IAC_2, 0, 4, false)
-kick.set("velocity", 96);
+def(kick,
+  mk(NoteOut, MIDI_OUT_IAC_2, 0, 0::ms, D4, false)
+  .set("velocity", 96)
+)
 
 
 def( rootNotes, S([0, -4, -2, -3], true) )
@@ -27,12 +29,11 @@ def(noteDivider, seqDiv(noteLens))
 
 noteDivider
   => mk(Buffer, 1).c // Skip stepping note on first trigger
-  => rootNotes.to(P_Step).c
-;
+  => rootNotes.to(P_Step).c;
 
 
-gateDivider => rootNotes.to(P_Trigger).c;
-
+gateDivider
+  => rootNotes.to(P_Trigger).c;
 
 
 def(diddles,
@@ -61,14 +62,13 @@ fun ModuckP claps(){
 }
 
 
-127 => int hatsVel;
 
 fun ModuckP hats(){
   return
-    P(multi(fourFour(B, 0), [
-      X(mk(Delay, D8) => mk(Value, 100).c)
-      ,X(mk(Delay, D2) => mk(Value, 110).c)
-    ]))
+    fourFour(B, 0).multi([
+      mk(Delay, D8) => mk(Value, 100).cc
+      ,mk(Delay, D2) => mk(Value, 110).cc
+    ])
   ;
 }
 

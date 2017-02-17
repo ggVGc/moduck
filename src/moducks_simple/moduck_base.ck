@@ -5,6 +5,9 @@ public class ModuckBase{
   VEvent outs[0];
   string outKeys[0];
 
+  fun int hasValueKey(string key){
+    return values[key] != null;
+  }
   
   fun void addOut(string tag){
     outKeys << tag;

@@ -3,7 +3,7 @@ public class ChainData{
   string srcTag;
   Moduck @ target;
   string targetTag;
-  int type;
+  int isValConnection;
 
 
   fun static ChainData conn(string srcTag, Moduck target, string targetTag){
@@ -11,7 +11,7 @@ public class ChainData{
     srcTag => ret.srcTag;
     target @=> ret.target;
     targetTag => ret.targetTag;
-    1 => ret.type;
+    false => ret.isValConnection;
     return ret;
   }
 
@@ -20,7 +20,7 @@ public class ChainData{
     srcTag => ret.srcTag;
     target @=> ret.target;
     targetTag => ret.targetTag;
-    2 => ret.type;
+    true => ret.isValConnection;
     return ret;
   }
 
