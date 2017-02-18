@@ -24,16 +24,22 @@ def( rootNotes, S([0, -4, -2, -3], true) )
 // [B*4, B4, B*2, B*2, B*2, B*2] @=> int noteLens[];
 [B*8, B*4, B2, B*3+B2] @=> int noteLens[];
 
-def(gateDivider, seqDiv(gateLens))
-def(noteDivider, seqDiv(noteLens))
+/*
+  def(gateDivider, seqDiv(gateLens))
+  def(noteDivider, seqDiv(noteLens))
+ */
 
-noteDivider
-  => mk(Buffer, 1).c // Skip stepping note on first trigger
-  => rootNotes.to(P_Step).c;
+/*
+  noteDivider
+    => mk(Buffer, 1).c // Skip stepping note on first trigger
+    => rootNotes.to(P_Step).c;
+ */
 
 
-gateDivider
-  => rootNotes.to(P_Trigger).c;
+/*
+  gateDivider
+    => rootNotes.to(P_Trigger).c;
+ */
 
 
 def(diddles,
@@ -82,27 +88,87 @@ def(hatsOut,
 
 def(clapDiv, mk(PulseDiv, 2, 0))
 
+fun IntRef whichNumber(string ch){
+  for(0=>int x;x<10;x++){
+    if(ch == ""+x){
+      return IntRef.make(x);
+    }
+  }
+  return null;
+}
+
+fun int[] seqFromString(string str, int beatSize, int seqLen){
+  int ret[str.length()];
+  0 => int curBeatLen;
+  0 => int count;
+  0 => int totalLen;
+  for(0=>int i;i<str.length();i++){
+    whichNumber(str.substring(i, 1)) @=> IntRef num;
+    if(num != null || i == str.length()-1){
+      curBeatLen + totalLen => totalLen;
+      seqLen - totalLen => int restLen;
+      if(restLen < 0){
+        curBeatLen-restLen => ret[count];
+        1 +=> count;
+        break;
+      }else{
+        curBeatLen => ret[count];
+        0 => curBeatLen;
+        1 +=> count;
+      }
+    }
+    beatSize + curBeatLen => curBeatLen;
+  }
+  
+  ret.size(count);
+  seqLen - totalLen => int restLen;
+  if(restLen > 0){
+    restLen + ret[count-1] => ret[count-1];
+  }
+
+  0 => int acc;
+  for(0=> int i;i<ret.size();i++){
+    <<<ret[i]>>>;
+    ret[i] +=> acc;
+  }
+  <<< acc >>>;
+
+  return ret;
+}
+
+
 masterClock
-  .b(noteDivider)
+  // => P(seqDiv([B, B2, B4, B4, B2, B8, B8, B2])).c
+  => P(seqDiv(seqFromString("1.1...111.1.1.", B8, B*4))).c
+  => mkc(Value, 80)
+  => kick.c
+;
+
+
+masterClock
+  // .b(noteDivider)
   // ,X(C(Delay.make(samp), gateDivider)) // Always trigger gate after note change
-  .b( fourFour(B*3, 86).b(mk(Delay, D*2-D4-D8) => mkc(PulseDiv, 3, 0) =>kick.c) => kick.c)
+  // .b( fourFour(B*3, 86).b(mk(Delay, D*2-D4-D8) => mkc(PulseDiv, 3, 0) =>kick.c) => kick.c)
+  .b( fourFour(B, 110) => hatsOut.c)
   // .b( fourFour(B*3-, 0) => kick.c )
   // ,X(C(C(Delay.make(D32), fourFour(B, 70)), drums))
   // ,X(C(C(Delay.make(D32), fourFour(B, 60)), drums))
   // ,X(C(Delay.make(D2),
-  .b( mk(Delay, D2) => hats().c => hatsOut.c )
-  .b(
-    claps()
-    => clapDiv.c
-    => mk(Sequencer, [70, 60, 66]).c
-    => clapOut.c
-    => mkc(Sequencer, [3, 2])
-    => mkc(Printer, "clap divisor")
-    => clapDiv.to("divisor").c
-  )
+  /*
+    .b( mk(Delay, D2) => hats().c => hatsOut.c )
+    .b(
+      claps()
+      => clapDiv.c
+      => mk(Sequencer, [70, 60, 66]).c
+      => clapOut.c
+      => mkc(Sequencer, [3, 2])
+      => mkc(Printer, "clap divisor")
+      => clapDiv.to("divisor").c
+    )
+   */
 ;
 
 
 
 
-0 => PLAY;
+1 => PLAY;

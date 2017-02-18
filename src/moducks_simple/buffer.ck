@@ -6,11 +6,11 @@ genHandler(TrigHandler, P_Trigger,
   HANDLE{
     buf[size-1] @=> IntRef curVal;
     if(curVal != null){
-      // <<<"SPitting out: "+curVal.i>>>;
+      // <<<"Spitting out: "+curVal.i>>>;
       parent.send(P_Trigger, curVal.i);
     }
-    for(0=>int i;i<size-1;i++){
-      buf[i] @=> buf[i+1];
+    for(size-1=>int i;i>0;i--){
+      buf[i-1] @=> buf[i];
     }
     IntRef.make(v) @=> buf[0];
     // <<<"Adding: "+buf[0].i>>>;
@@ -22,6 +22,7 @@ genHandler(TrigHandler, P_Trigger,
 
 public class Buffer extends Moduck{
   fun static Buffer make(int size){
+    <<< "Buf Size", size >>>;
     Buffer ret;
     IntRef buf[size];
     for(0=>int i;i<size;i++){
