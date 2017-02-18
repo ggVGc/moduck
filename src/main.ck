@@ -2,6 +2,8 @@
 Machine.add("types/intref.ck");
 Machine.add("types/vevent.ck");
 Machine.add("types/src_event.ck");
+Machine.add("types/int_fun.ck");
+samp => now;
 Machine.add("util.ck");
 Machine.add("moducks_simple/moduck_base.ck");
 Machine.add("event_handler.ck");

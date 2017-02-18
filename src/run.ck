@@ -51,8 +51,9 @@ chain(_startBang, [
 
 samp  => now;
 
-_startBang.trigger(1);
 if(PLAY){
+  _startBang.trigger(1);
+  <<< "Playing">>>;
   runForever();
 }
 

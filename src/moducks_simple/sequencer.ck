@@ -91,5 +91,8 @@ public class Sequencer extends Moduck{
     return ret;
   }
 
+  fun static Sequencer make(int entries[]){
+    return make(entries, true);
+  }
 }
 

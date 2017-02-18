@@ -10,3 +10,7 @@ define(SQ, Sequencer)
 define(def, ModuckP.make(
 $2
 ) @=> ModuckP $1;)
+
+
+define(mkc, `mk($@)'.c)
+define(mkcc, `mk($@)'.cc)

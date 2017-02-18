@@ -2,9 +2,10 @@ include(macros.m4)
 
 genHandler(ResetHandler, P_Reset,
   HANDLE{
-    parent.getVal("startOffset") => shared.accum;
+    startOffset => shared.accum;
   },
   Shared shared;
+  int startOffset;
 )
 
 genHandler(TrigHandler, P_Trigger,
@@ -41,12 +42,11 @@ public class PulseDiv extends Moduck{
   fun static PulseDiv make(int divisor, int startOffset){
     PulseDiv ret;
     ret.setVal("divisor", divisor);
-    ret.setVal("startOffset", startOffset);
 
     OUT(P_Trigger);
 
     IN(TrigHandler,(ret.shared));
-    IN(ResetHandler,(ret.shared));
+    IN(ResetHandler,(ret.shared, startOffset));
 
     ret.doHandle(P_Reset, 0);
 
