@@ -88,58 +88,12 @@ def(hatsOut,
 
 def(clapDiv, mk(PulseDiv, 2, 0))
 
-fun IntRef whichNumber(string ch){
-  for(0=>int x;x<10;x++){
-    if(ch == ""+x){
-      return IntRef.make(x);
-    }
-  }
-  return null;
-}
 
-fun int[] seqFromString(string str, int beatSize, int seqLen){
-  int ret[str.length()];
-  0 => int curBeatLen;
-  0 => int count;
-  0 => int totalLen;
-  for(0=>int i;i<str.length();i++){
-    whichNumber(str.substring(i, 1)) @=> IntRef num;
-    if(num != null || i == str.length()-1){
-      curBeatLen + totalLen => totalLen;
-      seqLen - totalLen => int restLen;
-      if(restLen < 0){
-        curBeatLen-restLen => ret[count];
-        1 +=> count;
-        break;
-      }else{
-        curBeatLen => ret[count];
-        0 => curBeatLen;
-        1 +=> count;
-      }
-    }
-    beatSize + curBeatLen => curBeatLen;
-  }
-  
-  ret.size(count);
-  seqLen - totalLen => int restLen;
-  if(restLen > 0){
-    restLen + ret[count-1] => ret[count-1];
-  }
-
-  0 => int acc;
-  for(0=> int i;i<ret.size();i++){
-    <<<ret[i]>>>;
-    ret[i] +=> acc;
-  }
-  <<< acc >>>;
-
-  return ret;
-}
 
 
 masterClock
   // => P(seqDiv([B, B2, B4, B4, B2, B8, B8, B2])).c
-  => P(seqDiv(seqFromString("1.1...111.1.1.", B8, B*4))).c
+  => seqDiv("1.1...111.1.1.", B8, B*4).c
   => mkc(Value, 80)
   => kick.c
 ;

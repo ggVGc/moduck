@@ -1,4 +1,6 @@
 
+
+
 public class Util{
   fun static dur bpmToDur(float bpm){
     return minute / bpm;
@@ -69,9 +71,56 @@ public class Util{
     }
     return arr;
   }
+
+  fun static IntRef whichNumber(string ch){
+    for(0=>int x;x<10;x++){
+      if(ch == ""+x){
+        return IntRef.make(x);
+      }
+    }
+    return null;
+  }
+
+  fun static SeqInfo seqFromString(string str, int beatSize, int seqLen){
+    SeqInfo.make(str.length()) @=> SeqInfo ret;
+    0 => int curBeatLen;
+    0 => int count;
+    0 => int totalLen;
+    for(0=>int i;i<str.length();i++){
+      whichNumber(str.substring(i, 1)) @=> IntRef num;
+      if(num != null){
+        num.i => ret.nums[count];
+      }
+      if(num != null || i == str.length()-1){
+        curBeatLen + totalLen => totalLen;
+        seqLen - totalLen => int restLen;
+        if(restLen < 0){
+          curBeatLen-restLen => ret.lens[count];
+          1 +=> count;
+          break;
+        }else{
+          curBeatLen => ret.lens[count];
+          0 => curBeatLen;
+          1 +=> count;
+        }
+      }
+      beatSize + curBeatLen => curBeatLen;
+    }
+    
+    ret.size(count);
+    seqLen - totalLen => int restLen;
+    if(restLen > 0){
+      restLen + ret.lens[count-1] => ret.lens[count-1];
+    }
+
+    0 => int acc;
+    for(0=> int i;i<ret.size();i++){
+      ret.lens[i] +=> acc;
+    }
+
+    return ret;
+  }
+
+
 }
-
-
-
-
 

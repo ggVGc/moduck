@@ -3,6 +3,7 @@ Machine.add("types/intref.ck");
 Machine.add("types/vevent.ck");
 Machine.add("types/src_event.ck");
 Machine.add("types/int_fun.ck");
+Machine.add("types/seqinfo.ck");
 samp => now;
 Machine.add("util.ck");
 Machine.add("moducks_simple/moduck_base.ck");
