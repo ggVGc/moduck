@@ -1,5 +1,6 @@
 
 include(macros.m4)
+include(pulses.m4)
 
 class RepeatHandler extends EventHandler{
   string pulseTag;
@@ -39,4 +40,15 @@ public class Repeater extends Moduck{
     return make(P_Trigger);
   }
 
+  /*
+    fun static Repeater make(Moduck m){
+      filterNonRecvPulses(m.handlerKeys) @=> string keys[];
+      make(keys) @=> Repeater ret;
+      for(0=>int i;i<keys.size();++i){
+        Patch.
+        m => ret.fromTo(recv(k), k).c;
+      }
+      return ret;
+    }
+   */
 }

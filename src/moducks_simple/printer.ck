@@ -7,7 +7,7 @@ fun void print(string msg, int v){
 }
 
 
-genHandler(PrintHandler, "print",
+genHandler(TrigHandler, P_Trigger,
   fun void handle(int v){
     print(msg, v);
     parent.send(P_Trigger, v);
@@ -21,7 +21,7 @@ public class Printer extends Moduck{
   fun static Printer make(string msg){
     Printer ret;
     OUT(P_Trigger);
-    IN(PrintHandler, (msg));
+    IN(TrigHandler, (msg));
     return ret;
   }
 }

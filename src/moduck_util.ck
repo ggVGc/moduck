@@ -29,6 +29,28 @@ public class MUtil{
   }
 
 
+
+  /*
+    fun static ModuckP remap(Moduck src, string srcTag, string dstTag){
+      Util.copy(src.outKeys) @=> string keys[];
+      if(!Util.contains(dstTag, keys)){
+        keys << dstTag;
+      }
+
+      ModuckP.make(Repeater.make(keys)) @=> ModuckP out;
+      for(0=>int i; i<src.outKeys.size();i++){
+        src.outKeys[i] @=> string k;
+        if(k != dstTag){
+
+
+          <<< k>>>;
+          this => out.listen(k).c;
+        }
+      }
+    }
+   */
+
+
   fun static Moduck mul2(Moduck a, Moduck b){
     Multiplier.make(2) @=> Multiplier mult;
     Patch.connect(a, null, mult, "0");

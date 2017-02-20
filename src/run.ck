@@ -31,6 +31,8 @@ define(B8, B4/2)
 define(B16, B8/2)
 define(B32, B16/2)
 
+define(Bar, (B*4))
+
 
 
 Trigger.make("start") @=> Trigger _startBang;

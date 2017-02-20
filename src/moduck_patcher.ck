@@ -6,11 +6,14 @@ class Connector{
 
   fun ModuckP c(Moduck other){
     // <<< data.srcTags[0], data.targetTags[0] >>>;
-    data.srcTags.size() - data.targetTags.size() => int diff;
-    for(0=>int i; i<diff;i++){
-      data.targetTags << P_Default;
-    }
-    data.targetTags.size() - data.srcTags.size() => diff;
+    /*
+      data.srcTags.size() - data.targetTags.size() => int diff;
+      for(0=>int i; i<diff;i++){
+        data.targetTags << P_Default;
+      }
+     */
+    data.targetTags.size() - data.srcTags.size() => int diff;
+    <<< diff >>>;
     for(0=>int i; i<diff;i++){
       data.srcTags << P_Default;
     }
@@ -29,10 +32,7 @@ class Connector{
 
 
   fun Connector to(string v){
-    <<< "TO", v>>>;
-    <<<data.targetTags.size()>>>;
     data.targetTags << v;
-    <<<data.targetTags.size()>>>;
     return this;
   }
 
@@ -101,12 +101,12 @@ public class ModuckP extends Moduck{
    */
 
   fun ModuckP b(Moduck m){
-    Patch.connect(this, P_Default, Patch.thru(m), P_Default);
-    return this;
+    return b(Connector.make(m, [P_Default], [P_Default]));
   }
 
   fun ModuckP b(Connector con){
-    return b(con.c(Repeater.make()));
+    con.c(this);
+    return this;
   }
 
   fun ModuckP set(string tag, int v){
@@ -153,23 +153,12 @@ public class ModuckP extends Moduck{
 
   // Translate one output tag into another
   fun ModuckP map(string srcTag, string dstTag){
-    Util.copy(this.outKeys) @=> string keys[];
-
-    if(!Util.contains(dstTag, keys)){
-      keys << dstTag;
-    }
-    
-
-    ModuckP.make(Repeater.make(keys)) @=> ModuckP ret;
-    // this => ret.from(srcTag).to(dstTag).c;
-    this => ret.from(srcTag).to(dstTag).c;
-    return ModuckP.make(Wrapper.make(this, ret));
+    return ModuckP.make(Patch.remap(this, srcTag, dstTag));
   }
 
   // Repeat a signal that was received(and handled)
   fun ModuckP propagate(string tag){
-    // TODO: Implement
-    return map(recv(tag), tag);
+    return ModuckP.make(Patch.propagate(this, tag));
   }
 
   // Repeat a received signal regardless if it was handled or not

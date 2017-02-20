@@ -13,6 +13,42 @@ public class Patch{
   }
 
 
+  fun static Moduck propagate(Moduck src, string tag){
+    filterNonRecvPulses(src.handlerKeys) @=> string keys[];
+    Repeater.make(keys) @=> Repeater parent;
+    Repeater.make(keys) @=> Repeater out;
+
+    for(0=>int i; i<keys.size();i++){
+      keys[i] @=> string k;
+      Patch.connect(parent, k, src, k);
+      Patch.connect(src, k, out, k);
+    }
+    Patch.connect(parent, recv(tag), out, tag);
+
+    return Wrapper.make(parent, out);
+  }
+
+  fun static Moduck remap(Moduck src, string srcTag, string dstTag){
+    filterNonRecvPulses(src.handlerKeys) @=> string keys[];
+
+    if(!Util.contains(dstTag, keys)){
+      keys << dstTag;
+    }
+    
+    Repeater.make(keys) @=> Moduck out;
+    connect(src, srcTag, out, dstTag);
+
+    for(0=>int i; i<keys.size();i++){
+      keys[i] @=> string k;
+      if(k != srcTag && k != dstTag){
+        connect(src, k, out, k);
+      }
+    }
+    return Wrapper.make(src, out);
+  }
+
+
+
   fun static void connectValLoop(Moduck src, string srcEventName, Moduck target, string valueName){
     while(true){
       src.outs[srcEventName] @=> VEvent ev;
@@ -70,7 +106,7 @@ public class Patch{
         <<<"Error: Invalid source event: "+srcTag+" - "+src>>>;
       }
 
-      <<<"Connecting "+src+"<>"+srcTag+" to "+target+"<>"+dstTag>>>;
+      // <<<"Connecting "+src+"<>"+srcTag+" to "+target+"<>"+dstTag>>>;
       if(target.hasValueKey(dstTag)){
         spork ~ connectValLoop(src, srcTag, target, dstTag);
       }else{
@@ -100,7 +136,7 @@ public class Patch{
       connect(src, d.srcTags, d.target, d.targetTags);
       // TODO: Combine into Repeater with all outputs available
       // implement using MUtil.combine
-      connect(d.target, null, out, P_Trigger);
+      connect(d.target, P_Default, out, P_Trigger);
     }
 
     return Wrapper.make(src, out);
@@ -110,8 +146,8 @@ public class Patch{
     Repeater.make() @=> Repeater inp;
     Delay.make(samp) @=> Delay out;
     Patch.connectMulti(inp, [
-      ChainData.make(null, other, null)
-      ,ChainData.make(null, out, null)
+      ChainData.make([P_Default], other, [P_Default])
+      ,ChainData.make([P_Default], out, [P_Default])
     ]);
     return Wrapper.make(inp, out);
   }
