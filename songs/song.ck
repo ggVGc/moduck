@@ -170,10 +170,11 @@ masterClock
       .propagate(P_Reset).listen([P_Reset, P_Trigger]).c // Propagate Reset pulses down the chain,
                                                         // and listen to Triggers for playing notes and Reset pulses.
 
-  => metaSeq("012.", B*3, B*9, offsets(-3, 0, 3)) // Alternate between 3 Offset chains, based on a meta-sequencer.
+  => metaSeq("012.", B*3, B*9, [mk(Offset, -3), mk(Offset, 3), mk(Blackhole)]) // Alternate between 2 Offset chains and a blackhole, based on a meta-sequencer.
       .hook(masterClock.fromTo(P_Trigger, P_Clock)) // Hook up stepping of the meta-sequencer to the masterclock, ignoring generated output
       .listen([P_Trigger, P_Reset]).c // Listen to Trigger for playing notes, and Reset pulses
 
+  => mkc(Printer, "out")
   => octaves(4).c // Transpose 4 octaves
   => synth.c // Send to midi output
 

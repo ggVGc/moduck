@@ -108,9 +108,18 @@ public class Patch{
         P_Default @=> dstTag;
       }
 
-      if(srcTag == P_Default){
-        src.outKeys[0] => srcTag;
+
+      filterNonRecvPulses(src.outKeys) @=> string nonRecvs[];
+      if(nonRecvs.size() == 0){
+        // Tried connecting to source with no outputs
+        // This is okay, and is currently used for Blackhole
+        return src;
       }
+
+      if(srcTag == P_Default){
+        nonRecvs[0] => srcTag;
+      }
+
       if(dstTag == P_Default ){
         target.handlerKeys[0] => dstTag;
       }

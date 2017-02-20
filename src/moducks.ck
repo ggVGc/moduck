@@ -18,3 +18,4 @@ Machine.add("moducks_simple/adder.ck");
 Machine.add("moducks_simple/clamper.ck");
 Machine.add("moducks_simple/buffer.ck");
 Machine.add("moducks_simple/processor.ck");
+Machine.add("moducks_simple/blackhole.ck");
