@@ -14,19 +14,32 @@ public class Patch{
 
 
   fun static Moduck propagate(Moduck src, string tag){
-    filterNonRecvPulses(src.handlerKeys) @=> string keys[];
-    Repeater.make(keys) @=> Repeater parent;
-    Repeater.make(keys) @=> Repeater out;
+    filterNonRecvPulses(src.handlerKeys) @=> string srcKeys[];
+    Repeater.make(srcKeys) @=> Repeater parent;
+    filterNonRecvPulses(src.outKeys) @=> string outKeys[];
+    if(!Util.contains(tag, outKeys)){
+      outKeys << tag;
+    }
+    Repeater.make(outKeys) @=> Repeater out;
 
-    for(0=>int i; i<keys.size();i++){
-      keys[i] @=> string k;
+    for(0=>int i; i<srcKeys.size();i++){
+      srcKeys[i] @=> string k;
       Patch.connect(parent, k, src, k);
-      Patch.connect(src, k, out, k);
+    }
+
+    for(0=>int i; i<src.outKeys.size();i++){
+      src.outKeys[i] => string k;
+      if(!isRecvPulse(k)){
+        if(k != tag){
+          Patch.connect(src, k, out, k);
+        }
+      }
     }
     Patch.connect(parent, recv(tag), out, tag);
 
     return Wrapper.make(parent, out);
   }
+
 
   fun static Moduck remap(Moduck src, string srcTag, string dstTag){
     filterNonRecvPulses(src.handlerKeys) @=> string keys[];

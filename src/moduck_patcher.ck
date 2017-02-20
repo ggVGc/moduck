@@ -4,24 +4,25 @@ include(pulses.m4)
 class Connector{
   ChainData data;
 
-  fun ModuckP c(Moduck other){
-    // <<< data.srcTags[0], data.targetTags[0] >>>;
-    /*
-      data.srcTags.size() - data.targetTags.size() => int diff;
-      for(0=>int i; i<diff;i++){
-        data.targetTags << P_Default;
-      }
-     */
-    data.targetTags.size() - data.srcTags.size() => int diff;
-    <<< diff >>>;
+  fun void preconnect(){
+    data.srcTags.size() - data.targetTags.size() => int diff;
+    for(0=>int i; i<diff;i++){
+      data.targetTags << P_Default;
+    }
+    data.targetTags.size() - data.srcTags.size() => diff;
     for(0=>int i; i<diff;i++){
       data.srcTags << P_Default;
     }
+  }
+
+  fun ModuckP c(Moduck other){
+    preconnect();
     return ModuckP.make(Patch.connect(other, data.srcTags, data.target, data.targetTags));
   }
 
   // Uses target as source and vice versa. Keeps srcTag and targetTag as is.
   fun ModuckP reverseConnect(Moduck other){
+    preconnect();
     return ModuckP.make(Patch.connect(data.target, data.srcTags, other, data.targetTags));
   }
 
@@ -34,6 +35,10 @@ class Connector{
   fun Connector to(string v){
     data.targetTags << v;
     return this;
+  }
+
+  fun Connector fromTo(string src, string dst){
+    return from(src).to(dst);
   }
 
   fun static Connector make(Moduck m, string fromTags[], string dstTags[]){
