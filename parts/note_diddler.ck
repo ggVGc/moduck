@@ -7,7 +7,7 @@ fun Moduck noteDiddler(int port, dur maxNoteDur, int noteValues[], int noteIndic
   Sequencer.make(durations, true) @=> Sequencer durationSeq;
 
   PulseDiv.make(durations[0], true) @=> PulseDiv divider;
-  V(noteDivSeq, divider, "divisor");
+  C(noteDivSeq, divider, "divisor");
   C(parent, divider) @=> Moduck divClock;
 
   multi( divClock, [
@@ -18,7 +18,7 @@ fun Moduck noteDiddler(int port, dur maxNoteDur, int noteValues[], int noteIndic
   NoteOut.make(port, 0, 0::ms, maxNoteDur, false)
     @=> NoteOut noteOut;
 
-  V(durationSeq, noteOut, "durRatio");
+  C(durationSeq, noteOut, "durRatio");
 
   Moduck @ out;
 

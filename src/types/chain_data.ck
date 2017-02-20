@@ -1,27 +1,36 @@
 
 public class ChainData{
-  string srcTag;
   Moduck @ target;
-  string targetTag;
-  int isValConnection;
+  string srcTags[0];
+  string targetTags[0];
 
 
-  fun static ChainData conn(string srcTag, Moduck target, string targetTag){
+  fun static ChainData make(string srcTags[], Moduck target, string targetTags[]){
     ChainData ret;
-    srcTag => ret.srcTag;
+    /*
+      if(srcTags != null){
+        for(0=>int i;i<srcTags.size();++i){
+          ret.srcTags << srcTags[i];
+        }
+      }
+      if(targetTags != null){
+        for(0=>int i;i<targetTags.size();++i){
+          ret.targetTags << targetTags[i];
+        }
+      }
+     */
     target @=> ret.target;
-    targetTag => ret.targetTag;
-    false => ret.isValConnection;
+    if(srcTags != null){
+      srcTags @=> ret.srcTags;
+    }
+    if(targetTags != null){
+      targetTags @=> ret.targetTags;
+    }
     return ret;
   }
 
-  fun static ChainData val(string srcTag, Moduck target, string targetTag){
-    ChainData ret;
-    srcTag => ret.srcTag;
-    target @=> ret.target;
-    targetTag => ret.targetTag;
-    true => ret.isValConnection;
-    return ret;
+  fun static ChainData make(string srcTag, Moduck target, string targetTag){
+    return make([srcTag], target, [targetTag]);
   }
 
 }

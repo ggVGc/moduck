@@ -3,7 +3,16 @@ include(pulses.m4)
 
 public class MUtil{
 
-  fun static Moduck combine(Moduck children[]){
+  fun static Moduck[] castModuckList(ModuckP list[]){
+    Moduck out[list.size()];
+    for(0=>int i;i<list.size();i++){
+      list[i] @=> out[i];
+    }
+    return out;
+  }
+
+
+  fun static ModuckP _combine(Moduck children[]){
     Repeater.make() @=> Repeater in;
     Repeater.make() @=> Repeater out;
     
@@ -12,7 +21,11 @@ public class MUtil{
       Patch.connect(children[i], null, out, null);
     }
 
-    return Wrapper.make(in, out);
+    return ModuckP.make(Wrapper.make(in, out));
+  }
+
+  fun static ModuckP _combine(ModuckP children[]){
+    return _combine(castModuckList(children));
   }
 
 

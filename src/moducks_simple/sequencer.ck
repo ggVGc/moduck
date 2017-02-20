@@ -64,7 +64,7 @@ genHandler(SetHandler, P_Set,
   int entries[];
 )
 
-genHandler(Reset, P_Reset,
+genHandler(ResetHandler, P_Reset,
   HANDLE{
     parent.setVal("curStep", 0);
   },
@@ -87,6 +87,7 @@ public class Sequencer extends Moduck{
     IN(StepHandler, (entries, loop));
     IN(TrigHandler, (entries));
     IN(SetHandler, (entries));
+    IN(ResetHandler, ());
 
     return ret;
   }

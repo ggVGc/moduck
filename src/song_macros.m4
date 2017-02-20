@@ -8,6 +8,7 @@ dnl define(to, ModuckP.to)
 define(S, ModuckP.make(Sequencer.make($@)))
 define(SQ, Sequencer)
 define(def, ModuckP.make(
+
 $2
 ) @=> ModuckP $1;)
 

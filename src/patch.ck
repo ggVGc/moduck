@@ -25,63 +25,70 @@ public class Patch{
   }
 
 
-  fun static Moduck connect(Moduck src, string srcEventName, Moduck target, string targetEventName){
-    if(targetEventName != null && target.hasValueKey(targetEventName)){
-      return connVal(src, srcEventName, target, targetEventName);
-    }else{
-      return connectOut(src, srcEventName, target, targetEventName);
-    }
+  fun static Moduck connect(Moduck src, Moduck target){
+    return connect(src, null, target, null);
   }
 
-  fun static Moduck connectOut(Moduck src, string srcEventName, Moduck target, string targetEventName){
+
+  fun static Moduck connect(Moduck src, string srcTag, Moduck target, string targetTag){
+    return connect(src, [srcTag], target, [targetTag]);
+  }
+
+
+  fun static Moduck connect(Moduck src, string srcEventNames[], Moduck target, string targetEventNames[]){
+    if(srcEventNames == null){
+      [P_Default] @=> srcEventNames;
+    }
+    if(targetEventNames == null){
+      [P_Default] @=> targetEventNames;
+    }
     if(src.outKeys.size() == 0){
       <<<"Error: No source outputs:"+src>>>;
-    }
-    if(srcEventName == null){
-      src.outKeys[0] => srcEventName;
-    }
-    if(src.outs[srcEventName] == null){
-      <<<"Error: Invalid source event: "+srcEventName+" - "+src>>>;
     }
 
     if(target.handlerKeys.size() == 0){
       <<<"Error: No target inputs:"+target>>>;
     }
-    if(targetEventName == null){
-      target.handlerKeys[0] => targetEventName;
+
+    for(0 => int i; i<srcEventNames.size(); i++){
+      srcEventNames[i] => string srcTag;
+      string dstTag;
+      if(i < targetEventNames.size()){
+        targetEventNames[i] => dstTag;
+      }else{
+        P_Default @=> dstTag;
+      }
+
+      if(srcTag == P_Default){
+        src.outKeys[0] => srcTag;
+      }
+      if(dstTag == P_Default ){
+        target.handlerKeys[0] => dstTag;
+      }
+
+      if(src.outs[srcTag] == null){
+        <<<"Error: Invalid source event: "+srcTag+" - "+src>>>;
+      }
+
+      <<<"Connecting "+src+"<>"+srcTag+" to "+target+"<>"+dstTag>>>;
+      if(target.hasValueKey(dstTag)){
+        spork ~ connectValLoop(src, srcTag, target, dstTag);
+      }else{
+        if(target.handlers[dstTag] == null){
+          <<<"Error: Invalid target event: "+dstTag+" - "+target>>>;
+        }
+        spork ~ connectLoop(src, srcTag, target, dstTag);
+      }
     }
-    if(target.handlers[targetEventName] == null){
-      <<<"Error: Invalid target event: "+targetEventName+" - "+target>>>;
-    }
-    /* <<<"Connecting "+src+"<>"+srcEventName+" to "+target+"<>"+targetEventName>>>; */
-    spork ~ connectLoop(src, srcEventName, target, targetEventName);
     return Wrapper.make(src, target);
   }
-
-
-  fun static Moduck connVal(Moduck src, string srcEventName, Moduck target, string key){
-    if(src.outKeys.size() == 0){
-      <<<"Error: No source outputs:"+src>>>;
-    }
-    if(srcEventName == null){
-      src.outKeys[0] => srcEventName;
-    }
-    spork ~ connectValLoop(src, srcEventName, target, key);
-    return Wrapper.make(src, target);
-  }
-
-
 
 
   fun static Moduck chain(Moduck first, ChainData rest[]){
     first @=> Moduck h;
     for(0 => int i; i<rest.size(); i++){
       rest[i] @=> ChainData d;
-      if(d.isValConnection){
-        connVal(h, d.srcTag, d.target, d.targetTag) @=> h;
-      }else{
-        connect(h, d.srcTag, d.target, d.targetTag) @=> h;
-      }
+      connect(h, d.srcTags, d.target, d.targetTags) @=> h;
     }
     return Wrapper.make(first, h);
   }
@@ -90,12 +97,10 @@ public class Patch{
     Repeater.make() @=> Repeater out;
     for(0 => int i; i<targets.size(); i++){
       targets[i] @=> ChainData d;
-      if(d.isValConnection){
-        connVal(src, d.srcTag, d.target, d.targetTag);
-      }else{
-        connect(src, d.srcTag, d.target, d.targetTag);
-        connect(d.target, d.targetTag, out, P_Trigger);
-      }
+      connect(src, d.srcTags, d.target, d.targetTags);
+      // TODO: Combine into Repeater with all outputs available
+      // implement using MUtil.combine
+      connect(d.target, null, out, P_Trigger);
     }
 
     return Wrapper.make(src, out);
@@ -105,8 +110,8 @@ public class Patch{
     Repeater.make() @=> Repeater inp;
     Delay.make(samp) @=> Delay out;
     Patch.connectMulti(inp, [
-      ChainData.conn(null, other, null)
-      ,ChainData.conn(null, out, null)
+      ChainData.make(null, other, null)
+      ,ChainData.make(null, out, null)
     ]);
     return Wrapper.make(inp, out);
   }

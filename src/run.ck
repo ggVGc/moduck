@@ -12,7 +12,7 @@ include(_all_parts.m4)
 32 => int TICKS_PER_BEAT;
 true => int PLAY;
 
-define(TIME_PER_BEAT, Util.bpmToDur(`BPM')) // dnl `
+define(TIME_PER_BEAT, Util.bpmToDur(`BPM')) // hack comment for vim syntax highlighting dnl ` 
 define(D, TIME_PER_BEAT)
 define(D2, (TIME_PER_BEAT/2))
 define(D4, D2/2)
@@ -44,10 +44,10 @@ include(_cur_song)
 <<< "=== Song setup done ===">>>;
 
 
-chain(_startBang, [
-  X2("start", ClockGen.make(Util.bpmToDur( BPM * TICKS_PER_BEAT)),"run")
-  ,X(masterClock)
-]);
+Patch.connect(
+  Patch.connect(_startBang, ClockGen.make(Util.bpmToDur( BPM * TICKS_PER_BEAT)))
+  ,masterClock
+);
 
 samp  => now;
 

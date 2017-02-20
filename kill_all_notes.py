@@ -26,10 +26,10 @@ for portInd, name in enumerate(available_ports):
 for port in outPorts:
   print("Killing notes for: %s" % (port[0]))
   midiout.open_port(port[1])
-  # for chan in range(0,16):
-  for i in range(0,127):
-    midiout.send_message([0x80, i, 0])
-    time.sleep(0.001)
+  for chan in range(0,16):
+    for i in range(0,127):
+      midiout.send_message([0x80+chan, i, 0])
+      time.sleep(0.0001)
   midiout.close_port()
     # time.sleep(0.5)
 # note_on = [0x90, 60, 112] # channel 1, middle C, velocity 112

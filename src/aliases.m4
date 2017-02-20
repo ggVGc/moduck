@@ -1,5 +1,5 @@
 
-define(V, Patch.connVal($1, null, $2, $3))
+dnl define(V, Patch.connVal($1, null, $2, $3))
 
 define(P, ModuckP.make($1))
 
@@ -8,41 +8,50 @@ define(wrap, P(Wrapper.make($1, $2)))
 define(mk, ModuckP.make($1.make(`shift($@)')))
 
 
-fun Moduck V1(Moduck src, string srcEventName, Moduck target, string msg){
-  return Patch.connVal(src, srcEventName, target, msg);
-}
+dnl fun Moduck V1(Moduck src, string srcEventName, Moduck target, string msg){
+dnl   return Patch.connVal(src, srcEventName, target, msg);
+dnl }
 
 fun  Moduck C(Moduck src, Moduck target){
-  return Patch.connect(src, null, target, null);
+  return Patch.connect(src, target);
 }
 
-fun  Moduck C1(Moduck src, Moduck target, string msg){
-  return Patch.connect(src, null, target, msg);
+fun Moduck C(Moduck src, Moduck target, string srcTag){
+  return Patch.connect(src, [""], target, [srcTag]);
 }
 
-fun  Moduck C2(Moduck src, string srcEventName, Moduck target, string msg){
-  return Patch.connect(src, srcEventName, target, msg);
+fun Moduck C(Moduck src, string srcTag, Moduck target, string targetTag){
+  return Patch.connect(src, [srcTag], target, [targetTag]);
 }
 
+
+dnl fun  Moduck C1(Moduck src, Moduck target, string msg){
+dnl   return Patch.connect(src, null, target, msg);
+dnl }
+dnl
+dnl fun  Moduck C2(Moduck src, string srcEventName, Moduck target, string msg){
+dnl   return Patch.connect(src, srcEventName, target, msg);
+dnl }
+dnl
 fun ChainData X(Moduck target){
-  return ChainData.conn(null, target, null);
+  return ChainData.make(null, target, null);
 }
 
-fun ChainData X1(Moduck target, string targetTag){
-  return ChainData.conn(null, target, targetTag);
-}
+dnl fun ChainData X1(Moduck target, string targetTag){
+dnl   return ChainData.make(null, target, targetTag);
+dnl }
+dnl
+dnl fun ChainData X2(string srcTag, Moduck target, string targetTag){
+dnl   return ChainData.make(srcTag, target, targetTag);
+dnl }
 
-fun ChainData X2(string srcTag, Moduck target, string targetTag){
-  return ChainData.conn(srcTag, target, targetTag);
-}
+dnl fun ChainData XV(Moduck target, string targetTag){
+dnl   return ChainData.val(null, target, targetTag);
+dnl }
 
-fun ChainData XV(Moduck target, string targetTag){
-  return ChainData.val(null, target, targetTag);
-}
-
-fun ChainData XV1(string srcTag, Moduck target, string targetTag){
-  return ChainData.val(srcTag, target, targetTag);
-}
+dnl fun ChainData XV1(string srcTag, Moduck target, string targetTag){
+dnl   return ChainData.val(srcTag, target, targetTag);
+dnl }
 
 fun Moduck multi(Moduck src, ChainData targets[]){
   return Patch.connectMulti(src, targets);

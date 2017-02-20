@@ -9,6 +9,13 @@ genHandler(TrigHandler, P_Trigger,
   ;
 )
 
+genHandler(ResetHandler, P_Reset,
+ HANDLE{
+  parent.setVal("index", startIndex);
+ },
+ int startIndex;
+)
+
 
 public class Router extends Moduck{
   fun static Router make(int startIndex){
@@ -17,6 +24,7 @@ public class Router extends Moduck{
       ret.addOut(""+i);
     }
     IN(TrigHandler, ());
+    IN(ResetHandler, (startIndex));
     ret.setVal("index", startIndex);
     return ret;
   }

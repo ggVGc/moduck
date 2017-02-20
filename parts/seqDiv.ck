@@ -11,17 +11,24 @@ fun ModuckP seqDiv(int lengths[]){
 
   def( sequence, S(trigLens, true) )
   C(divider, sequence);
-  V( sequence, divider, "divisor");
-  Wrapper.make(divider, sequence) @=> Moduck x;
-  x @=> Moduck ret;
+  C( sequence, divider, "divisor");
+  Wrapper.make(divider, sequence) @=> Moduck ret;
+
+  divider => sequence.from(recv(P_Reset)).to(P_Reset).c;
+
   if(initialDelay > 0){
     initialDelay +=> trigLens[trigLens.size()-1];
-    C(Buffer.make(initialDelay), x) @=> ret;
+    C(Buffer.make(initialDelay), ret) @=> ret;
   }
   return ModuckP.make(ret);
 }
 
 fun ModuckP seqDiv(string pattern, int beatSize, int totalLen){
   Util.seqFromString(pattern, beatSize, totalLen) @=> SeqInfo info;
-  return ModuckP.make(C(seqDiv(info.lens), Sequencer.make(info.nums, true)));
+  def(div, seqDiv(info.lens))
+  def(numSeq, mk(Sequencer, info.nums, true))
+
+  div => numSeq.from(recv(P_Reset)).to(P_Reset).c;
+
+  return div => numSeq.c;
 }

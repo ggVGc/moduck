@@ -32,7 +32,7 @@ public class Util{
       Std.abs(step) => step;
     }
 
-    (biggest - smallest / step $ float) $ int + 1 => int sz;
+    ((biggest - smallest) / step $ float) $ int + 1 => int sz;
     int arr[sz];
 
     for(0 => int i; i<sz; i++){
@@ -40,6 +40,23 @@ public class Util{
     }
 
     return arr;
+  }
+
+  fun static int contains(string s, string list[]){
+    for(0=>int i;i<list.size();++i){
+      if(list[i] == s){
+        return true;
+      }
+    }
+    return false;
+  }
+
+  fun static string[] copy(string list[]){
+    string ret[list.size()];
+    for(0=>int i; i<ret.size();++i){
+      list[i] @=> ret[i];
+    }
+    return ret;
   }
 
   fun static int[] concat(int lists[][]){
