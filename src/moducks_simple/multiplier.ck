@@ -34,7 +34,7 @@ public class Multiplier extends Moduck{
     IN(TrigHandler, (inputCount))
     for(0 => int i; i<inputCount; i++){
       ret.addIn(""+i, SetHandler.make(i));
-      ret.setVal(""+i, 1);
+      ret.addVal(""+i, 1);
     }
     return ret;
   }

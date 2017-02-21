@@ -12,8 +12,10 @@ public class Value extends Moduck{
   fun static Value make(int v){
     Value ret;
     OUT(P_Trigger);
-    ret.setVal("value", v);
     IN(TrigHandler, ());
+
+    ret.addVal("value", v);
+
     return ret;
   }
 

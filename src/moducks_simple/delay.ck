@@ -21,9 +21,9 @@ genHandler(TrigHandler, P_Trigger,
 public class Delay extends Moduck{
   fun static Delay make(dur delay){
     Delay ret;
-    ret.setVal("delay", Util.toSamples(delay));
     OUT(P_Trigger);
     IN(TrigHandler, ());
+    ret.addVal("delay", Util.toSamples(delay));
     return ret;
   }
 }

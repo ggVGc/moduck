@@ -174,11 +174,10 @@ public class ModuckP extends Moduck{
 
   fun static ModuckP make(Moduck m){
     ModuckP ret;
-    m.values @=> ret.values;
-    m.handlers @=> ret.handlers;
+    m._handlers @=> ret._handlers;
     m.handlerKeys @=> ret.handlerKeys;
-    m.outs @=> ret.outs;
-    m.outKeys @=> ret.outKeys;
+    m._outs @=> ret._outs;
+    m._outKeys @=> ret._outKeys;
     return ret;
   }
 

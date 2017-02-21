@@ -3,7 +3,7 @@ include(pulses.m4)
 public class Patch{
   fun static void connectLoop(Moduck src, string srcEventName, Moduck target, string targetEventName){
     while(true){
-      src.outs[srcEventName] @=> VEvent ev;
+      src.getOut(srcEventName) @=> VEvent ev;
       if(ev == null){
         <<<"Null event from "+src+":"+srcEventName>>>;
       }
@@ -16,7 +16,7 @@ public class Patch{
   fun static Moduck propagate(Moduck src, string tag){
     filterNonRecvPulses(src.handlerKeys) @=> string srcKeys[];
     Repeater.make(srcKeys) @=> Repeater parent;
-    filterNonRecvPulses(src.outKeys) @=> string outKeys[];
+    filterNonRecvPulses(src._outKeys) @=> string outKeys[];
     if(!Util.contains(tag, outKeys)){
       outKeys << tag;
     }
@@ -27,8 +27,8 @@ public class Patch{
       Patch.connect(parent, k, src, k);
     }
 
-    for(0=>int i; i<src.outKeys.size();i++){
-      src.outKeys[i] => string k;
+    for(0=>int i; i<src._outKeys.size();i++){
+      src._outKeys[i] => string k;
       if(!isRecvPulse(k)){
         if(k != tag){
           Patch.connect(src, k, out, k);
@@ -62,18 +62,6 @@ public class Patch{
 
 
 
-  fun static void connectValLoop(Moduck src, string srcEventName, Moduck target, string valueName){
-    while(true){
-      src.outs[srcEventName] @=> VEvent ev;
-      ev => now;
-       if(target.values[valueName] == null){
-         <<<"Invalid value: "+valueName+" - "+target>>>;
-       }
-       target.setVal(valueName, ev.val);
-    }
-  }
-
-
   fun static Moduck connect(Moduck src, Moduck target){
     return connect(src, null, target, null);
   }
@@ -91,7 +79,7 @@ public class Patch{
     if(targetEventNames == null){
       [P_Default] @=> targetEventNames;
     }
-    if(src.outKeys.size() == 0){
+    if(src._outKeys.size() == 0){
       <<<"Error: No source outputs:"+src>>>;
     }
 
@@ -109,34 +97,26 @@ public class Patch{
       }
 
 
-      filterNonRecvPulses(src.outKeys) @=> string nonRecvs[];
+      filterNonRecvPulses(src._outKeys) @=> string nonRecvs[];
       if(nonRecvs.size() == 0){
         // Tried connecting to source with no outputs
         // This is okay, and is currently used for Blackhole
         return src;
       }
 
-      if(srcTag == P_Default){
-        nonRecvs[0] => srcTag;
-      }
-
-      if(dstTag == P_Default ){
-        target.handlerKeys[0] => dstTag;
-      }
-
-      if(src.outs[srcTag] == null){
-        <<<"Error: Invalid source event: "+srcTag+" - "+src>>>;
-      }
+      /*
+        if(src.outs[srcTag] == null){
+          <<<"Error: Invalid source event: "+srcTag+" - "+src>>>;
+        }
+       */
 
       // <<<"Connecting "+src+"<>"+srcTag+" to "+target+"<>"+dstTag>>>;
-      if(target.hasValueKey(dstTag)){
-        spork ~ connectValLoop(src, srcTag, target, dstTag);
-      }else{
+      /*
         if(target.handlers[dstTag] == null){
           <<<"Error: Invalid target event: "+dstTag+" - "+target>>>;
         }
-        spork ~ connectLoop(src, srcTag, target, dstTag);
-      }
+       */
+      spork ~ connectLoop(src, srcTag, target, dstTag);
     }
     return Wrapper.make(src, target);
   }

@@ -75,9 +75,6 @@ genHandler(ResetHandler, P_Reset,
 public class Sequencer extends Moduck{
   fun static Sequencer make(int entries[], int loop){
     Sequencer ret;
-    ret.setVal("curStep", 0);
-    ret.setVal("loop", loop);
-    ret.setVal("targetStep", 0);
     OUT(P_Trigger);
     OUT(P_Stepped);
     OUT(P_Looped);
@@ -88,6 +85,10 @@ public class Sequencer extends Moduck{
     IN(TrigHandler, (entries));
     IN(SetHandler, (entries));
     IN(ResetHandler, ());
+
+    ret.addVal("curStep", 0);
+    ret.addVal("loop", loop);
+    ret.addVal("targetStep", 0);
 
     return ret;
   }

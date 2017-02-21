@@ -12,9 +12,9 @@ public class Offset extends Moduck{
 
   fun static Offset make(int off){
     Offset ret;
-    ret.setVal("offset", off);
     OUT(P_Trigger);
     IN(TrigHandler, ());
+    ret.addVal("offset", off);
     return ret;
   }
 }

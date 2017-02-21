@@ -25,7 +25,8 @@ public class Router extends Moduck{
     }
     IN(TrigHandler, ());
     IN(ResetHandler, (startIndex));
-    ret.setVal("index", startIndex);
+
+    ret.addVal("index", startIndex);
     return ret;
   }
 }

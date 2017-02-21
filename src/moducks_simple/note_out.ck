@@ -74,10 +74,12 @@ public class NoteOut extends Moduck{
   fun static NoteOut make(int devicePort, int channel, dur minDur, dur maxDur, int valueIsVelocity){
     NoteOut ret;
     OUT(P_Trigger);
-    ret.setVal("velocity", 110);
-    ret.setVal("note", 64);
-    ret.setVal("durRatio", 127);
     IN(TrigHandler, (devicePort, channel, minDur, maxDur, valueIsVelocity));
+
+    ret.addVal("velocity", 110);
+    ret.addVal("note", 64);
+    ret.addVal("durRatio", 127);
+
     return ret;
   }
 }

@@ -26,9 +26,9 @@ genHandler(TrigHandler, P_Trigger,
 public class Mapper extends Moduck{
   fun static Mapper make(int entries[], int offsetPerPeriod){
     Mapper ret;
-    ret.setVal("offsetPerPeriod", offsetPerPeriod);
     OUT(P_Trigger);
     IN(TrigHandler, (entries));
+    ret.addVal("offsetPerPeriod", offsetPerPeriod);
     return ret;
   }
 }
