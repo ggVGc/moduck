@@ -26,16 +26,13 @@ def(beatMeta, metaSeq("0123110231211020210", B+B3, Bar*4, [
 ]))
 
 
-def(meloMeta, metaSeq("012.", Bar, Bar/2, [
- mk(Sequencer, [0,1,2])
- ,mk(Sequencer, [4,3,4])
- ,mk(Sequencer, [2,6,5])
-])
-)
+def(meloMeta, metaSeq("0.12.", Bar, Bar*4, [
+ mk(Sequencer, [0,1,2]).b(mk(Printer, "reset").from(recv(P_Reset)))
+ ,mk(Sequencer, [2,1,3])
+ ,mk(Sequencer, [-2,-2,-1,0])
+]).set("resetOnLoop", true))
 
-samp => now;
 
-// meloMeta.set("resetOnLoop", true);
 
 
 masterClock
@@ -51,9 +48,9 @@ masterClock
       ).c
    */
   => meloMeta.c
-  // => mkc(Printer, "note")
+  => mkc(Printer, "note")
   => mkc(Mapper, Scales.MinorNatural, 12)
-  => octaves(3).c => mkc(Offset, -2)
+  => octaves(3).c => mkc(Offset, -4)
   => synth.c
 ;
 
