@@ -92,44 +92,6 @@ def(hatsOut,
 def(clapDiv, mk(PulseDiv, 2, 0))
 
 
-fun ModuckP metaSeq(string pattern, int stepSize, int totalLen, ModuckP variations[]){
-  return metaSeq(pattern, stepSize, totalLen, MUtil.castModuckList(variations));
-}
-
-
-fun ModuckP metaSeq(string pattern, int stepSize, int totalLen, Moduck variations[]){
-  def(divider, seqDiv(pattern, stepSize, totalLen))
-  def(router, mk(Router, 0))
-
-  divider => router.to("index").c;
-
-  def(routerOut, mk(Repeater))
-  for(0 => int i; i<variations.size(); i++){
-    def(v, variations[i]);
-    router => v.from(""+i).c;
-    v => routerOut.c;
-  }
-
-  def(out, mk(Wrapper, router, routerOut))
-  def(root, mk(Repeater, [P_Trigger, P_Clock, P_Reset]))
-
-  root.multi([
-    (mk(Delay, samp) => router.c).from(P_Trigger) // Delay triggers, if clock or reset happens in same frame
-    ,router.from(P_Reset).to(P_Reset)
-    ,divider.from(P_Reset).to(P_Reset)
-    ,divider.from(P_Clock).to(P_Trigger)
-  ]);
-
-
-  /*
-    root => router.from(P_Trigger).c;
-    root => divider.from(P_Reset).to(P_Reset).c;
-    root => divider.from(P_Step).to(P_Trigger).c;
-   */
-  
-
-  return mk(Wrapper, root, out);
-}
 
 
 define(combine, MUtil._combine([$@]))

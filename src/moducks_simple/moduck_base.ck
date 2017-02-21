@@ -53,6 +53,7 @@ public class ModuckBase{
       VEvent newEv;
       newEv @=> ev;
       ev @=> outs[key];
+      outKeys << key;
     }
 
     

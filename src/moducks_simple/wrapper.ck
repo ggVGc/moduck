@@ -6,11 +6,12 @@ public class Wrapper extends Moduck{
     Wrapper ret;
     src.handlerKeys @=> ret.handlerKeys;
     src.handlers @=> ret.handlers;
+    src.values @=> ret.values;
 
     // Copy all non-recv outs
     for(0 => int i; i<target.outKeys.size(); i++){
       target.outKeys[i] @=> string k;
-      if(!isRecvPulse(k)){
+      if(!isRecvPulse(k) && !target.hasValueKey(k)){
         target.outs[k] @=> ret.outs[k];
         ret.outKeys << k;
       }

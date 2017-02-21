@@ -52,4 +52,9 @@ public class PulseDiv extends Moduck{
 
     return ret;
   }
+
+  fun static PulseDiv make(int divisor){
+    return make(divisor, 0);
+  }
+
 }
