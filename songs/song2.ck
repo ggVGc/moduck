@@ -18,7 +18,7 @@ def(kick,
 )
 
 
-def(beatMeta, metaSeq("0123110231211020210", B+B3, Bar*4, [
+def(beatMeta, metaSeq("0", B+B3, Bar*4, [
   mk(PulseDiv, B2, 0)
   ,mk(PulseDiv, B6, 0)
   ,mk(PulseDiv, B3, 0)
@@ -26,9 +26,9 @@ def(beatMeta, metaSeq("0123110231211020210", B+B3, Bar*4, [
 ]))
 
 
-def(meloMeta, metaSeq("0.12.", Bar, Bar*4, [
+def(meloMeta, metaSeq("0.1.2", Bar, Bar*6, [
  mk(Sequencer, [0,1,2]).b(mk(Printer, "reset").from(recv(P_Reset)))
- ,mk(Sequencer, [2,1,3])
+ ,mk(Sequencer, [1,2,4])
  ,mk(Sequencer, [-2,-2,-1,0])
 ]).set("resetOnLoop", true))
 

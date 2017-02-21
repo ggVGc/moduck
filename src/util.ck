@@ -101,16 +101,22 @@ public class Util{
   }
 
   fun static SeqInfo seqFromString(string str, int beatSize, int seqLen){
+    if(whichNumber(str.substring(str.length()-1,1)) != null){
+      str+"." @=> str;
+    }
+
     SeqInfo.make(str.length()) @=> SeqInfo ret;
+     
     0 => int curBeatLen;
     0 => int count;
     0 => int totalLen;
     for(0=>int i;i<str.length();i++){
+      i == str.length()-1 => int isOnLast;
       whichNumber(str.substring(i, 1)) @=> IntRef num;
-      if(num != null){
+      if(num != null && !isOnLast){
         num.i => ret.nums[count];
       }
-      if(num != null || i == str.length()-1){
+      if(num != null || isOnLast){
         curBeatLen + totalLen => totalLen;
         seqLen - totalLen => int restLen;
         if(restLen < 0){
@@ -136,6 +142,7 @@ public class Util{
     for(0=> int i;i<ret.size();i++){
       ret.lens[i] +=> acc;
     }
+
 
     return ret;
   }
