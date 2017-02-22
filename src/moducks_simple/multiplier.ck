@@ -31,7 +31,7 @@ public class Multiplier extends Moduck{
   fun static Multiplier make(int inputCount){
     Multiplier ret;
     OUT(P_Trigger);
-    IN(TrigHandler, (inputCount))
+    IN(TrigHandler, (inputCount));
     for(0 => int i; i<inputCount; i++){
       ret.addIn(""+i, SetHandler.make(i));
       ret.addVal(""+i, 1);

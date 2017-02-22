@@ -1,2 +1,0 @@
-Runner.start();
-Util.runForever();

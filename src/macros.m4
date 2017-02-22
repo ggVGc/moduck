@@ -36,8 +36,9 @@ define(genHandler,
       return ret;
     }
 
-    fun void add(Moduck parent){
+    fun $1 add(Moduck parent){
       parent.addIn($2, this);
+      return this;
     }
 
     dnl fun void addDefault(Moduck parent){
@@ -48,7 +49,7 @@ define(genHandler,
 )
 
 
-define(IN, $1.make $2 .add(ret);)
+define(IN, $1.make $2 .add(ret))
 define(OUT, ret.addOut($1);)
 
 dnl define(IN_Default, $1.make $2 .addDefault(ret);)

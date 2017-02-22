@@ -44,17 +44,28 @@ include(aliases.m4)
 
 public class Runner{
   static Trigger @ _startBang;
-  static ModuckP @ masterClock;
+  static ClockGen @ masterClock;
 
   static int ticksPerBeat;
 
-  fun static void start(){
-    Patch.connect(_startBang, masterClock);
-    // Patch.connect(masterClock, Printer.make("master"));
-    samp  => now;
-    _startBang.trigger(1);
-    <<< "Playing">>>;
+  static int isPlaying;
 
+  fun static int setPlaying(int v){
+    if(v){
+      return start();
+    }else{
+      return stop();
+    }
+  }
+
+  fun static int start(){
+    if(isPlaying){
+      return false;
+    }
+    _startBang.trigger(1);
+    true => isPlaying;
+    <<< "Runner: Playing">>>;
+    return true;
   }
 
   fun static void setBpm(float bpm){
@@ -69,13 +80,25 @@ public class Runner{
     masterClock.getVal("delta")::samp @=> dur d;
     return minute/(d*ticksPerBeat);
   }
+
+  fun static int stop(){
+    if(!isPlaying){
+      return false;
+    }
+    masterClock.stop();
+    false => isPlaying;
+    <<< "Runner: Stopped ">>>;
+    return true;
+  }
 }
 
+false => Runner.isPlaying;
 
 32 => Runner.ticksPerBeat;
 
 
 Trigger.make("start") @=> Runner._startBang;
-ModuckP.make(ClockGen.make(120*Runner.ticksPerBeat)) @=> Runner.masterClock;
+ClockGen.make(120*Runner.ticksPerBeat) @=> Runner.masterClock;
 
-samp => now;
+Patch.connect(Runner._startBang, Runner.masterClock);
+Util.runForever(); // Keep connection alive

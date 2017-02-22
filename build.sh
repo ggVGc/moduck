@@ -16,6 +16,7 @@ python ./generateMidiPorts.py build/midiPorts.m4
 if [[ "$songName" == "" ]]; then
   echo "" > build/_cur_song
 else
+  echo "Building song: $1"
   cp "songs/$1.ck" build/_cur_song
   cd build || exit
   m4 _cur_song > tmp
@@ -48,9 +49,4 @@ if [[ "$songName" == "" ]]; then
     echo "$file"
     mv tmp "$file"
   done < <(find . -name '*.ck' -print0)
-else
-  cp ../src/run.ck run.ck
-  echo "Building song"
-  m4 run.ck > tmp
-  mv tmp run.ck
 fi

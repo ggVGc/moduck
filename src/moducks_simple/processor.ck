@@ -13,7 +13,7 @@ public class Processor extends Moduck{
   fun static Processor make(IntFun f){
     Processor ret;
     OUT(P_Trigger);
-    IN(TrigHandler, (f))
+    IN(TrigHandler, (f));
     return ret;
   }
 }

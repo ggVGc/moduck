@@ -10,11 +10,16 @@ genHandler(RunHandler, "run",
       parent.send(P_Clock, 0);
     }
   }
-  HANDLE{
+
+  fun void stop(){
     if(looper != null){
       looper.exit();
       null @=> looper;
     }
+  }
+
+  HANDLE{
+    stop();
     if(v){
       spork ~ loop() @=> looper;
     }
@@ -31,14 +36,21 @@ genHandler(BpmHandler, "bpm",
 
 
 public class ClockGen extends Moduck{
+  RunHandler @ runHandler;
+
+  fun void stop(){
+    runHandler.stop();
+  }
+
   fun static ClockGen make(float bpm){
     return make(Util.bpmToDur(bpm));
   }
+
   
   fun static ClockGen make(dur d){
     ClockGen ret;
     OUT(P_Clock);
-    IN(RunHandler, ());
+    IN(RunHandler, ()) @=> ret.runHandler;
     IN(BpmHandler, ());
     ret.addVal("delta", Util.toSamples(d));
     return ret;

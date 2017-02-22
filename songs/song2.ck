@@ -1,6 +1,7 @@
 include(song_macros.m4)
 include(_all_parts.m4)
 
+Runner.setPlaying(0);
 
 /*
   setBpm(134);
@@ -35,18 +36,25 @@ def(beatMeta, metaSeq("0", B+B3, Bar*4, [
 ]))
 
 
-def(meloMeta, metaSeq("0...1...2", Bar/2, Bar*6, [
- mk(Sequencer, [0,1,2]).b(mk(Printer, "reset").from(recv(P_Reset)))
- ,mk(Sequencer, [1,2,4])
- ,mk(Sequencer, [-1,-3,-2])
-]).set("resetOnLoop", true))
+dnl // def(meloMeta, metaSeq("0...1...2", Bar/2, Bar*6, [
+dnl //  mk(Sequencer, [0,1,2]).b(mk(Printer, "reset").from(recv(P_Reset)))
+dnl //  ,mk(Sequencer, [1,2,4])
+dnl //  ,mk(Sequencer, [-1,-3,-2])
+dnl // ]).set("resetOnLoop", true))
+
+
+def(meloRouter, mk(Router, 0).multi([
+  mk(Sequencer, [0,1,2]).from("0")
+  ,mk(Sequencer, [1,2,4]).from("1")
+  ,mk(Sequencer, [-1,-3,-2]).from("2")
+]))
 
 
 
 
-Runner.masterClock
+P(Runner.masterClock)
   .b(beatMeta.to(P_Clock))
-  .b(meloMeta.to(P_Clock))
+  // .b(meloMeta.to(P_Clock))
 ;
 
 Runner.masterClock
@@ -56,7 +64,8 @@ Runner.masterClock
       ).c
    */
   => beatMeta.c
-  => meloMeta.c
+  // => meloMeta.c
+  => meloRouter.c
   // => mkc(Printer, "note")
   => mkc(Mapper, Scales.MinorNatural, 12)
   => octaves(4).c => mkc(Offset, -4)
@@ -65,5 +74,14 @@ Runner.masterClock
 
 
 Runner.masterClock => fourFour(B, 70).c => kick.c;
+
+
+
+Runner.masterClock
+  => mkc(Delay, D*8)
+  => mkc(Value, 1)
+  => meloRouter.to("index").c
+;
+
 
 Util.runForever();
