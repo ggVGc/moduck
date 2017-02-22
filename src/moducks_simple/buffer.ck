@@ -22,7 +22,6 @@ genHandler(TrigHandler, P_Trigger,
 
 public class Buffer extends Moduck{
   fun static Buffer make(int size){
-    <<< "Buf Size", size >>>;
     Buffer ret;
     IntRef buf[size];
     for(0=>int i;i<size;i++){

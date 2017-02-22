@@ -1,8 +1,7 @@
-include(song_macros.m4)
-include(_all_parts.m4)
 
 
-// 134 => BPM;
+
+134 => BPM;
 
 
 output(synth, MIDI_OUT_IAC_3, 0, 16, false) 
@@ -19,29 +18,30 @@ def(kick,
 )
 
 
-def(beatMeta, metaSeq("0", B+B3, Bar*4, [
-  mk(PulseDiv, B3, 0)
+def(beatMeta, metaSeq("0123110231211020210", B+B3, Bar*4, [
+  mk(PulseDiv, B2, 0)
   ,mk(PulseDiv, B6, 0)
   ,mk(PulseDiv, B3, 0)
   ,mk(PulseDiv, B4, 0)
 ]))
 
 
-def(meloMeta, metaSeq("0...1...2", Bar/2, Bar*6, [
+// def(meloMeta, metaSeq("012.", Bar, Bar*4, [
+def(meloMeta, metaSeq(Values.meloSeq(), Bar, Bar*4, [
  mk(Sequencer, [0,1,2]).b(mk(Printer, "reset").from(recv(P_Reset)))
- ,mk(Sequencer, [1,2,4])
- ,mk(Sequencer, [-1,-3,-2])
+ ,mk(Sequencer, [4,3,4])
+ ,mk(Sequencer, [2,6,5])
 ]).set("resetOnLoop", true))
 
 
 
 
-Runner.masterClock
+masterClock
   .b(beatMeta.to(P_Clock))
   .b(meloMeta.to(P_Clock))
 ;
 
-Runner.masterClock
+masterClock
   => beatMeta.c
   /*
     => mk(Sequencer, [0,1,2,3,2,3,1,0,-2,-1]).hook(
@@ -51,10 +51,12 @@ Runner.masterClock
   => meloMeta.c
   => mkc(Printer, "note")
   => mkc(Mapper, Scales.MinorNatural, 12)
-  => octaves(4).c => mkc(Offset, -4)
+  => octaves(3).c => mkc(Offset, -2)
   => synth.c
 ;
 
-Runner.masterClock => fourFour(B, 70).c => kick.c;
+masterClock => fourFour(B, 70).c => kick.c;
 
-Util.runForever();
+
+1 => PLAY;
+

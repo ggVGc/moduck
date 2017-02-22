@@ -147,6 +147,9 @@ public class Util{
     return ret;
   }
 
+  fun static void runForever(){
+    while(true) { 99::hour => now; }
+  }
 
 }
 

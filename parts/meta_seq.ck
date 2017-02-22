@@ -18,7 +18,7 @@ fun ModuckP metaSeq(string pattern, int stepSize, int totalLen, Moduck variation
   root.addVal("resetOnLoop", false);
   root => resetGate.fromTo(recv("resetOnLoop"), "index").c;
   root.setVal("resetOnLoop", false);
-  def(resetter, mk(Buffer, 1) => mkc(Repeater))
+  def(resetter, mk(Repeater))
   resetGate => resetter.from("1").c;
 
   divider => resetGate.from(P_Looped).c;

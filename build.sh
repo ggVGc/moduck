@@ -17,6 +17,10 @@ if [[ "$songName" == "" ]]; then
   echo "" > build/_cur_song
 else
   cp "songs/$1.ck" build/_cur_song
+  cd build || exit
+  m4 _cur_song > tmp
+  mv tmp _cur_song
+  cd .. || exit
 fi
 
 rm -rf build/parts
