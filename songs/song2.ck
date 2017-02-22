@@ -1,7 +1,7 @@
 include(song_macros.m4)
 include(_all_parts.m4)
 
-Runner.setPlaying(0);
+Runner.setPlaying(1);
 
 /*
   setBpm(134);

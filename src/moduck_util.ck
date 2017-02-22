@@ -12,43 +12,40 @@ public class MUtil{
   }
 
 
-  fun static ModuckP _combine(Moduck children[]){
-    Repeater.make() @=> Repeater in;
-    Repeater.make() @=> Repeater out;
-    
-    for(0=>int i;i<children.size();i++){
-      Patch.connect(in, null, children[i], null);
-      Patch.connect(children[i], null, out, null);
-    }
+  fun static ModuckP combine(Moduck children[]){
+    string allSrcKeys[0];
 
-    return ModuckP.make(Wrapper.make(in, out));
-  }
-
-  fun static ModuckP _combine(ModuckP children[]){
-    return _combine(castModuckList(children));
-  }
-
-
-
-  /*
-    fun static ModuckP remap(Moduck src, string srcTag, string dstTag){
-      Util.copy(src.outKeys) @=> string keys[];
-      if(!Util.contains(dstTag, keys)){
-        keys << dstTag;
-      }
-
-      ModuckP.make(Repeater.make(keys)) @=> ModuckP out;
-      for(0=>int i; i<src.outKeys.size();i++){
-        src.outKeys[i] @=> string k;
-        if(k != dstTag){
-
-
-          <<< k>>>;
-          this => out.listen(k).c;
+    for(0 => int i; i<children.size(); i++){
+      children[i] @=> Moduck child;
+      for(0 => int k; k<child.handlerKeys.size(); k++){
+        child.handlerKeys[k] @=> string tag;
+        if(!isRecvPulse(tag) && !Util.contains(tag, allSrcKeys)){
+          allSrcKeys << tag;
         }
       }
     }
-   */
+
+    ChainData datas[0];
+    for(0 => int i; i<children.size(); i++){
+      ChainData.make(null, children[i], null) @=> ChainData d;
+      for(0 => int k; k<d.target.handlerKeys.size(); k++){
+        d.target.handlerKeys[k] @=> string tag;
+        if(!isRecvPulse(tag)){
+          d.srcTags << tag;
+          d.targetTags << tag;
+        }
+        datas << d;
+      }
+    }
+
+    Repeater.make(allSrcKeys) @=> Repeater root;
+
+    return ModuckP.make(Patch.connectMulti(root, datas));
+  }
+
+  fun static ModuckP combine(ModuckP children[]){
+    return combine(castModuckList(children));
+  }
 
 
   fun static Moduck mul2(Moduck a, Moduck b){

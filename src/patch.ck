@@ -132,13 +132,28 @@ public class Patch{
   }
 
   fun static Moduck connectMulti(Moduck src, ChainData targets[]){
-    Repeater.make() @=> Repeater out;
+    string allOutKeys[0];
+
+    for(0 => int i; i<targets.size(); i++){
+      targets[i] @=> ChainData d;
+      for(0 => int k; k<d.target._outKeys.size(); k++){
+        d.target._outKeys[k] @=> string tag;
+        if(!isRecvPulse(tag) && !Util.contains(tag, allOutKeys)){
+          allOutKeys << tag;
+        }
+      }
+    }
+
+    Repeater.make(allOutKeys) @=> Repeater out;
     for(0 => int i; i<targets.size(); i++){
       targets[i] @=> ChainData d;
       connect(src, d.srcTags, d.target, d.targetTags);
-      // TODO: Combine into Repeater with all outputs available
-      // implement using MUtil.combine
-      connect(d.target, P_Default, out, P_Trigger);
+      for(0 => int k; k<d.target._outKeys.size(); k++){
+        d.target._outKeys[k] @=> string tag;
+        if(!isRecvPulse(tag)){
+          connect(d.target, tag, out, tag);
+        }
+      }
     }
 
     return Wrapper.make(src, out);

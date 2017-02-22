@@ -16,5 +16,6 @@ Machine.add("moduck_patcher.ck");
 Machine.add("scales.ck");
 Machine.add("moduck_util.ck");
 Machine.add("runner.ck");
+samp => now;
 Machine.add("_cur_song");
 
