@@ -178,6 +178,8 @@ public class ModuckP extends Moduck{
     m.handlerKeys @=> ret.handlerKeys;
     m._outs @=> ret._outs;
     m._outKeys @=> ret._outKeys;
+    m._valHandlers@=> ret._valHandlers;
+    m._valHandlerKeys@=> ret._valHandlerKeys;
     return ret;
   }
 

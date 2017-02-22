@@ -17,6 +17,7 @@ Machine.add("scales.ck");
 Machine.add("moduck_util.ck");
 Machine.add("runner.ck");
 Machine.add("run.ck");
+Machine.add("_cur_song");
 
 
 
