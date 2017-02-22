@@ -166,12 +166,6 @@ public class ModuckP extends Moduck{
     return ModuckP.make(Patch.propagate(this, tag));
   }
 
-  // Repeat a received signal regardless if it was handled or not
-  fun ModuckP thru(string tags[]){
-    // TODO: Implement
-    return this;
-  }
-
   fun static ModuckP make(Moduck m){
     ModuckP ret;
     m._handlers @=> ret._handlers;
