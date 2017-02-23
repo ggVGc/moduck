@@ -151,5 +151,16 @@ public class Util{
     while(true) { 99::hour => now; }
   }
 
+  fun static string catStrings(string list[]){
+    if(list.size() == 0){
+      return "";
+    }
+    list[0] => string s;
+    for(1 => int i; i<list.size(); i++){
+      s+","+list[i] @=> s;
+    }
+    return s;
+  }
+
 }
 

@@ -2,19 +2,7 @@ include(song_macros.m4)
 include(_all_parts.m4)
 
 Runner.setPlaying(1);
-
-/*
-  setBpm(134);
-  setTicksPerBeat(32);
- */
-
-
 Runner.setBpm(108);
-
-
-output(synth2, MIDI_OUT_IAC_3, 1, 4, false) 
-output(synth3, MIDI_OUT_IAC_3, 2, 4, false) 
-
 
 def(synth, mk(NoteOut, MIDI_OUT_IAC_3, 0, 0::ms, D16, false))
 
@@ -26,7 +14,6 @@ def(kick,
   mk(NoteOut, MIDI_OUT_IAC_2, 0, 0::ms, D4, true)
   .set("note", 0)
 )
-
 
 def(beatMeta, metaSeq("0", B+B3, Bar*4, [
   mk(PulseDiv, B3, 0)
@@ -44,9 +31,9 @@ dnl // ]).set("resetOnLoop", true))
 
 
 def(meloRouter, mk(Router, 0).propagate(P_Reset).multi([
-  mk(Sequencer, [0,1,2]).fromTo("0", P_Default).fromTo(P_Reset, P_Reset)
-  ,mk(Sequencer, [1,2,4]).fromTo("1",P_Default).fromTo(P_Reset, P_Reset)
-  ,mk(Sequencer, [-1,-3,-2]).fromTo("2", P_Default).fromTo(P_Reset, P_Reset)
+  mk(Sequencer, [0,1,2]).from("0").listen(P_Reset)
+  ,mk(Sequencer, [1,2,4]).from("1").listen(P_Reset)
+  ,mk(Sequencer, [-1,-3,-2]).from("2").listen(P_Reset)
 ]))
 
 def(blocker, mk(Router, 0).multi([
@@ -58,19 +45,14 @@ def(blocker, mk(Router, 0).multi([
 def(master, Runner.masterClock => blocker.c)
 
 
-master
-  .b(beatMeta.to(P_Clock))
-  // .b(meloMeta.to(P_Clock))
-;
+master.multi([
+  beatMeta.to(P_Clock)
+  // , meloMeta.to(P_Clock)
+]);
 
 
 
 master
-  /*
-    => mk(Sequencer, [0,1,2,3,2,3,1,0,-2,-1]).hook(
-        beatMeta.fromTo(P_Looped, P_Reset)
-      ).c
-   */
   => beatMeta.c
   // => meloMeta.c
   => meloRouter.c

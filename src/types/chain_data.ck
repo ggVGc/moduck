@@ -1,4 +1,6 @@
 
+include(pulses.m4)
+
 public class ChainData{
   Moduck @ target;
   string srcTags[0];
@@ -21,16 +23,31 @@ public class ChainData{
      */
     target @=> ret.target;
     if(srcTags != null){
-      srcTags @=> ret.srcTags;
+      Util.copy(srcTags) @=> ret.srcTags;
     }
     if(targetTags != null){
-      targetTags @=> ret.targetTags;
+      Util.copy(targetTags) @=> ret.targetTags;
     }
     return ret;
   }
 
+  fun ChainData balanceTags(){
+    srcTags.size() - targetTags.size() => int diff;
+    for(0=>int i; i<diff;i++){
+      targetTags << P_Default;
+    }
+    targetTags.size() - srcTags.size() => diff;
+    for(0=>int i; i<diff;i++){
+      srcTags << P_Default;
+    }
+    return this;
+  }
+
   fun static ChainData make(string srcTag, Moduck target, string targetTag){
     return make([srcTag], target, [targetTag]);
+  }
+  fun static ChainData make(ChainData other){
+    return make(Util.copy(other.srcTags), other.target, Util.copy(other.targetTags));
   }
 
 }

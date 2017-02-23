@@ -87,15 +87,16 @@ public class Patch{
       <<<"Error: No target inputs:"+target>>>;
     }
 
+    if(srcEventNames.size() != targetEventNames.size()){
+      <<< "Inequal event tag counts">>>;
+      <<<"Source tags:", Util.catStrings(srcEventNames) >>>;
+      <<<"Target tags:", Util.catStrings(targetEventNames) >>>;
+      Machine.crash();
+    }
+
     for(0 => int i; i<srcEventNames.size(); i++){
       srcEventNames[i] => string srcTag;
-      string dstTag;
-      if(i < targetEventNames.size()){
-        targetEventNames[i] => dstTag;
-      }else{
-        P_Default @=> dstTag;
-      }
-
+      targetEventNames[i] => string dstTag;
 
       filterNonRecvPulses(src._outKeys) @=> string nonRecvs[];
       if(nonRecvs.size() == 0){
@@ -104,18 +105,6 @@ public class Patch{
         return src;
       }
 
-      /*
-        if(src.outs[srcTag] == null){
-          <<<"Error: Invalid source event: "+srcTag+" - "+src>>>;
-        }
-       */
-
-      // <<<"Connecting "+src+"<>"+srcTag+" to "+target+"<>"+dstTag>>>;
-      /*
-        if(target.handlers[dstTag] == null){
-          <<<"Error: Invalid target event: "+dstTag+" - "+target>>>;
-        }
-       */
       spork ~ connectLoop(src, srcTag, target, dstTag);
     }
     return Wrapper.make(src, target);

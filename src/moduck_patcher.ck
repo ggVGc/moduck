@@ -4,41 +4,37 @@ include(pulses.m4)
 class Connector{
   ChainData data;
 
-  fun void preconnect(){
-    data.srcTags.size() - data.targetTags.size() => int diff;
-    for(0=>int i; i<diff;i++){
-      data.targetTags << P_Default;
-    }
-    data.targetTags.size() - data.srcTags.size() => diff;
-    for(0=>int i; i<diff;i++){
-      data.srcTags << P_Default;
-    }
-  }
-
   fun ModuckP c(Moduck other){
-    preconnect();
+    data.balanceTags();
     return ModuckP.make(Patch.connect(other, data.srcTags, data.target, data.targetTags));
   }
 
   // Uses target as source and vice versa. Keeps srcTag and targetTag as is.
   fun ModuckP reverseConnect(Moduck other){
-    preconnect();
+    data.balanceTags();
     return ModuckP.make(Patch.connect(data.target, data.srcTags, other, data.targetTags));
   }
 
   fun Connector from(string v){
+    // <<<"from, ", v>>>;
     data.srcTags << v;
     return this;
   }
 
-
   fun Connector to(string v){
+    // <<<"to, ", v>>>;
     data.targetTags << v;
     return this;
   }
 
   fun Connector fromTo(string src, string dst){
+    data.balanceTags();
+    // <<<"Fromto, ", src, dst>>>;
     return from(src).to(dst);
+  }
+
+  fun Connector listen(string tag){
+    return fromTo(tag, tag);
   }
 
   fun static Connector make(Moduck m, string fromTags[], string dstTags[]){
@@ -50,60 +46,14 @@ class Connector{
 
 
 public class ModuckP extends Moduck{
-  /*
-    fun ModuckP connect(string srcTag, Moduck other, string targetTag){
-      return ModuckP.make(Patch.connect(this, srcTag, other, targetTag));
-    }
-
-
-  fun ModuckP connect(string srcTag, Moduck other, string targetTag){
-    return ModuckP.make(Patch.connect(this, srcTag, other, targetTag));
-  }
-
-  fun ModuckP c(string srcTag, Moduck other, string targetTag){
-    return connect(srcTag, other, targetTag);
-  }
-
-  fun ModuckP c(Moduck other, string targetTag){
-    return c(null, other, targetTag);
-  }
-   */
-
-  /*
-    fun ModuckP connect(Moduck other){
-      return Connector.make(this, null, null).c(other);
-    }
-   */
-
 
   fun ModuckP c(Moduck other){
     return Connector.make(this, [P_Default], [P_Default]).c(other);
   }
 
-
   fun Connector cc(Moduck other){
     return c(other).from(P_Default);
   }
-
-  /*
-    fun ModuckP c(Connector con){
-      Repeater.make() @=> Repeater rep;
-      return gt
-    }
-   */
-
-
-  /*
-    fun ModuckP multi(ChainData targets[]){
-      return ModuckP.make(Patch.connectMulti(this, targets));
-    }
-   */
-
-  /*
-    fun ModuckP chain(ChainData targets[]){
-      return ModuckP.make(Patch.chain(this, targets));
-    }
-   */
 
   fun ModuckP b(Moduck m){
     return b(Connector.make(m, [P_Default], [P_Default]));
@@ -122,7 +72,7 @@ public class ModuckP extends Moduck{
   fun ModuckP multi(Connector targets[]){
     ChainData datas[targets.size()];
     for(0=>int i; i<targets.size();i++){
-      targets[i].data @=> datas[i];
+      ChainData.make(targets[i].data).balanceTags() @=> datas[i];
     }
     return ModuckP.make(Patch.connectMulti(this, datas));
   }
