@@ -5,6 +5,7 @@ Runner.setPlaying(1);
 Runner.setBpm(108);
 
 def(synth, mk(NoteOut, MIDI_OUT_IAC_3, 0, 0::ms, D16, false))
+def(synth2, mk(NoteOut, MIDI_OUT_IAC_1, 0, 0::ms, D16, false))
 
 def(clap, mk(NoteOut, MIDI_OUT_IAC_2, 1, 0::ms, D4, true)
   .set("note", 4)
@@ -62,6 +63,17 @@ master
 ;
 
 
+def(resetter, mk(Repeater, P_Reset))
+
+master
+  => seqDiv("..11", B4, Bar).hook(resetter.listen(P_Reset)).c
+  => metaSeq("001", Bar, Bar*3, [mk(Value, -4), mk(Value, 3)]).hook(resetter.listen(P_Reset)).hook(master.to(P_Clock)).c
+  => octaves(5).c
+  => synth2.c
+;
+
+
+
 def(blockerOff, mk(Value, 1) => blocker.to("index").c);
 def(blockerOn, mk(Value, 0) => blocker.to("index").c);
 
@@ -70,6 +82,7 @@ def(kickGen, fourFour(B, 70))
 master => kickGen.c => kick.c;
 
 mk(MidInp, MIDI_IN_IAC_6, 0)
+  .b(resetter.from("cc"))
   .b(blockerOff.from("noteOn"))
   .b(meloRouter.fromTo("cc", P_Reset))
   .b((mk(Delay, samp) => meloRouter.to("index").c).from("noteOn"))

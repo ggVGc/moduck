@@ -20,6 +20,16 @@ genHandler(TrigHandler, P_Trigger,
 )
 
 
+genHandler(ResetHandler, P_Reset,
+  HANDLE{
+    for(0=>int i;i<size;i++){
+      null @=> buf[i];
+    }
+  },
+  IntRef buf[];
+  int size;
+)
+
 public class Buffer extends Moduck{
   fun static Buffer make(int size){
     Buffer ret;
@@ -29,6 +39,7 @@ public class Buffer extends Moduck{
     }
     OUT(P_Trigger);
     IN(TrigHandler,(buf, size));
+    IN(ResetHandler,(buf, size));
     return ret;
   }
 }

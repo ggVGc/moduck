@@ -5,7 +5,8 @@ public class Patch{
     while(true){
       src.getOut(srcEventName) @=> VEvent ev;
       if(ev == null){
-        <<<"Null event from "+src+":"+srcEventName>>>;
+        <<<"Null event from "+src.name+", "+src+":"+srcEventName>>>;
+        <<<Util.catStrings(src._outKeys)>>>;
       }
       ev => now;
       target.doHandle(targetEventName, ev.val);

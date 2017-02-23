@@ -124,6 +124,7 @@ public class ModuckP extends Moduck{
     m._outKeys @=> ret._outKeys;
     m._valHandlers@=> ret._valHandlers;
     m._valHandlerKeys@=> ret._valHandlerKeys;
+    m.name @=> ret.name;
     return ret;
   }
 
@@ -136,5 +137,10 @@ public class ModuckP extends Moduck{
       return Connector.make(null, null, tag);
     }
    */
+
+  fun ModuckP setName(string n){
+    n @=> name;
+    return this;
+  }
 
 }

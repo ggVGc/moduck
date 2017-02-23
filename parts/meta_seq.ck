@@ -2,7 +2,7 @@
 
 
 fun ModuckP metaSeq(string pattern, int stepSize, int totalLen, Moduck variations[]){
-  def(root, mk(Repeater, [P_Trigger, P_Clock, P_Reset]))
+  def(root, mk(Repeater, [P_Trigger, P_Clock, P_Reset]).setName("metaSeq_root"))
 
   def(divider, seqDiv(pattern, stepSize, totalLen))
   def(router, mk(Router, 0))
@@ -18,7 +18,7 @@ fun ModuckP metaSeq(string pattern, int stepSize, int totalLen, Moduck variation
   root.addVal("resetOnLoop", false);
   root => resetGate.fromTo(recv("resetOnLoop"), "index").c;
   root.setVal("resetOnLoop", false);
-  def(resetter, mk(Repeater))
+  def(resetter, mk(Repeater, P_Reset).setName("metaSeq_resetter"))
   resetGate => resetter.from("1").c;
 
   divider => resetGate.from(P_Looped).c;
@@ -27,7 +27,9 @@ fun ModuckP metaSeq(string pattern, int stepSize, int totalLen, Moduck variation
     def(v, variations[i]);
     router => v.from(""+i).c;
     v => routerOut.c;
-    resetter => v.to(P_Reset).c;
+    if(v.hasHandler(P_Reset)){
+      resetter => v.to(P_Reset).c;
+    }
   }
 
   divider => routerOut.listen(P_Looped).c;

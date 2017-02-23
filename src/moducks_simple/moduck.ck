@@ -9,6 +9,9 @@ public class Moduck extends ModuckBase {
   ValueSetHandler _valHandlers[0];
   string _valHandlerKeys[0];
 
+  "-" @=> string name;
+
+
 
   fun void addIn(string tag, EventHandler h){
     addOut(recv(tag));
@@ -84,16 +87,19 @@ public class Moduck extends ModuckBase {
       findDefaultInputTag() @=> tag;
     }
 
-
     _handlers[tag] @=> EventHandler handler;
     if(handler == null){
-      <<<"Invalid event: "+tag>>>;
+      <<<name+": Invalid event: "+tag>>>;
       return false;
     }else{
       handler.handle(v);
       handler.parent.send(recv(tag), v);
       return true;
     }
+  }
+
+  fun int hasHandler(string tag){
+    return _handlers[tag] != null;
   }
 
   fun int getVal(string tag){
