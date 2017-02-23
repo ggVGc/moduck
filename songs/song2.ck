@@ -43,21 +43,29 @@ dnl //  ,mk(Sequencer, [-1,-3,-2])
 dnl // ]).set("resetOnLoop", true))
 
 
-def(meloRouter, mk(Router, 0).multi([
-  mk(Sequencer, [0,1,2]).from("0")
-  ,mk(Sequencer, [1,2,4]).from("1")
-  ,mk(Sequencer, [-1,-3,-2]).from("2")
+def(meloRouter, mk(Router, 0).propagate(P_Reset).multi([
+  mk(Sequencer, [0,1,2]).fromTo("0", P_Default).fromTo(P_Reset, P_Reset)
+  ,mk(Sequencer, [1,2,4]).fromTo("1",P_Default).fromTo(P_Reset, P_Reset)
+  ,mk(Sequencer, [-1,-3,-2]).fromTo("2", P_Default).fromTo(P_Reset, P_Reset)
+]))
+
+def(blocker, mk(Router, 0).multi([
+  mk(Blackhole).from("0")
+  ,mk(Repeater).from("1")
 ]))
 
 
+def(master, Runner.masterClock => blocker.c)
 
 
-P(Runner.masterClock)
+master
   .b(beatMeta.to(P_Clock))
   // .b(meloMeta.to(P_Clock))
 ;
 
-Runner.masterClock
+
+
+master
   /*
     => mk(Sequencer, [0,1,2,3,2,3,1,0,-2,-1]).hook(
         beatMeta.fromTo(P_Looped, P_Reset)
@@ -66,22 +74,30 @@ Runner.masterClock
   => beatMeta.c
   // => meloMeta.c
   => meloRouter.c
-  // => mkc(Printer, "note")
   => mkc(Mapper, Scales.MinorNatural, 12)
   => octaves(4).c => mkc(Offset, -4)
   => synth.c
 ;
 
 
-Runner.masterClock => fourFour(B, 70).c => kick.c;
+def(blockerOff, mk(Value, 1) => blocker.to("index").c);
+def(blockerOn, mk(Value, 0) => blocker.to("index").c);
 
+def(kickGen, fourFour(B, 70))
 
+master => kickGen.c => kick.c;
 
-Runner.masterClock
-  => mkc(Delay, D*8)
-  => mkc(Value, 1)
-  => meloRouter.to("index").c
+mk(MidInp, MIDI_IN_IAC_6, 0)
+  .b(blockerOff.from("noteOn"))
+  .b(meloRouter.fromTo("cc", P_Reset))
+  .b((mk(Delay, samp) => meloRouter.to("index").c).from("noteOn"))
+  .b(beatMeta.fromTo("noteOn", P_Reset))
+  .b(meloRouter.fromTo("noteOn", P_Reset))
+  .b(beatMeta.fromTo("cc", P_Reset))
+  .b(kickGen.fromTo("cc", P_Reset))
+  .b(blockerOn.from("cc"))
 ;
+
 
 
 Util.runForever();

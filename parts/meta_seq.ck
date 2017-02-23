@@ -34,9 +34,10 @@ fun ModuckP metaSeq(string pattern, int stepSize, int totalLen, Moduck variation
 
   root.multi([
     (mk(Delay, samp) => router.c).from(P_Trigger) // Delay triggers, if clock or reset happens in same frame
-    ,router.from(P_Reset).to(P_Reset)
-    ,divider.from(P_Reset).to(P_Reset)
-    ,divider.from(P_Clock).to(P_Trigger)
+    ,router.listen(P_Reset)
+    ,divider.listen(P_Reset)
+    ,resetter.from(P_Reset)
+    ,divider.fromTo(P_Clock, P_Trigger)
   ]);
 
   return mk(Wrapper, root, out);

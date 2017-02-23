@@ -1,4 +1,6 @@
 
+Machine.add("midi_flower/initialize.ck");
+samp => now;
 Machine.add("types/intref.ck");
 Machine.add("types/vevent.ck");
 Machine.add("types/src_event.ck");

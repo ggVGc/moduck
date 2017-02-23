@@ -43,6 +43,7 @@ cd ../ || exit
 
 if [[ "$songName" == "" ]]; then
   cp -r ../src/* .
+  cp -r ../midi_flower .
   while IFS= read -r -d '' file
   do
     m4 "$file" > tmp
