@@ -4,6 +4,11 @@ public class Patch{
   fun static void connectLoop(Moduck src, string srcEventName, Moduck target, string targetEventName){
     while(true){
       src.getOut(srcEventName) @=> VEvent ev;
+      /*
+        if(target.getOut(targetEventName) == null){
+          <<<"Invalid target event"+target.name+", "+target+":"+targetEventName>>>;
+        }
+       */
       if(ev == null){
         <<<"Null event from "+src.name+", "+src+":"+srcEventName>>>;
         <<<Util.catStrings(src._outKeys)>>>;

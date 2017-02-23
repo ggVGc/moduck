@@ -10,7 +10,12 @@ genHandler(ResetHandler, P_Reset,
 
 genHandler(TrigHandler, P_Trigger,
   HANDLE{
-    if(shared.accum == 0 || shared.accum >= parent.getVal("divisor")){
+    parent.getVal("divisor") @=> int divisor;
+    if(divisor <=0 ){
+      return;
+    }
+
+    if(shared.accum == 0 || shared.accum >= divisor){
       parent.send(P_Trigger, v);
       0 => shared.accum;
     }

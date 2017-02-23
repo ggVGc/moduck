@@ -1,13 +1,12 @@
 = Moducks to make =
-  == Simple ==
+  == Custom ==
     * Clock repeater (come up with better name)
     * Attenuator
     * Inverter (implement with Processor)
     * Clamper (implement with Processor)
+    * SequenceRepeater (better name). Records a buffer, and can freeze and loop whatever it has.
+      Maybe just a loop mode for Buffer?
 
-  == Complex ==
-    * 
-  
   == Copies ==
     * Trigger riot
     * Z8000

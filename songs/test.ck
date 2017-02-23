@@ -1,7 +1,7 @@
 include(song_macros.m4)
 include(_all_parts.m4)
 
-Runner.setPlaying(true);
+Runner.setPlaying(1);
 
 def(synth, mk(NoteOut, MIDI_OUT_IAC_3, 0, 0::ms, D16, false))
 def(kick,
@@ -9,12 +9,31 @@ def(kick,
   .set("note", 0)
 )
 
+def(riot, triggerRiot())
+
 
 Runner.masterClock
   => mk(PulseDiv, B).c
-  => mk(Probably, 90).c
-  => mk(Printer, "").c
+  => riot.c
 ;
+
+
+
+riot.set("div0", 2);
+riot.set("div1", 3);
+
+riot.set("prob1", 40);
+
+
+
+riot.multi([
+  mk(Printer, "side0").from("side0")
+  // ,mk(Printer, "side1").from("side1")
+  // ,mk(Printer, "bottom0").from("bottom0")
+  // ,mk(Printer, "bottom1").from("bottom1")
+  // ,mk(Printer, "bottom2").from("bottom2")
+  // ,mk(Printer, "bottom3").from("bottom3")
+]);
 
 
 
