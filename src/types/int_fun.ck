@@ -1,4 +1,5 @@
 
 public class IntFun{
-  fun int call(int v){return v;}
+  Moduck @ parent;
+  fun IntRef call(int v){return null;}
 }

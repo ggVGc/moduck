@@ -1,12 +1,22 @@
 = Moducks to make =
   == Simple ==
-    * Clock 
+    * Clock repeater (come up with better name)
+    * Attenuator
+    * Inverter (implement with Processor)
+    * Clamper (implement with Processor)
 
   == Complex ==
     * 
   
   == Copies ==
     * Trigger riot
+    * Z8000
     * Turing machine random looping sequencer
     * Make Noise Rene
-    
+    * Circadian Rhythms
+
+
+= Todo: =
+  * Multiplier and Adder should be implemented in terms of Processor2(which also
+    needs to be created)
+  * Add play speed and step size to Sequencer

@@ -4,7 +4,10 @@ include(macros.m4)
 
 genHandler(TrigHandler, P_Trigger,
   HANDLE{
-    parent.send(P_Trigger, f.call(v));
+    f.call(v) @=> IntRef ret;
+    if(ret != null){
+      parent.send(P_Trigger, ret.i);
+    }
   },
   IntFun f;
 )
@@ -12,6 +15,7 @@ genHandler(TrigHandler, P_Trigger,
 public class Processor extends Moduck{
   fun static Processor make(IntFun f){
     Processor ret;
+    ret @=> f.parent;
     OUT(P_Trigger);
     IN(TrigHandler, (f));
     return ret;
