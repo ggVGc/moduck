@@ -1,3 +1,12 @@
-= Events =
-  Current event system with tags is botched with concurrent event triggers.
-  Each Moduck needs to hold a dict of events instead.
+= Moducks to make =
+  == Simple ==
+    * Clock 
+
+  == Complex ==
+    * 
+  
+  == Copies ==
+    * Trigger riot
+    * Turing machine random looping sequencer
+    * Make Noise Rene
+    

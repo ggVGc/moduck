@@ -4,6 +4,7 @@ include(macros.m4)
 genHandler(TrigHandler, P_Trigger,
   HANDLE{
     0 => int acc;
+    samp => now; // Delay output, in case inputs were set at same tick
     for(0 => int i; i<inputCount; i++){
       acc + parent.getVal(""+i) => acc;
     }
