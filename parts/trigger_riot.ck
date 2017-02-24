@@ -1,16 +1,14 @@
 
 
-fun ModuckP makeKnob(){
+fun ModuckP makeKnob(int initialTicksPerBeat){
+  def(speedClockDiv, mk(PulseDiv, initialTicksPerBeat))
   def(clockDiv, mk(PulseDiv,0))
   def(prob, mk(Probably, 100))
   def(clockDly, mk(PulseDelay, 0))
   def(timeDly, mk(Delay, 0::samp))
   def(timeAttn, mk(Attenuator,0,100))
-
-  def(root, mk(Repeater, [P_Trigger, "clockDelay", "div", "prob", "time"]).setName("riot_knobRoot"));
-
+  def(root, mk(Repeater, [P_Trigger, "clockDelay", "div", "prob", "time", "speed"]).setName("riot_knobRoot"));
   def(clockPhaseDelta, mk(Subtract))
-
 
   clockDiv
     => clockPhaseDelta.fromTo(recv("divisor"), "a").c;
@@ -18,23 +16,21 @@ fun ModuckP makeKnob(){
   clockDly
     => clockPhaseDelta.fromTo(recv("size"), "b").c;
 
-
   def(clockDeltaTime, mk(Value, 0))
 
   def(mul, mk(Multiplier, 2))
   clockPhaseDelta => mul.to("1").c;
   mul.setVal("0", Runner.samplesPerTick());
   mul => clockDeltaTime.to("value").c;
-
   clockDeltaTime => clockDeltaTime.fromTo(recv("value"), P_Trigger).c;
 
   root
     .b(clockDly.fromTo("clockDelay", "size"))
     .b(clockDiv.fromTo("div", "divisor"))
+    .b(speedClockDiv.fromTo("speed", "divisor"))
     .b(prob.fromTo("prob", "chance"))
     .b(timeAttn.fromTo("time", "ratio"))
   ;
-
 
   timeAttn
     => mk(Delay, samp).from(recv("ratio")).c
@@ -42,35 +38,28 @@ fun ModuckP makeKnob(){
     => timeAttn.to(P_Trigger).c
   ;
 
-
   def(trigOut, root
-    => clockDiv.listen(P_Trigger).c
+    => speedClockDiv.c
+    => clockDiv.c
     => prob.c
     => clockDly.c
     => timeDly.c
   );
 
   trigOut.setName("riot_knobOut");
-
   timeAttn => timeDly.to("delay").c;
-
   root => clockDly.to(P_Clock).c;
-
   samp => now;
-
   clockDiv.set("divisor", 0);
-
   return mk(Wrapper, root, trigOut);
 
 }
 
-fun ModuckP triggerRiot(){
-  4 => int gridSize;
-
+fun ModuckP triggerRiot(int gridSize, int initialTicksPerBeat){
   defl(sideOuts, makeOuts(gridSize));
   defl(bottomOuts, makeOuts(gridSize));
 
-  defl(knobs, makeKnobs(gridSize*gridSize));
+  defl(knobs, makeKnobs(gridSize*gridSize, initialTicksPerBeat));
 
   string inKeys[0];
   string outKeys[0];
@@ -85,6 +74,7 @@ fun ModuckP triggerRiot(){
       inKeys << "prob"+x+""+y;
       inKeys << "time"+x+""+y;
       inKeys << "clockDelay"+x+""+y;
+      inKeys << "speed"+x+""+y;
     }
   }
 
@@ -104,6 +94,7 @@ fun ModuckP triggerRiot(){
         .b(knob.fromTo("div"+x+""+y, "div"))
         .b(knob.fromTo("prob"+x+""+y, "prob"))
         .b(knob.fromTo("time"+x+""+y, "time"))
+        .b(knob.fromTo("speed"+x+""+y, "speed"))
       ;
 
       knob
@@ -123,11 +114,11 @@ fun ModuckP triggerRiot(){
 
 
 
-fun ModuckP[] makeKnobs(int count){
+fun ModuckP[] makeKnobs(int count, int initialTicksPerBeat){
   ModuckP ret[count];
 
   for(0=>int i;i<count;++i){
-    makeKnob() @=> ret[i];
+    makeKnob(initialTicksPerBeat) @=> ret[i];
   }
   return ret;
 }
