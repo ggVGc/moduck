@@ -59,6 +59,19 @@ dnl define(OUT_Default, ret.addDefaultOut($1);)
 define(HANDLE, fun void handle(int v))
 
 
+define(maker0,
+
+fun static Moduck[] many(int count){
+  Moduck ret[count];
+  for(0=>int x;x<count;++x){
+    make() @=> ret[x];
+  }
+  return ret;
+}
+
+
+fun static $1 make()
+)
 
 define(maker,
 

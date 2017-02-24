@@ -13,19 +13,15 @@ def(riot, triggerRiot())
 
 
 Runner.masterClock
-  => mk(PulseDiv, B).c
-  => mkc(Printer, "master")
+  // => mkc(Printer, "master")
   => riot.c
 ;
 
 
-
-
-
 riot
-  .set("div00", 4)
-  .set("div01", 4)
-  .set("time01", 50) // 50% time delay
+  .set("div00", Bar)
+  .set("div01", Bar/2)
+  // .set("time01", 50) // 50% time delay
 ;
 
 // riot.set("prob01", 40);
