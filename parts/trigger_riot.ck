@@ -31,7 +31,6 @@ fun ModuckP triggerRiot(){
   def(root, mk(Repeater, inKeys));
   def(mainOut, mk(Repeater, outKeys))
 
-
   for(0=>int x;x<gridSize;++x){ 
     bottomOuts[x] => mainOut.to("bottom"+x).c;
     for(0=>int y;y<gridSize;++y){ 
@@ -66,7 +65,6 @@ fun ModuckP triggerRiot(){
   for(0=>int y;y<gridSize;++y){ 
     sideOuts[y] => mainOut.to("side"+y).c;
   }
-
 
   samp => now;
   return mk(Wrapper, root, mainOut);

@@ -13,14 +13,18 @@ def(riot, triggerRiot())
 
 
 Runner.masterClock
-  => mk(PulseDiv, B).c
+  => mk(PulseDiv, Bar).c
   => mkc(Printer, "master")
-  => riot.c
+  => mkc(PulseGen, 3, D)
+  => mkc(Printer, "genout")
+  // => riot.c
 ;
 
 
 
-riot.set("div00", 4);
+
+
+// riot.set("div00", 4);
 // riot.set("div01", 5);
 
 // riot.set("prob01", 40);
