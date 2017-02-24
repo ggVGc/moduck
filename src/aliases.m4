@@ -7,6 +7,8 @@ define(wrap, P(Wrapper.make($1, $2)))
 
 define(mk, ModuckP.make($1.make(`shift($@)')))
 
+define(mkMany, ModuckP.many($1.many(`shift($@)')))
+
 
 dnl fun Moduck V1(Moduck src, string srcEventName, Moduck target, string msg){
 dnl   return Patch.connVal(src, srcEventName, target, msg);

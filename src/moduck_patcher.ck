@@ -128,6 +128,14 @@ public class ModuckP extends Moduck{
     return ret;
   }
 
+  fun static ModuckP[] many(Moduck list[]){
+    ModuckP ret[list.size()];
+    for(0=>int i;i<list.size();++i){
+      ModuckP.make(list[i]) @=> ret[i];
+    }
+    return ret;
+  }
+
   /*
     fun static Connector From(string tag){
       return Connector.make(null, tag, null);

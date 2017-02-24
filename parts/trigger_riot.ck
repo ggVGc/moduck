@@ -7,7 +7,9 @@ fun ModuckP triggerRiot(){
   defl(sideOuts, makeOuts(gridSize));
   defl(bottomOuts, makeOuts(gridSize));
 
-  defl(probabilities, makeProbabilities(gridSize*gridSize));
+  defl(probabilities, mkMany(Probably, gridSize*gridSize, 100));
+  defl(clockDelays, mkMany(PulseDelay, gridSize*gridSize, 0));
+
 
   string inKeys[0];
   string outKeys[0];
@@ -15,12 +17,15 @@ fun ModuckP triggerRiot(){
   inKeys << P_Trigger;
 
   for(0=>int i;i<gridSize*gridSize;++i){ 
-    inKeys << "div"+i;
-    inKeys << "prob"+i;
   }
   for(0=>int x;x<gridSize;++x){ 
-    outKeys << "side"+x;
-    outKeys << "bottom"+x;
+    for(0=>int y;y<gridSize;++y){ 
+      outKeys << "side"+x;
+      outKeys << "bottom"+x;
+      inKeys << "div"+x+""+y;
+      inKeys << "prob"+x+""+y;
+      inKeys << "clockDelay"+x+""+y;
+    }
   }
 
   def(root, mk(Repeater, inKeys));
@@ -32,14 +37,29 @@ fun ModuckP triggerRiot(){
     for(0=>int y;y<gridSize;++y){ 
       x+y*gridSize => int ind;
 
-      root => divs[ind].listen(P_Trigger).c;
-      divs[ind] => probabilities[ind].c;
-      probabilities[ind] => sideOuts[y].c;
-      probabilities[ind] => bottomOuts[x].c;
+      clockDelays[ind] @=> ModuckP dly;
 
-      root => divs[ind].fromTo("div"+ind, "divisor").c;
-      divs[ind] => mk(Printer, "new divisor for div"+ind).from(recv("divisor")).c;
-      root => probabilities[ind].fromTo("prob"+ind, "chance").c;
+      probabilities[ind] @=> ModuckP prob;
+
+      def(trigOut, root
+        => divs[ind].listen(P_Trigger).c
+        => prob.c
+        => mkc(Printer, "TRI")
+        => dly.c
+      );
+
+      root => dly.to(P_Clock).c;
+
+      (trigOut => mkc(Printer, "out"))
+        .b(sideOuts[y])
+        .b(bottomOuts[x])
+      ;
+
+
+      root => clockDelays[ind].fromTo("clockDelay"+x+""+y, "size").c;
+      root => divs[ind].fromTo("div"+x+""+y, "divisor").c;
+
+      root => probabilities[ind].fromTo("prob"+x+""+y, "chance").c;
     }
   }
 
@@ -74,11 +94,4 @@ fun ModuckP[] makeOuts(int count){
 }
 
 
-fun ModuckP[] makeProbabilities(int count){
-  ModuckP ret[count];
-  for(0=>int x;x<count;++x){
-    mk(Probably, 100) @=> ret[x];
-  }
-  return ret;
-}
 

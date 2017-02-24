@@ -19,3 +19,4 @@
   * Multiplier and Adder should be implemented in terms of Processor2(which also
     needs to be created)
   * Add play speed and step size to Sequencer
+  * PulseDiv: When changing divisor, recalculate current step value. Don't reset to 0.

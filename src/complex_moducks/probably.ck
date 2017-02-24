@@ -19,4 +19,12 @@ public class Probably{
     ret.addVal("chance", chance);
     return ret;
   }
+
+  fun static Moduck[] many(int count, int chance){
+    Moduck ret[count];
+    for(0=>int x;x<count;++x){
+      make(chance) @=> ret[x];
+    }
+    return ret;
+  }
 }

@@ -17,5 +17,6 @@ Machine.add("simple_moducks/multiplier.ck");
 Machine.add("simple_moducks/adder.ck");
 Machine.add("simple_moducks/clamper.ck");
 Machine.add("simple_moducks/buffer.ck");
+Machine.add("simple_moducks/pulse_delay.ck");
 Machine.add("simple_moducks/blackhole.ck");
 Machine.add("simple_moducks/mid_inp.ck");
