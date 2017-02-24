@@ -21,22 +21,23 @@ Runner.masterClock
 riot
   .set("div00", Bar)
   .set("div01", Bar/2)
-  // .set("time01", 50) // 50% time delay
+  .set("time01", 1) // 50% time delay
 ;
 
 // riot.set("prob01", 40);
 
 
 
-riot.multi([
-  mk(Printer, "side0").from("side0")
-  ,mk(Printer, "side1").from("side1")
-  ,mk(Printer, "bottom0").from("bottom0")
-  ,mk(Printer, "bottom1").from("bottom1")
-  ,mk(Printer, "bottom2").from("bottom2")
-  ,mk(Printer, "bottom3").from("bottom3")
-]);
-
+/*
+  riot.multi([
+    mk(Printer, "side0").from("side0")
+    ,mk(Printer, "side1").from("side1")
+    ,mk(Printer, "bottom0").from("bottom0")
+    ,mk(Printer, "bottom1").from("bottom1")
+    ,mk(Printer, "bottom2").from("bottom2")
+    ,mk(Printer, "bottom3").from("bottom3")
+  ]);
+ */
 
 
 Util.runForever();

@@ -20,3 +20,6 @@
     needs to be created)
   * Add play speed and step size to Sequencer
   * PulseDiv: When changing divisor, recalculate current step value. Don't reset to 0.
+  * Something where I can keep a buffer of length X, and at any moment freeze it, and step around in it.
+    Setting areas to loop, and sequencing the various loops with a meta sequencer.
+    Kind of on-the-fly chopping, but of sequences instead of audio clips.

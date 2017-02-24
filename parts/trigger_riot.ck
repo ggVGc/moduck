@@ -9,10 +9,24 @@ fun ModuckP makeKnob(){
 
   def(root, mk(Repeater, [P_Trigger, "clockDelay", "div", "prob", "time"]).setName("riot_knobRoot"));
 
-
   def(clockPhaseDelta, mk(Subtract))
 
-  def(clockDeltaTime, mk(Value, Util.toSamples(100::ms)))
+
+  clockDiv
+    => clockPhaseDelta.fromTo(recv("divisor"), "a").c;
+
+  clockDly
+    => clockPhaseDelta.fromTo(recv("size"), "b").c;
+
+
+  def(clockDeltaTime, mk(Value, 0))
+
+  def(mul, mk(Multiplier, 2))
+  clockPhaseDelta => mul.to("1").c;
+  mul.setVal("0", Runner.samplesPerTick());
+  mul => clockDeltaTime.to("value").c;
+
+  clockDeltaTime => clockDeltaTime.fromTo(recv("value"), P_Trigger).c;
 
   root
     .b(clockDly.fromTo("clockDelay", "size"))
@@ -41,6 +55,10 @@ fun ModuckP makeKnob(){
   timeAttn => timeDly.to("delay").c;
 
   root => clockDly.to(P_Clock).c;
+
+  samp => now;
+
+  clockDiv.set("divisor", 0);
 
   return mk(Wrapper, root, trigOut);
 
@@ -81,7 +99,7 @@ fun ModuckP triggerRiot(){
       knobs[ind] @=> ModuckP knob;
 
       root
-        .b(knob)
+        .b(knob.listen(P_Trigger))
         .b(knob.fromTo("clockDelay"+x+""+y, "clockDelay"))
         .b(knob.fromTo("div"+x+""+y, "div"))
         .b(knob.fromTo("prob"+x+""+y, "prob"))

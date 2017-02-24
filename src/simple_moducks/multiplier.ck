@@ -1,30 +1,21 @@
 
 include(macros.m4)
 
+fun int doMult(ModuckBase m, int count){
+    1 => int acc;
+    for(0 => int i; i<count; i++){
+      acc * m.getVal(""+i) => acc;
+    }
+    return acc;
+}
+
 genHandler(TrigHandler, P_Trigger,
   HANDLE{
-    1 => int acc;
     samp => now;
-    for(0 => int i; i<inputCount; i++){
-      acc * parent.getVal(""+i) => acc;
-    }
-    parent.send(P_Trigger, acc);
+    parent.send(P_Trigger, doMult(parent, inputCount));
   },
   int inputCount;
 )
-
-
-class SetHandler extends EventHandler{ 
-  int ind;
-  fun void handle(int v){
-    parent.setVal(""+ind, v);
-  }
-  fun static SetHandler make(int ind){
-    SetHandler ret;
-    ind => ret.ind;
-    return ret;
-  }
-}
 
 
 
@@ -32,10 +23,11 @@ public class Multiplier extends Moduck{
   fun static Multiplier make(int inputCount){
     Multiplier ret;
     OUT(P_Trigger);
-    IN(TrigHandler, (inputCount));
+    TrigHandler.make(inputCount) @=> TrigHandler h;
+    h.add(ret);
     for(0 => int i; i<inputCount; i++){
-      ret.addIn(""+i, SetHandler.make(i));
       ret.addVal(""+i, 1);
+      Patch.connect(ret, recv(""+i), ret, P_Trigger);
     }
     return ret;
   }

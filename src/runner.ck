@@ -72,8 +72,19 @@ public class Runner{
     masterClock.setVal("delta", Util.toSamples(Util.bpmToDur(bpm*ticksPerBeat)));
   }
 
+  fun static dur timePerTick(){
+    return masterClock.getVal("delta")::samp;
+  }
+  fun static int samplesPerTick(){
+    return Util.toSamples(timePerTick());
+  }
+
   fun static dur timePerBeat(){
-    return (masterClock.getVal("delta")*ticksPerBeat)::samp;
+    return timePerTick()*ticksPerBeat;
+  }
+
+  fun static int samplesPerBeat(){
+    return Util.toSamples(timePerBeat());
   }
 
   fun static float getBpm(){
