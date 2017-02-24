@@ -60,9 +60,22 @@ define(HANDLE, fun void handle(int v))
 
 
 
+define(maker,
+
+fun static Moduck[] many(int count, `shift($@)'){
+  Moduck ret[count];
+  for(0=>int x;x<count;++x){
+    make(
+      dnl Extract argument names with some dirty inline python
+      `esyscmd(python -c "print(\",\".join(\" $@ \".replace(\",\", \" \").split()[2::2]))")'
+    ) @=> ret[x];
+  }
+  return ret;
+}
 
 
-
+fun static $1 make(`shift($@)')
+)
 
 ')
 

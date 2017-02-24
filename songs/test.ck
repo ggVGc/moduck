@@ -13,34 +13,33 @@ def(riot, triggerRiot())
 
 
 Runner.masterClock
-  => mk(PulseDiv, Bar).c
+  => mk(PulseDiv, B).c
   => mkc(Printer, "master")
-  => mkc(PulseGen, 3, D)
-  => mkc(Printer, "genout")
-  // => riot.c
+  => riot.c
 ;
 
 
 
 
 
-// riot.set("div00", 4);
-// riot.set("div01", 5);
+riot
+  .set("div00", 4)
+  .set("div01", 4)
+  .set("time01", 50) // 50% time delay
+;
 
 // riot.set("prob01", 40);
 
 
 
-/*
-  riot.multi([
-    mk(Printer, "side0").from("side0")
-    ,mk(Printer, "side1").from("side1")
-    ,mk(Printer, "bottom0").from("bottom0")
-    ,mk(Printer, "bottom1").from("bottom1")
-    ,mk(Printer, "bottom2").from("bottom2")
-    ,mk(Printer, "bottom3").from("bottom3")
-  ]);
- */
+riot.multi([
+  mk(Printer, "side0").from("side0")
+  ,mk(Printer, "side1").from("side1")
+  ,mk(Printer, "bottom0").from("bottom0")
+  ,mk(Printer, "bottom1").from("bottom1")
+  ,mk(Printer, "bottom2").from("bottom2")
+  ,mk(Printer, "bottom3").from("bottom3")
+]);
 
 
 

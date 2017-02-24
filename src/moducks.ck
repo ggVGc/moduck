@@ -21,3 +21,4 @@ Machine.add("simple_moducks/pulse_delay.ck");
 Machine.add("simple_moducks/blackhole.ck");
 Machine.add("simple_moducks/mid_inp.ck");
 Machine.add("simple_moducks/pulse_gen.ck");
+Machine.add("simple_moducks/attenuator.ck");

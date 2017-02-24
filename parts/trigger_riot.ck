@@ -2,13 +2,15 @@
 
 fun ModuckP triggerRiot(){
   4 => int gridSize;
-  defl(divs, makeDivs(gridSize));
 
   defl(sideOuts, makeOuts(gridSize));
   defl(bottomOuts, makeOuts(gridSize));
 
+  defl(clockDivs, makeDivs(gridSize));
   defl(probabilities, mkMany(Probably, gridSize*gridSize, 100));
   defl(clockDelays, mkMany(PulseDelay, gridSize*gridSize, 0));
+  defl(timeDelays, mkMany(Delay, gridSize*gridSize, 0::samp))
+  defl(timeAttenuators, mkMany(Attenuator, gridSize*gridSize,0,100))
 
 
   string inKeys[0];
@@ -24,6 +26,7 @@ fun ModuckP triggerRiot(){
       outKeys << "bottom"+x;
       inKeys << "div"+x+""+y;
       inKeys << "prob"+x+""+y;
+      inKeys << "time"+x+""+y;
       inKeys << "clockDelay"+x+""+y;
     }
   }
@@ -31,34 +34,54 @@ fun ModuckP triggerRiot(){
   def(root, mk(Repeater, inKeys));
   def(mainOut, mk(Repeater, outKeys))
 
+
+  def(clockDeltaTime, mk(Value, Util.toSamples(100::ms)))
+
   for(0=>int x;x<gridSize;++x){ 
     bottomOuts[x] => mainOut.to("bottom"+x).c;
     for(0=>int y;y<gridSize;++y){ 
       x+y*gridSize => int ind;
 
+      clockDivs[ind] @=> ModuckP div;
       clockDelays[ind] @=> ModuckP dly;
-
       probabilities[ind] @=> ModuckP prob;
+      timeDelays[ind] @=> ModuckP timeDly;
+      timeAttenuators[ind] @=> ModuckP timeAttn;
+
+      root
+        .b(dly.fromTo("clockDelay"+x+""+y, "size"))
+        .b(div.fromTo("div"+x+""+y, "divisor"))
+        .b(prob.fromTo("prob"+x+""+y, "chance"))
+        .b(timeAttn.fromTo("time"+x+""+y, "ratio"))
+      ;
+
+      timeAttn
+        => mk(Delay, samp).from(recv("ratio")).c
+        => clockDeltaTime.c
+        => timeAttn.to(P_Trigger).c
+      ;
+
+      timeAttn => timeDly.to("delay").c;
+
 
       def(trigOut, root
-        => divs[ind].listen(P_Trigger).c
+        => div.listen(P_Trigger).c
         => prob.c
-        => mkc(Printer, "TRI")
         => dly.c
+        => timeDly.c
       );
 
       root => dly.to(P_Clock).c;
 
-      (trigOut => mkc(Printer, "out"))
+      trigOut
         .b(sideOuts[y])
         .b(bottomOuts[x])
       ;
 
+      samp => now;
+      clockDeltaTime.doHandle(P_Trigger, 0);
 
-      root => clockDelays[ind].fromTo("clockDelay"+x+""+y, "size").c;
-      root => divs[ind].fromTo("div"+x+""+y, "divisor").c;
 
-      root => probabilities[ind].fromTo("prob"+x+""+y, "chance").c;
     }
   }
 
