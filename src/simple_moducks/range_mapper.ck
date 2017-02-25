@@ -11,7 +11,6 @@ genHandler(TrigHandler, P_Trigger,
       return;
     }
     ((v-srcMin)$ float) / (srcMax-srcMin) @=> float d;
-    <<< d >>>;
     parent.send(P_Trigger, outMin + ((d * (outMax-outMin)) $ int));
   },
 )

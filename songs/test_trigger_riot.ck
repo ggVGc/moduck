@@ -19,40 +19,17 @@ def(hat, mk(NoteOut, MIDI_OUT_IAC_2, 0, 0::ms, D4, true)
 
 def(riot, triggerRiot(4, B4))
 
-
 Runner.masterClock
   => riot.c
 ;
 
 
-
-class AddFun extends IntFun{
-  fun IntRef call(int v){
-    return IntRef.make(v+parent.getVal("value"));
-  };
-}
-
-class Add{
-  fun static Processor make(int v){
-    AddFun f;
-    Processor.make(f) @=> Processor ret;
-    ret.addVal("value", v);
-    return ret;
-  }
-}
-
-def(val, mk(Value, 64));
-
-val 
-  => mk(Add, 1).c
-  => val.to("value").c
-;
-
 Runner.masterClock
-  => mk(PulseDiv, B).c
-  => val.c
+  => mk(PulseDiv, B4).c
+  => MUtil.process(mk(Value, 0), "value", mk(Add, 1)).c
   => (mk(RangeMapper, 0,127,50,60) => mkc(Printer, "rangemapped: ")).c
 ;
+
 
 mk(MidInp, MIDI_IN_NANO_KTRL, 0)
   .b(riot.fromTo("cc14", "div00"))

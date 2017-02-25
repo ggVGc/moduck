@@ -93,5 +93,24 @@ public class MUtil{
     return add;
   }
 
+
+  fun static ModuckP process(ModuckP m, string srcTag, string dstTag, ModuckP processor){
+    m 
+      => ModuckP.make(Repeater.make()).from(srcTag).c
+      => processor.c
+      => m.to(dstTag).c
+    ;
+    return m;
+  }
+
+
+  fun static ModuckP process(ModuckP m, string dstTag, ModuckP processor){
+    return process(m, P_Default, dstTag, processor);
+  }
+
+  fun static ModuckP process(ModuckP m, ModuckP processor){
+    return process(m, P_Default, P_Default, processor);
+  }
+
 }
 

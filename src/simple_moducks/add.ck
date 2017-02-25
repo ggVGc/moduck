@@ -4,7 +4,7 @@ class AddFun extends IntFun{
   };
 }
 
-class Add{
+public class Add{
   fun static Processor make(int v){
     AddFun f;
     Processor.make(f) @=> Processor ret;
