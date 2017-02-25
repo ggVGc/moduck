@@ -105,7 +105,7 @@ public class Runner{
 
 false => Runner.isPlaying;
 
-64 => Runner.ticksPerBeat;
+128 => Runner.ticksPerBeat;
 
 
 Trigger.make("start") @=> Runner._startBang;

@@ -49,6 +49,7 @@ deviceHints = [
   ,["IAC Driver IAC Bus 4", "IAC_4"]
   ,["IAC Driver IAC Bus 5", "IAC_5"]
   ,["IAC Driver IAC Bus 6", "IAC_6"]
+  ,["nanoKONTROL", "NANO_KTRL"]
 ]
 
 

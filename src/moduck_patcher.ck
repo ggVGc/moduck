@@ -151,4 +151,8 @@ public class ModuckP extends Moduck{
     return this;
   }
 
+  fun Moduck asModuck(){
+    return this;
+  }
+
 }

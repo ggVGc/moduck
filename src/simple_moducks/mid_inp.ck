@@ -21,6 +21,7 @@ class Responder extends MIDIFlowerPetal{
     parent.send("value", value);
     samp => now;
     parent.send("cc", controller);
+    parent.send("cc"+controller, value);
  }
 
  function void noteOff(int key, int velocity){
@@ -61,6 +62,9 @@ public class MidInp extends Moduck{
     ret.flower.assign(Responder.make(ret), channel);
     OUT("noteOn");
     OUT("noteOff");
+    for(0=>int i;i<128;++i){
+      OUT("cc"+i);
+    }
     OUT("cc");
     OUT("program");
     OUT("channelPressure");

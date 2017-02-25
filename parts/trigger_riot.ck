@@ -7,7 +7,8 @@ fun ModuckP makeKnob(int initialTicksPerBeat){
   def(clockDly, mk(PulseDelay, 0))
   def(timeDly, mk(Delay, 0::samp))
   def(timeAttn, mk(Attenuator,0,100))
-  def(root, mk(Repeater, [P_Trigger, "clockDelay", "div", "prob", "time", "speed"]).setName("riot_knobRoot"));
+
+  def(root, mk(Repeater, [P_Trigger, "delay", "div", "prob", "time", "speed"]).setName("riot_knobRoot"));
   def(clockPhaseDelta, mk(Subtract))
 
   clockDiv
@@ -20,12 +21,12 @@ fun ModuckP makeKnob(int initialTicksPerBeat){
 
   def(mul, mk(Multiplier, 2))
   clockPhaseDelta => mul.to("1").c;
-  mul.setVal("0", Runner.samplesPerTick());
+  mul.setVal("0", Runner.samplesPerTick()*initialTicksPerBeat); // TODO: Use another multiplier here to get updated values for tickerPerBeat
   mul => clockDeltaTime.to("value").c;
   clockDeltaTime => clockDeltaTime.fromTo(recv("value"), P_Trigger).c;
 
   root
-    .b(clockDly.fromTo("clockDelay", "size"))
+    .b(clockDly.fromTo("delay", "size"))
     .b(clockDiv.fromTo("div", "divisor"))
     .b(speedClockDiv.fromTo("speed", "divisor"))
     .b(prob.fromTo("prob", "chance"))
@@ -48,11 +49,20 @@ fun ModuckP makeKnob(int initialTicksPerBeat){
 
   trigOut.setName("riot_knobOut");
   timeAttn => timeDly.to("delay").c;
-  root => clockDly.to(P_Clock).c;
+  speedClockDiv => clockDly.to(P_Clock).c;
   samp => now;
   clockDiv.set("divisor", 0);
   return mk(Wrapper, root, trigOut);
 
+}
+
+fun ModuckP mulWith(int multVal){
+  def(mult, mk(Multiplier, 2))
+  mult.set("1", multVal);
+  def(root, mk(Repeater))
+  root => mult.to("0").c;
+
+  return mk(Wrapper, root, mult);
 }
 
 fun ModuckP triggerRiot(int gridSize, int initialTicksPerBeat){
@@ -60,11 +70,14 @@ fun ModuckP triggerRiot(int gridSize, int initialTicksPerBeat){
   defl(bottomOuts, makeOuts(gridSize));
 
   defl(knobs, makeKnobs(gridSize*gridSize, initialTicksPerBeat));
+  defl(blockers, mkMany(Blocker, gridSize*gridSize));
+  defl(blockerDelays, mkMany(Delay, gridSize*gridSize, 0::samp));
 
   string inKeys[0];
   string outKeys[0];
 
   inKeys << P_Trigger;
+
 
   for(0=>int x;x<gridSize;++x){ 
     for(0=>int y;y<gridSize;++y){ 
@@ -73,8 +86,9 @@ fun ModuckP triggerRiot(int gridSize, int initialTicksPerBeat){
       inKeys << "div"+x+""+y;
       inKeys << "prob"+x+""+y;
       inKeys << "time"+x+""+y;
-      inKeys << "clockDelay"+x+""+y;
+      inKeys << "delay"+x+""+y;
       inKeys << "speed"+x+""+y;
+      inKeys << "width"+x+""+y;
     }
   }
 
@@ -83,29 +97,45 @@ fun ModuckP triggerRiot(int gridSize, int initialTicksPerBeat){
 
 
   for(0=>int x;x<gridSize;++x){ 
-    bottomOuts[x] => mainOut.to("bottom"+x).c;
+    bottomOuts[x] @=> ModuckP bottomSlot;
     for(0=>int y;y<gridSize;++y){ 
       x+y*gridSize => int ind;
       knobs[ind] @=> ModuckP knob;
+      // (bottomSlot => blockers[ind].c) @=> bottomSlot;
+
+      def(widthDly, blockerDelays[ind]);
+      def(blocker, blockers[ind]);
 
       root
         .b(knob.listen(P_Trigger))
-        .b(knob.fromTo("clockDelay"+x+""+y, "clockDelay"))
+        .b(knob.fromTo("delay"+x+""+y, "delay"))
         .b(knob.fromTo("div"+x+""+y, "div"))
         .b(knob.fromTo("prob"+x+""+y, "prob"))
         .b(knob.fromTo("time"+x+""+y, "time"))
         .b(knob.fromTo("speed"+x+""+y, "speed"))
+        .b((mulWith(Util.toSamples(ms)) => widthDly.to("delay").c).from("width"+x+""+y))
       ;
 
+      widthDly => blocker.to("off").c;
+      blocker => widthDly.from(recv("on")).c;
+
+
       knob
+        .b(mk(Delay, samp) => blocker.to("on").c)
         .b(sideOuts[y])
         .b(bottomOuts[x])
       ;
     }
+    bottomSlot => mainOut.to("bottom"+x).c;
   }
 
   for(0=>int y;y<gridSize;++y){ 
-    sideOuts[y] => mainOut.to("side"+y).c;
+    sideOuts[y] @=> ModuckP sideSlot;
+    // for(0=>int x;x<gridSize;++x){ 
+    //   x+y*gridSize => int ind;
+    //   (sideSlot => blockers[ind].c) @=> sideSlot;
+    // }
+    sideSlot => mainOut.to("side"+y).c;
   }
 
   samp => now;
