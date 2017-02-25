@@ -24,30 +24,30 @@ Runner.masterClock
 ;
 
 
-Runner.masterClock
-  => mk(PulseDiv, B4).c
-  => MUtil.process(mk(Value, 0), "value", mk(Add, 1)).c
-  => (mk(RangeMapper, 0,127,50,60) => mkc(Printer, "rangemapped: ")).c
-;
+/*
+  Runner.masterClock
+    => mk(PulseDiv, B4).c
+    => MUtil.process(mk(Value, 0), "value", mk(Add, 1)).c
+    => (mk(RangeMapper, 0,127,50,60) => mkc(Printer, "rangemapped: ")).c
+  ;
+ */
+
+def(nanoKtrl, mk(MidInp, MIDI_IN_NANO_KTRL, 0))
+
+for(0=>int x;x<3;++x){
+  for(0=>int y;y<3;++y){
+    x+y*3 @=> int ind;
+    nanoKtrl => (mk(RangeMapper, 0,127,0,64) => riot.to("div"+x+""+y).c).from("cc"+(14+ind)).c;
+    riot => mk(Printer, "div "+x+" "+y).from(recv("div"+x+""+y)).c;
+
+    nanoKtrl => (mk(RangeMapper, 0,127,0,100) => riot.to("prob"+x+""+y).c).from("cc"+(2+ind)).c;
+    riot => mk(Printer, "prob "+x+" "+y).from(recv("prob"+x+""+y)).c;
+  }
+}
+
+nanoKtrl => mk(Printer, "cc").from("cc").c;
 
 
-mk(MidInp, MIDI_IN_NANO_KTRL, 0)
-  .b(riot.fromTo("cc14", "div00"))
-  .b(riot.fromTo("cc15", "div10"))
-  .b(riot.fromTo("cc16", "div20"))
-  .b(riot.fromTo("cc17", "div01"))
-  .b(riot.fromTo("cc18", "div11"))
-  .b(riot.fromTo("cc19", "div21"))
-  .b(riot.fromTo("cc20", "div02"))
-  .b(riot.fromTo("cc21", "div12"))
-  .b(riot.fromTo("cc22", "div22"))
-
-  .b(mk(Printer, "").from("value"))
-
-
-  .b(mk(Printer, "noteOn").from("noteOn"))
-  .b(mk(Printer, "program").from("program"))
-;
 
 // riot
 //   .set("div00", 4)

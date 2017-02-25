@@ -3,7 +3,7 @@ include(macros.m4)
 
 
 fun void print(string msg, int v){
-    <<< msg + ">" + ":" + v + " - ", Math.floor(now/samp) $ int >>>;
+    <<< msg + ": " + v + " - ", Math.floor(now/samp) $ int >>>;
 }
 
 
