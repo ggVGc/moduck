@@ -1,4 +1,5 @@
 include(aliases.m4)
+include(pulses.m4)
 
 /*
   public class Runner{
@@ -44,11 +45,22 @@ include(aliases.m4)
 
 public class Runner{
   static Trigger @ _startBang;
-  static ClockGen @ masterClock;
+  static Repeater @ masterClock;
+  static ClockGen @ _masterClockGen;
+  // static int tickCount;
 
   static int ticksPerBeat;
 
   static int isPlaying;
+
+  /*
+    fun static void tickCountLoop(){
+      while(true){
+        masterClock._outs[P_Clock] => now;
+        1 +=> tickCount;
+      }
+    }
+   */
 
   fun static int setPlaying(int v){
     if(v){
@@ -69,11 +81,11 @@ public class Runner{
   }
 
   fun static void setBpm(float bpm){
-    masterClock.setVal("delta", Util.toSamples(Util.bpmToDur(bpm*ticksPerBeat)));
+    _masterClockGen.setVal("delta", Util.toSamples(Util.bpmToDur(bpm*ticksPerBeat)));
   }
 
   fun static dur timePerTick(){
-    return masterClock.getVal("delta")::samp;
+    return _masterClockGen.getVal("delta")::samp;
   }
   fun static int samplesPerTick(){
     return Util.toSamples(timePerTick());
@@ -88,7 +100,7 @@ public class Runner{
   }
 
   fun static float getBpm(){
-    masterClock.getVal("delta")::samp @=> dur d;
+    _masterClockGen.getVal("delta")::samp @=> dur d;
     return minute/(d*ticksPerBeat);
   }
 
@@ -96,10 +108,22 @@ public class Runner{
     if(!isPlaying){
       return false;
     }
-    masterClock.stop();
+    _masterClockGen.stop();
     false => isPlaying;
     <<< "Runner: Stopped ">>>;
     return true;
+  }
+
+  fun static void skipForward(int ticks){
+    samp => now;
+    false => Printer.enabled;
+    false => NoteOut.enabled;
+    for(0=>int i;i<ticks;++i){
+      masterClock.doHandle(P_Default, 0);
+      samp => now;
+    }
+    true => Printer.enabled;
+    true => NoteOut.enabled;
   }
 }
 
@@ -109,7 +133,16 @@ false => Runner.isPlaying;
 
 
 Trigger.make("start") @=> Runner._startBang;
-ClockGen.make(120*Runner.ticksPerBeat) @=> Runner.masterClock;
+ClockGen.make(120*Runner.ticksPerBeat) @=> Runner._masterClockGen;
+Repeater.make(P_Clock) @=> Runner.masterClock;
 
-Patch.connect(Runner._startBang, Runner.masterClock);
+
+Patch.connect(Runner._startBang, Runner._masterClockGen);
+Patch.connect(Runner._masterClockGen, Runner.masterClock);
+
+// 0 => Runner.tickCount;
+// spork ~ Runner.tickCountLoop();
+samp => now;
+
+
 Util.runForever(); // Keep connection alive

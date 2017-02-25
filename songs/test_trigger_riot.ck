@@ -20,14 +20,16 @@ def(hat, mk(NoteOut, MIDI_OUT_IAC_2, 0, 0::ms, D4, true)
 def(riot, triggerRiot(4, B4))
 
 Runner.masterClock
+  // => mk(Printer, "").c
   => riot.c
 ;
 
+def(vvv, mk(Value, 0));
 
 /*
-  Runner.masterClock
+  (Runner.masterClock
     => mk(PulseDiv, B4).c
-    => MUtil.process(mk(Value, 0), "value", mk(Add, 1)).c
+    ).b(MUtil.update(vvv, "value", mk(Add, 1)))
     => (mk(RangeMapper, 0,127,50,60) => mkc(Printer, "rangemapped: ")).c
   ;
  */
@@ -45,11 +47,11 @@ for(0=>int x;x<3;++x){
     riot => mk(Printer, "prob "+x+" "+y).from(recv("prob"+x+""+y)).c;
 
     nanoKtrl
-      => MUtil.process(riot, recv("delay"+x+""+y), "delay"+x+""+y, mk(Add, 1))
+      => MUtil.update(riot, recv("delay"+x+""+y), "delay"+x+""+y, mk(Add, 1))
           .from("ccOn"+(23+ind)).c
     ;
     nanoKtrl
-      => MUtil.process(riot, recv("delay"+x+""+y), "delay"+x+""+y, mk(Add, -1) => mkc(RangeMapper, 0,9999,0,9999))
+      => MUtil.update(riot, recv("delay"+x+""+y), "delay"+x+""+y, mk(Add, -1) => mkc(RangeMapper, 0,9999,0,9999))
           .from("ccOn"+(33+ind)).c
     ;
     riot => mk(Printer, "delay "+x+" "+y).from(recv("delay"+x+""+y)).c;
@@ -72,8 +74,8 @@ nanoKtrl2 => mk(Printer, "ccOn").from("ccOn").c;
 
 
 
-// riot
-//   .set("div00", 4)
+riot
+  .set("div00", 4);
 //   .set("div10", 9)
 //   .set("div13", 5)
 //   .set("div12", 14)
@@ -101,6 +103,8 @@ riot.multi([
   // ,mk(Printer, "bottom2").from("bottom2")
   // ,mk(Printer, "bottom3").from("bottom3")
 ]);
+
+// Runner.skipForward(100000);
 
 
 Util.runForever();

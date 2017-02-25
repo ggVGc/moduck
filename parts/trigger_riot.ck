@@ -1,6 +1,8 @@
 
 
 fun ModuckP makeKnob(int initialTicksPerBeat){
+  // TODO:
+  // Don't use another clickdiv here. Ust a multiplier value for the divisor of clockDiv instead
   def(speedClockDiv, mk(PulseDiv, initialTicksPerBeat))
   def(clockDiv, mk(PulseDiv,0))
   def(prob, mk(Probably, 100))

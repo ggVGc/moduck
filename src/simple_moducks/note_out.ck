@@ -32,33 +32,35 @@ genHandler(TrigHandler, P_Trigger,
     }
 
     HANDLE{
-      /* <<< "NOTEOUT:" +tag +":"+v>>>; */
-      MidiMsg msg;
-      144 + channel => msg.data1; // NoteOn
+      if(NoteOut.enabled){
+        /* <<< "NOTEOUT:" +tag +":"+v>>>; */
+        MidiMsg msg;
+        144 + channel => msg.data1; // NoteOn
 
-      /* if(tag == P_Trigger){ */
-        // TODO: Implement again
-        /* parent.getVal("note")  => note; */
-      /* }else{ */
-        // Trigger with received note value
-        // v => note;
-      /* } */
+        /* if(tag == P_Trigger){ */
+          // TODO: Implement again
+          /* parent.getVal("note")  => note; */
+        /* }else{ */
+          // Trigger with received note value
+          // v => note;
+        /* } */
 
-      int note;
-      if(valueIsVelocity){
-        parent.getVal("note") => note;
-        v => msg.data3;
-      }else{
-        v => note;
-        parent.getVal("velocity") => msg.data3;
+        int note;
+        if(valueIsVelocity){
+          parent.getVal("note") => note;
+          v => msg.data3;
+        }else{
+          v => note;
+          parent.getVal("velocity") => msg.data3;
+        }
+
+        note => msg.data2;
+        parent.getVal("durRatio") / 127.0 => float durMul;
+        maxDur - minDur => dur deltaDur;
+        minDur + deltaDur * durMul => dur duration;
+        offSender.noteOff(note, duration);
+        midOut.send(msg);
       }
-
-      note => msg.data2;
-      parent.getVal("durRatio") / 127.0 => float durMul;
-      maxDur - minDur => dur deltaDur;
-      minDur + deltaDur * durMul => dur duration;
-      offSender.noteOff(note, duration);
-      midOut.send(msg);
       parent.send(P_Trigger, v);
   },
   int devicePort;
@@ -71,6 +73,7 @@ genHandler(TrigHandler, P_Trigger,
 
 
 public class NoteOut extends Moduck{
+  static int enabled;
   fun static NoteOut make(int devicePort, int channel, dur minDur, dur maxDur, int valueIsVelocity){
     NoteOut ret;
     OUT(P_Trigger);
@@ -83,3 +86,6 @@ public class NoteOut extends Moduck{
     return ret;
   }
 }
+
+true => NoteOut.enabled;
+

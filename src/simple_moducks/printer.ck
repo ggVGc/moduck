@@ -9,7 +9,9 @@ fun void print(string msg, int v){
 
 genHandler(TrigHandler, P_Trigger,
   fun void handle(int v){
-    print(msg, v);
+    if(Printer.enabled){
+      print(msg, v);
+    }
     parent.send(P_Trigger, v);
   },
   string msg;
@@ -18,6 +20,7 @@ genHandler(TrigHandler, P_Trigger,
 
 
 public class Printer extends Moduck{
+  static int enabled;
   fun static Printer make(string msg){
     Printer ret;
     OUT(P_Trigger);
@@ -26,3 +29,4 @@ public class Printer extends Moduck{
   }
 }
 
+true => Printer.enabled;
