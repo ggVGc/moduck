@@ -24,6 +24,36 @@ Runner.masterClock
   => riot.c
 ;
 
+
+
+class AddFun extends IntFun{
+  fun IntRef call(int v){
+    return IntRef.make(v+parent.getVal("value"));
+  };
+}
+
+class Add{
+  fun static Processor make(int v){
+    AddFun f;
+    Processor.make(f) @=> Processor ret;
+    ret.addVal("value", v);
+    return ret;
+  }
+}
+
+def(val, mk(Value, 64));
+
+val 
+  => mk(Add, 1).c
+  => val.to("value").c
+;
+
+Runner.masterClock
+  => mk(PulseDiv, B).c
+  => val.c
+  => (mk(RangeMapper, 0,127,50,60) => mkc(Printer, "rangemapped: ")).c
+;
+
 mk(MidInp, MIDI_IN_NANO_KTRL, 0)
   .b(riot.fromTo("cc14", "div00"))
   .b(riot.fromTo("cc15", "div10"))

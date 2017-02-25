@@ -3,16 +3,42 @@ include(pulses.m4)
 
 class Connector{
   ChainData data;
+  null @=> string _triggerName;
+  0 => int _triggerVal;
 
   fun ModuckP c(Moduck other){
     data.balanceTags();
-    return ModuckP.make(Patch.connect(other, data.srcTags, data.target, data.targetTags));
+    Patch.connect(other, data.srcTags, data.target, data.targetTags) @=> Moduck ret;
+    if(_triggerName != null){
+      samp => now;
+      other.doHandle(_triggerName, _triggerVal);
+    }
+    return ModuckP.make(ret);
   }
 
   // Uses target as source and vice versa. Keeps srcTag and targetTag as is.
   fun ModuckP reverseConnect(Moduck other){
     data.balanceTags();
-    return ModuckP.make(Patch.connect(data.target, data.srcTags, other, data.targetTags));
+    Patch.connect(data.target, data.srcTags, other, data.targetTags) @=> Moduck ret;
+    if(_triggerName != null){
+      samp => now;
+      data.target.doHandle(_triggerName, _triggerVal);
+    }
+    return ModuckP.make(ret);
+  }
+
+  fun Connector trigger(string tag, int val){
+    tag @=> _triggerName;
+    val @=> _triggerVal;
+    return this;
+  }
+
+  fun Connector trigger(string tag){
+    return trigger(tag, 0);
+  }
+
+  fun Connector trigger(){
+    return trigger(P_Default);
   }
 
   fun Connector from(string v){

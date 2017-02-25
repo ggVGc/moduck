@@ -20,3 +20,4 @@ Machine.add("simple_moducks/pulse_gen.ck");
 Machine.add("simple_moducks/attenuator.ck");
 Machine.add("simple_moducks/processor.ck");
 Machine.add("simple_moducks/subtract.ck");
+Machine.add("simple_moducks/range_mapper.ck");

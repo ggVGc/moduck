@@ -58,6 +58,7 @@ dnl define(OUT_Default, ret.addDefaultOut($1);)
 
 define(HANDLE, fun void handle(int v))
 
+define(V, parent.getVal("$1") @=> int $1;)
 
 define(maker0,
 
