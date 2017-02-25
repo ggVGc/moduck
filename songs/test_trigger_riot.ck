@@ -33,19 +33,42 @@ Runner.masterClock
  */
 
 def(nanoKtrl, mk(MidInp, MIDI_IN_NANO_KTRL, 0))
+def(nanoKtrl2, mk(MidInp, MIDI_IN_NANO_KTRL, 1))
 
 for(0=>int x;x<3;++x){
   for(0=>int y;y<3;++y){
     x+y*3 @=> int ind;
-    nanoKtrl => (mk(RangeMapper, 0,127,0,64) => riot.to("div"+x+""+y).c).from("cc"+(14+ind)).c;
+    nanoKtrl => (mk(RangeMapper, 0,127,0,64) => riot.to("div"+x+""+y).c).from("ccOn"+(14+ind)).c;
     riot => mk(Printer, "div "+x+" "+y).from(recv("div"+x+""+y)).c;
 
-    nanoKtrl => (mk(RangeMapper, 0,127,0,100) => riot.to("prob"+x+""+y).c).from("cc"+(2+ind)).c;
+    nanoKtrl => (mk(RangeMapper, 0,127,0,100) => riot.to("prob"+x+""+y).c).from("ccOn"+(2+ind)).c;
     riot => mk(Printer, "prob "+x+" "+y).from(recv("prob"+x+""+y)).c;
+
+    nanoKtrl
+      => MUtil.process(riot, recv("delay"+x+""+y), "delay"+x+""+y, mk(Add, 1))
+          .from("ccOn"+(23+ind)).c
+    ;
+    nanoKtrl
+      => MUtil.process(riot, recv("delay"+x+""+y), "delay"+x+""+y, mk(Add, -1) => mkc(RangeMapper, 0,9999,0,9999))
+          .from("ccOn"+(33+ind)).c
+    ;
+    riot => mk(Printer, "delay "+x+" "+y).from(recv("delay"+x+""+y)).c;
+
+    nanoKtrl2
+      => (mk(RangeMapper, 0,127,0,100) => riot.to("time"+x+""+y).c).from("ccOn"+(57+ind)).c;
+    ;
+    riot => mk(Printer, "time "+x+" "+y).from(recv("time"+x+""+y)).c;
+
+
+    nanoKtrl2
+      => riot.from("ccOn"+(48+ind)).to("speed"+x+""+y).c
+    ;
+    riot => mk(Printer, "speed "+x+" "+y).from(recv("speed"+x+""+y)).c;
   }
 }
 
-nanoKtrl => mk(Printer, "cc").from("cc").c;
+nanoKtrl => mk(Printer, "ccOn").from("ccOn").c;
+nanoKtrl2 => mk(Printer, "ccOn").from("ccOn").c;
 
 
 

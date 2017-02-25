@@ -2,39 +2,24 @@ include(macros.m4)
 
 genHandler(ResetHandler, P_Reset,
   HANDLE{
-    startOffset => shared.accum;
+    0 => accum.i;
   },
-  Shared shared;
-  int startOffset;
+  IntRef accum;
 )
 
 genHandler(TrigHandler, P_Trigger,
   HANDLE{
     parent.getVal("divisor") @=> int divisor;
-    if(divisor <=0 ){
-      return;
-    }
-
-    if(shared.accum == 0 || shared.accum >= divisor){
+    if(divisor > 0 && Math.remainder(accum.i, divisor) == 0){
       parent.send(P_Trigger, v);
-      0 => shared.accum;
     }
-    shared.accum + 1 => shared.accum;
-    if(shared.accum >= parent.getVal("divisor")){
-      0 => shared.accum;
-    }
+    accum.i + 1 => accum.i;
   },
-  Shared shared;
+  IntRef accum;
 )
 
 
-class Shared{
-  int accum;
-}
-
-
 public class PulseDiv extends Moduck{
-  Shared shared;
   /*
     fun void onValChange(string key, int v){
       <<< "DivChange", v>>>;
@@ -49,10 +34,12 @@ public class PulseDiv extends Moduck{
 
     OUT(P_Trigger);
 
-    IN(TrigHandler,(ret.shared));
-    IN(ResetHandler,(ret.shared, startOffset));
+    IntRef accum;
+    IN(TrigHandler,(accum));
+    IN(ResetHandler,(accum));
 
     ret.addVal("divisor", divisor);
+    ret.addVal("offset", startOffset);
 
     ret.doHandle(P_Reset, 0);
 

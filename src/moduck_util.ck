@@ -94,13 +94,17 @@ public class MUtil{
   }
 
 
+
   fun static ModuckP process(ModuckP m, string srcTag, string dstTag, ModuckP processor){
-    m 
-      => ModuckP.make(Repeater.make()).from(srcTag).c
+    // TODO: Default value always 0 here..
+    ModuckP.make(Value.make(0)) @=> ModuckP val;
+    m => val.fromTo(srcTag, "value").c;
+
+    return Repeater.make()
+      => val.c
       => processor.c
       => m.to(dstTag).c
     ;
-    return m;
   }
 
 
