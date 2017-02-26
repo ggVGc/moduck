@@ -8,6 +8,7 @@ public class Moduck extends ModuckBase {
   string handlerKeys[0];
   ValueSetHandler _valHandlers[0];
   string _valHandlerKeys[0];
+  false => int persisting;
 
   "-" @=> string name;
 
@@ -50,6 +51,7 @@ public class Moduck extends ModuckBase {
     addIn(tag, h.getEvHandler());
     h @=> _valHandlers[tag];
     _valHandlerKeys << tag;
+    addOut(tag);
   }
 
   fun ModuckBase setVal(string tag, int v){
@@ -71,6 +73,31 @@ public class Moduck extends ModuckBase {
     return null;
   }
 
+  fun void _onRunnerStart(){
+    RunnerBase._startBang => now;
+    for(0=>int i;i<_valHandlerKeys.size();++i){
+      _valHandlerKeys[i] @=> string k;
+      this.send(k, getVal(k));
+    }
+  }
+
+  fun void doPersist(string fileName){
+    true => persisting;
+    for(0=>int i;i<_valHandlerKeys.size();++i){
+      _valHandlerKeys[i] @=> string k;
+      fileName @=> _valHandlers[k].persistPath;
+      FileIO fio;
+      fio.open( fileName+"_"+k, FileIO.READ );
+      if(fio.good()){
+        int val;
+        fio => val;
+        fio.close();
+        val @=> _valHandlers[k].curVal;
+      }
+    }
+    spork ~ _onRunnerStart();
+  }
+
 
   fun string findDefaultOutputTag(){
     filterNonRecvPulses(_outKeys) @=> string nonRecvs[];
@@ -87,11 +114,23 @@ public class Moduck extends ModuckBase {
       findDefaultInputTag() @=> tag;
     }
 
+
     _handlers[tag] @=> EventHandler handler;
     if(handler == null){
       <<<name+": Invalid event: "+tag>>>;
       return false;
     }else{
+      /*
+        if(persistVals != null){
+          null @=> persistVals;
+          persistVals[tag] @=> IntRef val;
+          if(val != null){
+            val.i => v;
+            <<< "restired val", tag, v>>>;
+          }
+        }
+       */
+
       handler.handle(v);
       handler.parent.send(recv(tag), v);
       return true;
@@ -123,8 +162,27 @@ public class Moduck extends ModuckBase {
 class ValueSetHandler extends EventHandler{
   string tag;
   int curVal;
+  null @=> string persistPath;
+
+  fun void _writePersistVal(){
+    FileIO fout;
+    fout.open(persistPath+"_"+tag, FileIO.WRITE );
+
+    // test
+    if(!fout.good()){
+      <<<"can't open file for writing...: "+persistPath+"_"+tag>>>;
+    }else{
+      fout <= curVal;
+      fout.close();
+    }
+  }
+
   fun void handle(int val){
     val @=> curVal;
+    if(persistPath != null){
+      _writePersistVal();
+    }
+    parent.send(tag, curVal);
     samp => now;
   }
 

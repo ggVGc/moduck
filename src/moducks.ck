@@ -22,3 +22,5 @@ Machine.add("simple_moducks/processor.ck");
 Machine.add("simple_moducks/subtract.ck");
 Machine.add("simple_moducks/range_mapper.ck");
 Machine.add("simple_moducks/add.ck");
+Machine.add("simple_moducks/persistent_base.ck");
+Machine.add("simple_moducks/persistent.ck");

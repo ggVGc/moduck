@@ -43,8 +43,7 @@ include(pulses.m4)
 include(aliases.m4)
 
 
-public class Runner{
-  static Trigger @ _startBang;
+public class Runner extends RunnerBase{
   static Repeater @ masterClock;
   static ClockGen @ _masterClockGen;
   // static int tickCount;
@@ -74,7 +73,8 @@ public class Runner{
     if(isPlaying){
       return false;
     }
-    _startBang.trigger(1);
+    _startBang.broadcast();
+    Runner._masterClockGen.doHandle("run", 1);
     true => isPlaying;
     <<< "Runner: Playing">>>;
     return true;
@@ -132,12 +132,10 @@ false => Runner.isPlaying;
 64 => Runner.ticksPerBeat;
 
 
-Trigger.make("start") @=> Runner._startBang;
 ClockGen.make(120*Runner.ticksPerBeat) @=> Runner._masterClockGen;
 Repeater.make(P_Clock) @=> Runner.masterClock;
 
 
-Patch.connect(Runner._startBang, Runner._masterClockGen);
 Patch.connect(Runner._masterClockGen, Runner.masterClock);
 
 // 0 => Runner.tickCount;

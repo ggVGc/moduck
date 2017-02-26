@@ -1,7 +1,7 @@
 include(song_macros.m4)
 include(_all_parts.m4)
 
-Runner.setPlaying(1);
+
 
 def(synth, mk(NoteOut, MIDI_OUT_IAC_1, 0, 0::ms, D4, false))
 def(kick,
@@ -24,15 +24,18 @@ Runner.masterClock
   => riot.c
 ;
 
-def(vvv, mk(Value, 0));
+def(vvv, mk(Value, 0).persist("test"))
 
-/*
-  (Runner.masterClock
-    => mk(PulseDiv, B4).c
-    ).b(MUtil.update(vvv, "value", mk(Add, 1)))
-    => (mk(RangeMapper, 0,127,50,60) => mkc(Printer, "rangemapped: ")).c
-  ;
- */
+// (Runner.masterClock
+//   => mk(PulseDiv, B4).c
+//   ).b(MUtil.update(vvv, "value", mk(Add, 1)))
+//   => vvv.c
+//   => mk(Printer, "val").c
+//   // => (mk(RangeMapper, 0,127,50,60) => mkc(Printer, "rangemapped: ")).c
+// ;
+
+samp => now;
+vvv.doHandle(P_Trigger, 0);
 
 def(nanoKtrl, mk(MidInp, MIDI_IN_NANO_KTRL, 0))
 def(nanoKtrl2, mk(MidInp, MIDI_IN_NANO_KTRL, 1))
@@ -40,10 +43,14 @@ def(nanoKtrl2, mk(MidInp, MIDI_IN_NANO_KTRL, 1))
 for(0=>int x;x<3;++x){
   for(0=>int y;y<3;++y){
     x+y*3 @=> int ind;
-    nanoKtrl => (mk(RangeMapper, 0,127,0,64) => riot.to("div"+x+""+y).c).from("ccOn"+(14+ind)).c;
+    "ccOn"+(14+ind) @=> string ccOn;
+    nanoKtrl
+      => mk(Delay, samp).from(ccOn).c
+      => mk(Value, 0).hook(nanoKtrl.from(ccOn).to("value")).persist("nanoKtrl_"+ccOn).c
+      => (mk(RangeMapper, 1,127,0,64) => riot.to("div"+x+""+y).c).c;
     riot => mk(Printer, "div "+x+" "+y).from(recv("div"+x+""+y)).c;
 
-    nanoKtrl => (mk(RangeMapper, 0,127,0,100) => riot.to("prob"+x+""+y).c).from("ccOn"+(2+ind)).c;
+    nanoKtrl => (mk(RangeMapper, 1,127,0,100) => riot.to("prob"+x+""+y).c).from("ccOn"+(2+ind)).c;
     riot => mk(Printer, "prob "+x+" "+y).from(recv("prob"+x+""+y)).c;
 
     nanoKtrl
@@ -57,7 +64,7 @@ for(0=>int x;x<3;++x){
     riot => mk(Printer, "delay "+x+" "+y).from(recv("delay"+x+""+y)).c;
 
     nanoKtrl2
-      => (mk(RangeMapper, 0,127,0,100) => riot.to("time"+x+""+y).c).from("ccOn"+(57+ind)).c;
+      => (mk(RangeMapper, 1,127,0,100) => riot.to("time"+x+""+y).c).from("ccOn"+(57+ind)).c;
     ;
     riot => mk(Printer, "time "+x+" "+y).from(recv("time"+x+""+y)).c;
 
@@ -107,4 +114,10 @@ riot.multi([
 // Runner.skipForward(100000);
 
 
+samp => now;
+// Persistent.restoreAll();
+
+Runner.setPlaying(1);
+
 Util.runForever();
+

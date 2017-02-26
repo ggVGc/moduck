@@ -7,6 +7,7 @@ Machine.add("types/seqinfo.ck");
 Machine.add("util.ck");
 Machine.add("simple_moducks/moduck_base.ck");
 Machine.add("event_handler.ck");
+Machine.add("runner_base.ck");
 
 Machine.add("simple_moducks/moduck.ck");
 Machine.add("types/int_fun.ck");

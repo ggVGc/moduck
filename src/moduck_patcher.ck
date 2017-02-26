@@ -33,6 +33,7 @@ class Connector{
     return this;
   }
 
+
   fun Connector trigger(string tag){
     return trigger(tag, 0);
   }
@@ -178,6 +179,11 @@ public class ModuckP extends Moduck{
   }
 
   fun Moduck asModuck(){
+    return this;
+  }
+
+  fun ModuckP persist(string fileName){
+    doPersist("../vals/"+fileName);
     return this;
   }
 
