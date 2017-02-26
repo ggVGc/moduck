@@ -2,7 +2,7 @@ include(macros.m4)
 
 genHandler(TrigHandler, P_Trigger,
   HANDLE{
-    parent.send("value", parent.getVal("value"));
+    parent.send(P_Trigger, parent.getVal("value"));
   },
   ;
 )
@@ -11,6 +11,7 @@ genHandler(TrigHandler, P_Trigger,
 public class Value extends Moduck{
   fun static Value make(int v){
     Value ret;
+    OUT(P_Trigger);
     IN(TrigHandler, ());
 
     ret.addVal("value", v);

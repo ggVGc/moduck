@@ -17,7 +17,7 @@ def(hat, mk(NoteOut, MIDI_OUT_IAC_2, 0, 0::ms, D4, true)
   .set("note", 2)
 )
 
-def(riot, triggerRiot(4, B4))
+def(riot, triggerRiot(4, B4).persist("riot_1"))
 
 Runner.masterClock
   // => mk(Printer, "").c
@@ -43,11 +43,7 @@ def(nanoKtrl2, mk(MidInp, MIDI_IN_NANO_KTRL, 1))
 for(0=>int x;x<3;++x){
   for(0=>int y;y<3;++y){
     x+y*3 @=> int ind;
-    "ccOn"+(14+ind) @=> string ccOn;
-    nanoKtrl
-      => mk(Delay, samp).from(ccOn).c
-      => mk(Value, 0).hook(nanoKtrl.from(ccOn).to("value")).persist("nanoKtrl_"+ccOn).c
-      => (mk(RangeMapper, 1,127,0,64) => riot.to("div"+x+""+y).c).c;
+    nanoKtrl => (mk(RangeMapper, 1,127,0,100) => riot.to("div"+x+""+y).c).from("ccOn"+(14+ind)).c;
     riot => mk(Printer, "div "+x+" "+y).from(recv("div"+x+""+y)).c;
 
     nanoKtrl => (mk(RangeMapper, 1,127,0,100) => riot.to("prob"+x+""+y).c).from("ccOn"+(2+ind)).c;
@@ -81,8 +77,8 @@ nanoKtrl2 => mk(Printer, "ccOn").from("ccOn").c;
 
 
 
-riot
-  .set("div00", 4);
+// riot
+//   .set("div00", 4);
 //   .set("div10", 9)
 //   .set("div13", 5)
 //   .set("div12", 14)
@@ -100,9 +96,9 @@ riot
 
 
 riot.multi([
-  (mk(Value, 100) => kick.c).from("side0")
-  ,(mk(Value, 100) => snare.c).from("side1")
-  ,(mk(Value, 100) => hat.c).from("side2")
+  (mk(Value, 120) => kick.c).from("side0")
+  ,(mk(Value, 75) => snare.c).from("side1")
+  ,(mk(Value, 70) => hat.c).from("side2")
   // ,(mk(Sequencer, [50,47,53,55,48,58]) => synth.c).from("bottom1")
   // ,mk(Printer, "side1").from("side1")
   // mk(Printer, "bottom0").from("bottom0")

@@ -10,6 +10,8 @@ public class Moduck extends ModuckBase {
   string _valHandlerKeys[0];
   false => int persisting;
 
+  // int outCache[0];
+
   "-" @=> string name;
 
 
@@ -45,6 +47,27 @@ public class Moduck extends ModuckBase {
    */
 
 
+  fun void _writePersistVal(string persistPath, string tag, int val){
+    FileIO fout;
+    fout.open(persistPath+"_"+tag, FileIO.WRITE );
+
+    // test
+    if(!fout.good()){
+      <<<"can't open file for writing...: "+persistPath+"_"+tag>>>;
+    }else{
+      fout <= val;
+      fout.close();
+    }
+  }
+
+  fun void _outCacheSetter(string persistFileName, string tag){
+    while(true){
+      _outs[tag] @=> VEvent ev;
+      ev => now;
+      _writePersistVal(persistFileName, tag, ev.val);
+    }
+  }
+
 
   fun void addVal(string tag, int initialValue){
     ValueSetHandler.make(this, tag, initialValue) @=> ValueSetHandler h;
@@ -73,29 +96,27 @@ public class Moduck extends ModuckBase {
     return null;
   }
 
-  fun void _onRunnerStart(){
+  fun void _onRunnerStart(string persistFileName){
     RunnerBase._startBang => now;
-    for(0=>int i;i<_valHandlerKeys.size();++i){
-      _valHandlerKeys[i] @=> string k;
-      this.send(k, getVal(k));
+    for(0=>int i;i<_outKeys.size();++i){
+      _outKeys[i] @=> string k;
+      FileIO fio;
+      fio.open( persistFileName+"_"+k, FileIO.READ );
+      if(fio.good()){
+        int val;
+        fio => val;
+        fio.close();
+        this.send(k, val);
+      }
     }
   }
 
   fun void doPersist(string fileName){
     true => persisting;
-    for(0=>int i;i<_valHandlerKeys.size();++i){
-      _valHandlerKeys[i] @=> string k;
-      fileName @=> _valHandlers[k].persistPath;
-      FileIO fio;
-      fio.open( fileName+"_"+k, FileIO.READ );
-      if(fio.good()){
-        int val;
-        fio => val;
-        fio.close();
-        val @=> _valHandlers[k].curVal;
-      }
+    for(0=>int i;i<_outKeys.size();++i){
+      spork ~ _outCacheSetter(fileName, _outKeys[i]);
     }
-    spork ~ _onRunnerStart();
+    spork ~ _onRunnerStart(fileName);
   }
 
 
@@ -162,26 +183,13 @@ public class Moduck extends ModuckBase {
 class ValueSetHandler extends EventHandler{
   string tag;
   int curVal;
-  null @=> string persistPath;
-
-  fun void _writePersistVal(){
-    FileIO fout;
-    fout.open(persistPath+"_"+tag, FileIO.WRITE );
-
-    // test
-    if(!fout.good()){
-      <<<"can't open file for writing...: "+persistPath+"_"+tag>>>;
-    }else{
-      fout <= curVal;
-      fout.close();
-    }
-  }
+  // null @=> string persistPath;
 
   fun void handle(int val){
     val @=> curVal;
-    if(persistPath != null){
-      _writePersistVal();
-    }
+    // if(persistPath != null){
+    //   _writePersistVal();
+    // }
     parent.send(tag, curVal);
     samp => now;
   }
