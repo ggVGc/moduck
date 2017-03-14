@@ -73,6 +73,10 @@ public class Runner extends RunnerBase{
     if(isPlaying){
       return false;
     }
+    false => NoteOut.enabled;
+    _preStartBang.broadcast();
+    samp => now;
+    true => NoteOut.enabled;
     _startBang.broadcast();
     Runner._masterClockGen.doHandle("run", 1);
     true => isPlaying;

@@ -9,8 +9,10 @@ public class Moduck extends ModuckBase {
   ValueSetHandler _valHandlers[0];
   string _valHandlerKeys[0];
   false => int persisting;
+  // string persistenceIgnore[0];
 
-  // int outCache[0];
+  IntRef outCache[0];
+  string persistFileName;
 
   "-" @=> string name;
 
@@ -60,11 +62,14 @@ public class Moduck extends ModuckBase {
     }
   }
 
-  fun void _outCacheSetter(string persistFileName, string tag){
+  fun void _outCacheWriter(string persistFileName, string tag){
     while(true){
       _outs[tag] @=> VEvent ev;
       ev => now;
-      _writePersistVal(persistFileName, tag, ev.val);
+      IntRef.make(ev.val) @=> outCache[tag];
+      if(persisting){
+        _writePersistVal(persistFileName, tag, ev.val);
+      }
     }
   }
 
@@ -96,28 +101,32 @@ public class Moduck extends ModuckBase {
     return null;
   }
 
-  fun void _onRunnerStart(string persistFileName){
-    RunnerBase._startBang => now;
+  fun void _onRunnerStart(){
+    RunnerBase._preStartBang => now;
+
     for(0=>int i;i<_outKeys.size();++i){
       _outKeys[i] @=> string k;
+      spork ~ _outCacheWriter(persistFileName, k);
       FileIO fio;
       fio.open( persistFileName+"_"+k, FileIO.READ );
       if(fio.good()){
         int val;
         fio => val;
         fio.close();
-        this.send(k, val);
+        if(isRecvPulse(k)){
+          doHandle(unRecv(k), val);
+        }else{
+          send(k, val);
+        }
       }
     }
   }
 
   fun void doPersist(string fileName){
     true => persisting;
-    for(0=>int i;i<_outKeys.size();++i){
-      spork ~ _outCacheSetter(fileName, _outKeys[i]);
-    }
-    spork ~ _onRunnerStart(fileName);
+    fileName @=> persistFileName
   }
+  spork ~ _onRunnerStart();
 
 
   fun string findDefaultOutputTag(){

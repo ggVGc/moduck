@@ -28,4 +28,3 @@ Machine.add("moduck_util.ck");
 Machine.add("runner.ck");
 samp => now;
 Machine.add("_cur_song");
-

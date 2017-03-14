@@ -18,6 +18,11 @@ fun int isRecvPulse(string str){
     && str.substring(0, prefLen) == pulseRecvPrefix;
 }
 
+fun string unRecv(string str){
+  pulseRecvPrefix.length() => int prefLen;
+  return str.substring(prefLen);
+}
+
 fun string[] filterNonRecvPulses(string tags[]){
   string ret[0];
   for(0=>int i;i<tags.size();++i){
