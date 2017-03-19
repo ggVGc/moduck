@@ -9,7 +9,7 @@ if [[ "$songName" == "" ]]; then
   mkdir build
 fi
 
-python ./generateMidiPorts.py build/midiPorts.m4
+python2 ./generateMidiPorts.py build/midiPorts.m4
 
 
 
