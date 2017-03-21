@@ -124,7 +124,7 @@ public class Moduck extends ModuckBase {
 
   fun void doPersist(string fileName){
     true => persisting;
-    fileName @=> persistFileName
+    fileName @=> persistFileName;
   }
   spork ~ _onRunnerStart();
 

@@ -28,6 +28,10 @@ rm -rf build/parts
 mkdir build/parts
 cp -r parts/* build/parts
 
+rm -rf build/instruments
+mkdir build/instruments
+cp -r instruments/* build/instruments
+
 
 cd build/parts || exit
 
@@ -37,6 +41,18 @@ while IFS= read -r -d '' file
 do
   echo "include(parts/$file)" >> ../_all_parts.m4
 done < <(find . -name '*.ck' -print0)
+
+cd ../../build/instruments || exit
+
+echo "" > ../_all_instruments.m4
+
+
+
+while IFS= read -r -d '' file
+do
+  echo "include(instruments/$file)" >> ../_all_instruments.m4
+done < <(find . -name '*.ck' -print0)
+
 
 
 cd ../ || exit
