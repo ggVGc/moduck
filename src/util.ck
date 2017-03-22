@@ -20,6 +20,9 @@ public class Util{
     }
   }
 
+  fun static int[] range(int start, int end){
+    return Util.range(start, end, 1);
+  }
 
   fun static int[] range(int start, int end, int step){
     int smallest;
@@ -70,6 +73,22 @@ public class Util{
       sz + lists[i].size() => sz;
     }
     int arr[sz];
+    0 => int count;
+    for(0 => int i; i<lists.size(); i++){
+      for(0 => int j; j<lists[i].size(); j++){
+        lists[i][j] => arr[count];
+        count+1 => count;
+      }
+    }
+    return arr;
+  }
+
+  fun static string[] concatStrings(string lists[][]){
+    0 => int sz;
+    for(0 => int i; i<lists.size(); i++){
+      sz + lists[i].size() => sz;
+    }
+    string arr[sz];
     0 => int count;
     for(0 => int i; i<lists.size(); i++){
       for(0 => int j; j<lists[i].size(); j++){
@@ -165,6 +184,14 @@ public class Util{
       s+","+list[i] @=> s;
     }
     return s;
+  }
+
+  fun static string[] numberedStrings(string prefix, int numbers[]){
+    string ret[numbers.size()];
+    for(0 => int i; i<numbers.size(); i++){
+      prefix+numbers[i] => ret[i];
+    }
+    return ret;
   }
 }
 

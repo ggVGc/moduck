@@ -56,7 +56,7 @@ public class Moduck extends ModuckBase {
 
   fun void addVal(string tag, int initialValue){
     ValueSetHandler.make(this, tag, initialValue) @=> ValueSetHandler h;
-    addIn(tag, h.getEvHandler());
+    addIn(tag, h.asEventHandler());
     h @=> _valHandlers[tag];
     _valHandlerKeys << tag;
     addOut(tag);
@@ -138,7 +138,7 @@ public class Moduck extends ModuckBase {
     if(handler == null){
       <<<name+": Invalid event: "+tag>>>;
       return false;
-    }else{
+    } else {
       // Persistance related
       /*
         if(persistVals != null){
@@ -208,7 +208,7 @@ class ValueSetHandler extends EventHandler{
   }
 
 
-  fun EventHandler getEvHandler(){
+  fun EventHandler asEventHandler(){
     return this;
   }
 }
