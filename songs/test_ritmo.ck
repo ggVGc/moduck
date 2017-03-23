@@ -17,12 +17,16 @@ inp
   .b(mk(Printer, "ccVal").from("ccValue"))
 ;
 
-/* 
- Runner.masterClock
-   => val.c
-   => mk(Printer, "tick").c
- ;
- */
+def(block, mk(Blocker))
+
+inp => block.fromTo("cc", P_Gate).c;
+inp => val.fromTo("cc", "value").c;
+
+Runner.masterClock
+  => block.c
+  => val.c
+  => mk(Printer, "tick").c
+;
 Runner.setPlaying(1);
 
 Util.runForever();
