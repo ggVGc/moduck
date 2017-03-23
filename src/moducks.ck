@@ -16,11 +16,11 @@ Machine.add("simple_moducks/attenuator.ck");
 Machine.add("simple_moducks/processor.ck");
 Machine.add("simple_moducks/subtract.ck");
 Machine.add("simple_moducks/offset.ck");
-/* Machine.add("simple_moducks/trigger.ck"); */
-/* Machine.add("simple_moducks/clamper.ck"); */
 Machine.add("simple_moducks/blackhole.ck");
 Machine.add("simple_moducks/blocker.ck");
 Machine.add("simple_moducks/sample_hold.ck");
+/* Machine.add("simple_moducks/trigger.ck"); */
+/* Machine.add("simple_moducks/clamper.ck"); */
 /* Machine.add("simple_moducks/pulse_gen.ck"); */
 /* Machine.add("simple_moducks/range_mapper.ck"); */
 /* Machine.add("simple_moducks/add.ck"); */
