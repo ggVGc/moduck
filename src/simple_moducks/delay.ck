@@ -4,10 +4,12 @@ include(macros.m4)
 genHandler(TrigHandler, P_Trigger,
   fun void doWait(int v){
     parent.getVal("delay") :: samp => now;
-    parent.send(P_Trigger, v);
+    parent.send(P_Trigger, IntRef.make(v));
   }
   HANDLE{
-    spork ~ doWait(v);
+    if(null != v){
+      spork ~ doWait(v.i);
+    }
   },
 ;
 )

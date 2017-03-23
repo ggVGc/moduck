@@ -40,17 +40,19 @@ public class Moduck extends ModuckBase {
     }
   }
 
-  fun void _outCacheWriter(string persistFileName, string tag){
-    while(true){
-      _outs[tag] @=> VEvent ev;
-      ev => now;
-      IntRef.make(ev.val) @=> outCache[tag];
-      if(persisting){
-        _writePersistVal(persistFileName, tag, ev.val);
-      }
-    }
-  }
-
+  // TODO: Persistance related
+  /* 
+   fun void _outCacheWriter(string persistFileName, string tag){
+     while(true){
+       _outs[tag] @=> VEvent ev;
+       ev => now;
+       IntRef.make(ev.val) @=> outCache[tag];
+       if(persisting){
+         _writePersistVal(persistFileName, tag, ev.val);
+       }
+     }
+   }
+   */
 
   fun void addVal(string tag, int initialValue){
     ValueSetHandler.make(this, tag, initialValue) @=> ValueSetHandler h;
@@ -62,7 +64,7 @@ public class Moduck extends ModuckBase {
 
 
   fun ModuckBase setVal(string tag, int v){
-    doHandle(tag, v);
+    doHandle(tag, IntRef.make(v));
     samp => now;
     return this;
   }
@@ -86,19 +88,27 @@ public class Moduck extends ModuckBase {
 
     for(0=>int i;i<_outKeys.size();++i){
       _outKeys[i] @=> string k;
-      spork ~ _outCacheWriter(persistFileName, k);
-      FileIO fio;
-      fio.open( persistFileName+"_"+k, FileIO.READ );
-      if(fio.good()){
-        int val;
-        fio => val;
-        fio.close();
-        if(isRecvPulse(k)){
-          doHandle(unRecv(k), val);
-        }else{
-          send(k, val);
-        }
-      }
+
+      // TODO: Persistance related
+      /* 
+       spork ~ _outCacheWriter(persistFileName, k);
+       */
+
+      // Persistance related
+      /* 
+       FileIO fio;
+       fio.open( persistFileName+"_"+k, FileIO.READ );
+       if(fio.good()){
+         int val;
+         fio => val;
+         fio.close();
+         if(isRecvPulse(k)){
+           doHandle(unRecv(k), val);
+         }else{
+           send(k, val);
+         }
+       }
+       */
     }
   }
 
@@ -119,17 +129,17 @@ public class Moduck extends ModuckBase {
     return nonRecvs[0];
   }
 
-  fun int doHandle(string tag, int v){
+  fun int doHandle(string tag, IntRef v){
     if(tag == P_Default){
       findDefaultInputTag() @=> tag;
     }
-
 
     _handlers[tag] @=> EventHandler handler;
     if(handler == null){
       <<<name+": Invalid event: "+tag>>>;
       return false;
     }else{
+      // Persistance related
       /*
         if(persistVals != null){
           null @=> persistVals;
@@ -172,12 +182,19 @@ class ValueSetHandler extends EventHandler{
   // null @=> string persistPath;
 
 
-  fun void handle(int val){
-    val @=> curVal;
-    // if(persistPath != null){
-    //   _writePersistVal();
-    // }
-    parent.send(tag, curVal);
+  fun void handle(IntRef val){
+    if(null != val){
+      val.i @=> curVal;
+    }
+
+    //TODO: Persistance related
+    /* 
+     if(persistPath != null){
+       _writePersistVal();
+     }
+     */
+
+    parent.send(tag, val);
     samp => now;
   }
 

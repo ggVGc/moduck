@@ -1,4 +1,4 @@
 
 public class VEvent extends Event{
-  int val;
+  IntRef val;
 }

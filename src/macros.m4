@@ -56,7 +56,7 @@ dnl define(IN_Default, $1.make $2 .addDefault(ret);)
 dnl define(OUT_Default, ret.addDefaultOut($1);)
 
 
-define(HANDLE, fun void handle(int v))
+define(HANDLE, fun void handle(IntRef v))
 
 define(V, parent.getVal("$1") @=> int $1;)
 
