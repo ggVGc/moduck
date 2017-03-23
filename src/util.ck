@@ -11,6 +11,7 @@ public class Util{
     return (d / samp) $ int;
   }
 
+
   fun static string strOrNull(string s){
     if(s != null){
       return s;
@@ -18,6 +19,7 @@ public class Util{
       return "nil";
     }
   }
+
 
   fun static int[] range(int start, int end, int step){
     int smallest;
@@ -42,6 +44,7 @@ public class Util{
     return arr;
   }
 
+
   fun static int contains(string s, string list[]){
     for(0=>int i;i<list.size();++i){
       if(list[i] == s){
@@ -52,7 +55,6 @@ public class Util{
   }
 
 
-
   fun static string[] copy(string list[]){
     string ret[list.size()];
     for(0=>int i; i<ret.size();++i){
@@ -60,6 +62,7 @@ public class Util{
     }
     return ret;
   }
+
 
   fun static int[] concat(int lists[][]){
     0 => int sz;
@@ -91,6 +94,7 @@ public class Util{
     return arr;
   }
 
+
   fun static IntRef whichNumber(string ch){
     for(0=>int x;x<10;x++){
       if(ch == ""+x){
@@ -99,6 +103,7 @@ public class Util{
     }
     return null;
   }
+
 
   fun static SeqInfo seqFromString(string str, int beatSize, int seqLen){
     if(whichNumber(str.substring(str.length()-1,1)) != null){
@@ -142,14 +147,14 @@ public class Util{
     for(0=> int i;i<ret.size();i++){
       ret.lens[i] +=> acc;
     }
-
-
     return ret;
   }
+
 
   fun static void runForever(){
     while(true) { 99::hour => now; }
   }
+
 
   fun static string catStrings(string list[]){
     if(list.size() == 0){
@@ -161,6 +166,5 @@ public class Util{
     }
     return s;
   }
-
 }
 
