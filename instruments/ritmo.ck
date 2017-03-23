@@ -2,7 +2,7 @@
 
 fun ModuckP ritmo(ModuckP rhythms[]){
   Util.concatStrings([
-      [P_Trigger]
+      [P_Clock]
       ,Util.numberedStrings("in", Util.range(0, rhythms.size()))
   ])
   @=> string rootTags[];
