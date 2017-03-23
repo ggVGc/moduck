@@ -16,7 +16,8 @@ genHandler(TrigHandler, P_Trigger,
       if(divisor > 0 && Math.remainder(accum.i, divisor) == 0){
         parent.sendPulse(P_Trigger, v.i);
       }
-      accum.i + 1 => accum.i;
+      1.0 => float mul;
+      accum.i + (Math.round(1*mul)$int) => accum.i;
     }
   },
   IntRef accum;
