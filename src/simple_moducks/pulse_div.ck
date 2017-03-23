@@ -14,7 +14,7 @@ genHandler(TrigHandler, P_Trigger,
     if(null != v){
       parent.getVal("divisor") @=> int divisor;
       if(divisor > 0 && Math.remainder(accum.i, divisor) == 0){
-        parent.send(P_Trigger, v);
+        parent.sendPulse(P_Trigger, v.i);
       }
       accum.i + 1 => accum.i;
     }

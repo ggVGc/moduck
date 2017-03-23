@@ -4,6 +4,8 @@ genHandler(TrigHandler, P_Trigger,
   HANDLE{
     if(null != v){
       parent.send(P_Trigger, IntRef.make(parent.getVal("value")));
+    }else{
+      parent.send(P_Trigger, null);
     }
   },
   ;

@@ -15,13 +15,14 @@ define(D32, D16/2)
 define(B, Runner.ticksPerBeat)
 define(B2, B/2)
 define(B4, B2/2)
-define(B3, B-B4)
-define(B5, B+B4)
 define(B6, B+B2)
-define(B7, B+B2+B4)
 define(B8, B4/2)
 define(B16, B8/2)
 define(B32, B16/2)
+
+define(B3, B-B4)
+define(B5, B+B4)
+define(B7, B+B2+B4)
 
 define(Bar, (B*4))
 
