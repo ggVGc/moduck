@@ -12,6 +12,8 @@ genHandler(GateHandler, P_Gate,
       (ratio$float)/(parent.getVal("ratioMax") $ float)=> float mul;
       Math.round(v.i * mul) $ int @=> int trigVal;
       parent.send(P_Trigger, IntRef.make(trigVal));
+    }else{
+      parent.send(P_Trigger, null);
     }
   },
 ;
