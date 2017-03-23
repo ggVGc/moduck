@@ -2,7 +2,11 @@
 include(macros.m4)
 
 genHandler( TrigHandler, P_Trigger, HANDLE{
-    parent.send(P_Trigger, v + parent.getVal("offset"));
+    if(null != v){
+      parent.send(P_Trigger, IntRef.make(v.i + parent.getVal("offset")));
+    }else{
+      parent.send(P_Trigger, null);
+    }
   },
 ;)
 
