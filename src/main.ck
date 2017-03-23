@@ -22,7 +22,6 @@ Machine.add("moducks.ck");
 samp => now;
 Machine.add("complex_moducks/probably.ck");
 Machine.add("moduck_patcher.ck");
-Machine.add("complex_moducks/blocker.ck");
 Machine.add("scales.ck");
 Machine.add("moduck_util.ck");
 Machine.add("runner.ck");
