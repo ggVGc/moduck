@@ -1,6 +1,11 @@
 
 include(macros.m4)
 
+class BufStep{
+  null => IntRef val;
+  false => int hasValue;
+}
+
 
 genHandler(TrigHandler, P_Trigger,
   HANDLE{
@@ -12,11 +17,11 @@ genHandler(TrigHandler, P_Trigger,
     if(buf.size() < size+1){
       buf.size(size+1);
     }
-    IntRef.make(v) @=> buf[0];
+    v @=> buf[0].val;
+    true @=> buf[0].hasValue;
   },
-  IntRef buf[];
+  BufStep buf[];
 )
-
 
 
 genHandler(ClockHandler, P_Clock,
@@ -31,39 +36,39 @@ genHandler(ClockHandler, P_Clock,
     for(size=>int i;i>0;i--){
       buf[i-1] @=> buf[i];
     }
-    buf[size] @=> IntRef curVal;
-    if(curVal != null){
-      parent.send(P_Trigger, curVal.i);
+    buf[size] @=> BufStep curVal;
+    if(curVal.hasValue){
+      parent.send(P_Trigger, curVal.val);
     }
-    null @=> buf[0];
+    false @=> buf[0].hasValue;
   },
-  IntRef buf[];
+  BufStep buf[];
 )
 
 
 genHandler(ResetHandler, P_Reset,
   HANDLE{
-    parent.getVal("size") @=> int size;
-    if(size == 0){
-      return;
-    }
-    if(buf.size() < size+1){
-      buf.size(size+1);
-    }
-    for(0=>int i;i<size+1;i++){
-      null @=> buf[i];
+    if(null != v){
+      parent.getVal("size") @=> int size;
+      if(size == 0){
+        return;
+      }
+      if(buf.size() < size+1){
+        buf.size(size+1);
+      }
+      for(0=>int i;i<size+1;i++){
+        false @=> buf[i].hasValue;
+      }
     }
   },
-  IntRef buf[];
+  BufStep buf[];
 )
+
 
 public class PulseDelay extends Moduck{
   fun static PulseDelay make(int size){
     PulseDelay ret;
-    IntRef buf[size];
-    for(0=>int i;i<size;i++){
-      null @=> buf[i];
-    }
+    BufStep buf[size];
     OUT(P_Trigger);
     IN(TrigHandler,(buf));
     IN(ResetHandler,(buf));

@@ -1,30 +1,24 @@
 
 include(macros.m4)
 
+fun int doMult(ModuckBase m, int count){
+    0 => int acc;
+    for(0 => int i; i<count; i++){
+      acc + m.getVal(""+i) => acc;
+    }
+    return acc;
+}
+
 genHandler(TrigHandler, P_Trigger,
   HANDLE{
-    0 => int acc;
-    samp => now;
-    for(0 => int i; i<inputCount; i++){
-      acc + parent.getVal(""+i) => acc;
+    if(null != v){
+      // TODO: Why is there a delay here?
+      samp => now;
+      parent.send(P_Trigger, IntRef.make(doMult(parent, inputCount)));
     }
-    parent.send(P_Trigger, acc);
   },
   int inputCount;
 )
-
-
-class SetHandler extends EventHandler{ 
-  int ind;
-  fun void handle(int v){
-    parent.setVal(""+ind, v);
-  }
-  fun static SetHandler make(int ind){
-    SetHandler ret;
-    ind => ret.ind;
-    return ret;
-  }
-}
 
 
 
@@ -32,10 +26,11 @@ public class Adder extends Moduck{
   fun static Adder make(int inputCount){
     Adder ret;
     OUT(P_Trigger);
-    IN(TrigHandler, (inputCount));
+    TrigHandler.make(inputCount) @=> TrigHandler h;
+    h.add(ret);
     for(0 => int i; i<inputCount; i++){
-      ret.addIn(""+i, SetHandler.make(i));
-      ret.setVal(""+i, 1);
+      ret.addVal(""+i, 1);
+      Patch.connect(ret, recv(""+i), ret, P_Trigger);
     }
     return ret;
   }

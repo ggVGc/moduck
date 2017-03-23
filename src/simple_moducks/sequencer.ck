@@ -16,9 +16,9 @@ fun void doStep(ModuckBase parent, int entries[], int loop){
     /* <<<"Seq Stepped">>>; */
     parent.setVal("curStep", cur + 1);
   }
-  parent.send(P_Stepped, v);
+  parent.sendPulse(P_Stepped, v);
   if(looped){
-    parent.send(P_Looped, v);
+    parent.sendPulse(P_Looped, v);
   }
 }
 
@@ -26,7 +26,7 @@ genHandler(StepTrigHandler, P_StepTrigger,
   fun void init(){}
 
   HANDLE{
-    parent.send(P_Trigger, entries[parent.getVal("curStep")]);
+    parent.sendPulse(P_Trigger, entries[parent.getVal("curStep")]);
     doStep(parent, entries, loop);
   },
   int entries[];
@@ -49,7 +49,7 @@ genHandler(TrigHandler, P_Trigger,
   fun void init(){}
 
   HANDLE{
-    parent.send(P_Trigger, entries[parent.getVal("curStep")]);
+    parent.sendPulse(P_Trigger, entries[parent.getVal("curStep")]);
   },
   int entries[];
 )
@@ -58,8 +58,10 @@ genHandler(TrigHandler, P_Trigger,
 
 genHandler(SetHandler, P_Set,
   HANDLE{
-    v => entries[parent.getVal("targetStep")];
-    parent.send(P_Set, parent.getVal("targetStep"));
+    if(null != v){
+      v.i => entries[parent.getVal("targetStep")];
+      parent.sendPulse(P_Set, parent.getVal("targetStep"));
+    }
   },
   int entries[];
 )

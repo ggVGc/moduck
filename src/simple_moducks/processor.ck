@@ -4,9 +4,13 @@ include(macros.m4)
 
 genHandler(TrigHandler, P_Trigger,
   HANDLE{
-    f.call(v) @=> IntRef ret;
-    if(ret != null){
-      parent.send(P_Trigger, ret.i);
+    if(null != v){
+      f.call(v.i) @=> IntRef ret;
+      if(ret != null){
+        parent.send(P_Trigger, ret);
+      }
+    }else{
+      parent.send(P_Trigger, null);
     }
   },
   IntFun f;

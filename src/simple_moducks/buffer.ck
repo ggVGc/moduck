@@ -4,24 +4,26 @@ include(macros.m4)
 
 genHandler(TrigHandler, P_Trigger,
   HANDLE{
-    parent.getVal("size") @=> int size;
-    if(size == 0){
-      parent.send(P_Trigger, v);
-      return;
+    if(null != v){
+      parent.getVal("size") @=> int size;
+      if(size == 0){
+        parent.send(P_Trigger, v);
+        return;
+      }
+      if(buf.size() < size){
+        buf.size(size);
+      }
+      buf[size-1] @=> IntRef curVal;
+      if(curVal != null){
+        // <<<"Spitting out: "+curVal.i>>>;
+        parent.send(P_Trigger, curVal);
+      }
+      for(size-1=>int i;i>0;i--){
+        buf[i-1] @=> buf[i];
+      }
+      v @=> buf[0];
+      // <<<"Adding: "+buf[0].i>>>;
     }
-    if(buf.size() < size){
-      buf.size(size);
-    }
-    buf[size-1] @=> IntRef curVal;
-    if(curVal != null){
-      // <<<"Spitting out: "+curVal.i>>>;
-      parent.send(P_Trigger, curVal.i);
-    }
-    for(size-1=>int i;i>0;i--){
-      buf[i-1] @=> buf[i];
-    }
-    IntRef.make(v) @=> buf[0];
-    // <<<"Adding: "+buf[0].i>>>;
   },
   IntRef buf[];
 )
@@ -29,15 +31,17 @@ genHandler(TrigHandler, P_Trigger,
 
 genHandler(ResetHandler, P_Reset,
   HANDLE{
-    parent.getVal("size") @=> int size;
-    if(size == 0){
-      return;
-    }
-    if(buf.size() < size){
-      buf.size(size);
-    }
-    for(0=>int i;i<size;i++){
-      null @=> buf[i];
+    if(null != v){
+      parent.getVal("size") @=> int size;
+      if(size == 0){
+        return;
+      }
+      if(buf.size() < size){
+        buf.size(size);
+      }
+      for(0=>int i;i<size;i++){
+        null @=> buf[i];
+      }
     }
   },
   IntRef buf[];

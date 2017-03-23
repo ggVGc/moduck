@@ -18,6 +18,17 @@ public class ModuckBase{
   }
 
 
+  fun void waitSend(dur delay, string tag, IntRef v){
+    delay => now;
+    send(tag, v);
+  }
+
+  fun void sendPulse(string tag, int v){
+    send(tag, IntRef.make(v));
+    spork ~ waitSend(samp, tag, null);
+  }
+
+
   fun int getVal(string key){
     <<<"ModuckBase.getVal - Error: This should never trigger">>>;
     Machine.crash();

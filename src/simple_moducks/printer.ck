@@ -2,13 +2,19 @@
 include(macros.m4)
 
 
-fun void print(string msg, int v){
-    <<< msg + ": " + v + " - ", Math.floor(now/samp) $ int >>>;
+fun void print(string msg, IntRef v){
+  string valStr;
+  if(null != v){
+    ""+v.i @=> valStr;
+  }else{
+    "nil" @=> valStr;
+  }
+  <<< msg + ": " + valStr + " - ", Math.floor(now/samp) $ int >>>;
 }
 
 
 genHandler(TrigHandler, P_Trigger,
-  fun void handle(int v){
+  fun void handle(IntRef v){
     if(Printer.enabled){
       print(msg, v);
     }

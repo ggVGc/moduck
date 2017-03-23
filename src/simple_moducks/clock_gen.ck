@@ -1,13 +1,14 @@
 include(macros.m4)
 
 
+// TODO: This should use a gate signal instead
 genHandler(RunHandler, "run",
   Shred @ looper;
 
   fun void loop(){
     while(true){
       parent.getVal("delta")::samp => now;
-      parent.send(P_Clock, 0);
+      parent.sendPulse(P_Clock, 0);
     }
   }
 
@@ -20,7 +21,7 @@ genHandler(RunHandler, "run",
 
   HANDLE{
     stop();
-    if(v){
+    if(null != v && v.i){
       spork ~ loop() @=> looper;
     }
   },
@@ -29,10 +30,11 @@ genHandler(RunHandler, "run",
 
 genHandler(BpmHandler, "bpm",
   HANDLE{
-    parent.setVal("delta", Util.toSamples(Util.bpmToDur(v)));
+    if(null != v){
+      parent.setVal("delta", Util.toSamples(Util.bpmToDur(v.i)));
+    }
   },
 )
-
 
 
 public class ClockGen extends Moduck{
@@ -41,6 +43,7 @@ public class ClockGen extends Moduck{
   fun void stop(){
     runHandler.stop();
   }
+
 
   fun static ClockGen make(float bpm){
     return make(Util.bpmToDur(bpm));

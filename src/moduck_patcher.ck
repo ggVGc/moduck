@@ -4,7 +4,7 @@ include(pulses.m4)
 class Connector{
   ChainData data;
   null @=> string _triggerName;
-  0 => int _triggerVal;
+  null @=> IntRef _triggerVal;
 
   fun ModuckP c(Moduck other){
     data.balanceTags();
@@ -27,7 +27,7 @@ class Connector{
     return ModuckP.make(ret);
   }
 
-  fun Connector trigger(string tag, int val){
+  fun Connector trigger(string tag, IntRef val){
     tag @=> _triggerName;
     val @=> _triggerVal;
     return this;
@@ -35,7 +35,7 @@ class Connector{
 
 
   fun Connector trigger(string tag){
-    return trigger(tag, 0);
+    return trigger(tag, IntRef.make(0));
   }
 
   fun Connector trigger(){

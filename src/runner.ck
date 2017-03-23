@@ -78,7 +78,7 @@ public class Runner extends RunnerBase{
     samp => now;
     true => NoteOut.enabled;
     _startBang.broadcast();
-    Runner._masterClockGen.doHandle("run", 1);
+    Runner._masterClockGen.doHandle("run", IntRef.make(1));
     true => isPlaying;
     <<< "Runner: Playing">>>;
     return true;
@@ -123,7 +123,7 @@ public class Runner extends RunnerBase{
     false => Printer.enabled;
     false => NoteOut.enabled;
     for(0=>int i;i<ticks;++i){
-      masterClock.doHandle(P_Default, 0);
+      masterClock.doHandle(P_Default, IntRef.make(0));
       samp => now;
     }
     true => Printer.enabled;

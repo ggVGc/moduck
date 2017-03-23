@@ -4,7 +4,9 @@ include(macros.m4)
 
 genHandler(TrigHandler, P_Trigger,
   HANDLE{
-    parent.send(P_Trigger, parent.getVal("a") - parent.getVal("b"));
+    if(null != v){
+      parent.send(P_Trigger, IntRef.make(parent.getVal("a") - parent.getVal("b")));
+    }
   },
 )
 

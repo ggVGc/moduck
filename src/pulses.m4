@@ -6,6 +6,7 @@ define(P_Looped, "looped")
 define(P_Stepped, "stepped")
 define(P_Step, "step")
 define(P_StepTrigger, "steptrigger")
+define(P_Gate, "gate")
 define(P_Default, "")
 
 define(pulseRecvPrefix, "received_")

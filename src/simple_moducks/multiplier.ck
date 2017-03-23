@@ -11,8 +11,11 @@ fun int doMult(ModuckBase m, int count){
 
 genHandler(TrigHandler, P_Trigger,
   HANDLE{
-    samp => now;
-    parent.send(P_Trigger, doMult(parent, inputCount));
+    if(null != v){
+      // TODO: Why is there a delay here?
+      samp => now;
+      parent.send(P_Trigger, IntRef.make(doMult(parent, inputCount)));
+    }
   },
   int inputCount;
 )

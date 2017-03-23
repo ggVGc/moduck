@@ -3,21 +3,26 @@ include(macros.m4)
 
 genHandler(TrigHandler, P_Trigger,
   HANDLE{
-    parent.getVal("offsetPerPeriod") => int offs;
-    int k;
-    int rest;
-    if(v >= 0){
-      v / entries.size() => rest;
-      v % entries.size() => k;
-    }else{
-      v / entries.size() => rest;
-      v % entries.size() => k;
-      if(k < 0 ){
-        entries.size() + k => k;
-        rest -1 => rest;
+    if(null != v){
+      parent.getVal("offsetPerPeriod") => int offs;
+      int k;
+      int rest;
+      v.i => int val;
+      if(val >= 0){
+        val / entries.size() => rest;
+        val % entries.size() => k;
+      }else{
+        val / entries.size() => rest;
+        val % entries.size() => k;
+        if(k < 0 ){
+          entries.size() + k => k;
+          rest -1 => rest;
+        }
       }
+      parent.send(P_Trigger, IntRef.make(entries[k] + rest*offs));
+    }else{
+      parent.send(P_Trigger, null);
     }
-    parent.send(P_Trigger, entries[k] + rest*offs);
   },
   int entries[];
 )
