@@ -1,5 +1,4 @@
 
-
 fun ModuckP ritmo(ModuckP rhythms[]){
   Util.concatStrings([
       [P_Clock]
