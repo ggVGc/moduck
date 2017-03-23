@@ -1,6 +1,7 @@
 
 Machine.add("midi_flower/initialize.ck");
 Machine.add("types/intref.ck");
+Machine.add("types/floatref.ck");
 Machine.add("types/vevent.ck");
 Machine.add("types/src_event.ck");
 Machine.add("types/seqinfo.ck");

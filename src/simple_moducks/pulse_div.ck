@@ -16,8 +16,7 @@ genHandler(TrigHandler, P_Trigger,
       if(divisor > 0 && Math.remainder(accum.i, divisor) == 0){
         parent.sendPulse(P_Trigger, v.i);
       }
-      (parent.getVal("scaling") $ float)/ 100.0 => float mul;
-      accum.i + (Math.round(1*mul)$int) => accum.i;
+      accum.i + 1 => accum.i;
     }
   },
   IntRef accum;
@@ -37,7 +36,6 @@ public class PulseDiv extends Moduck{
 
     ret.addVal("divisor", divisor);
     ret.addVal("offset", startOffset);
-    ret.addVal("scaling", 100); // In percentage
 
     ret.doHandle(P_Reset, IntRef.make(0));
 
