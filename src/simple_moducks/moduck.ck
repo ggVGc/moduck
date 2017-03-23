@@ -2,21 +2,17 @@
 include(pulses.m4)
 
 
-
 public class Moduck extends ModuckBase {
   EventHandler _handlers[0];
   string handlerKeys[0];
   ValueSetHandler _valHandlers[0];
   string _valHandlerKeys[0];
   false => int persisting;
-  // string persistenceIgnore[0];
 
   IntRef outCache[0];
   string persistFileName;
 
   "-" @=> string name;
-
-
 
   fun void addIn(string tag, EventHandler h){
     addOut(recv(tag));
@@ -32,28 +28,10 @@ public class Moduck extends ModuckBase {
     ev @=> _outs[tag];
   }
 
-
-  /*
-    fun void addDefaultIn(string tag, EventHandler h){
-      addIn(tag, h);
-      tag => _defaultHandlerTag;
-    }
-   */
-
-
-  /*
-    fun void addDefaultOut(string tag){
-      addOut(tag);
-      tag => _defaultOutputTag;
-    }
-   */
-
-
   fun void _writePersistVal(string persistPath, string tag, int val){
     FileIO fout;
     fout.open(persistPath+"_"+tag, FileIO.WRITE );
 
-    // test
     if(!fout.good()){
       <<<"can't open file for writing...: "+persistPath+"_"+tag>>>;
     }else{
@@ -82,11 +60,13 @@ public class Moduck extends ModuckBase {
     addOut(tag);
   }
 
+
   fun ModuckBase setVal(string tag, int v){
     doHandle(tag, v);
     samp => now;
     return this;
   }
+
 
   fun string findDefaultInputTag(){
     for(0=>int i;i<handlerKeys.size();++i){
@@ -186,13 +166,11 @@ public class Moduck extends ModuckBase {
 }
 
 
-
-
-
 class ValueSetHandler extends EventHandler{
   string tag;
   int curVal;
   // null @=> string persistPath;
+
 
   fun void handle(int val){
     val @=> curVal;
@@ -203,6 +181,7 @@ class ValueSetHandler extends EventHandler{
     samp => now;
   }
 
+
   fun static ValueSetHandler make(Moduck owner, string tag, int initialVal){
     ValueSetHandler ret;
     owner @=> ret.parent;
@@ -210,6 +189,7 @@ class ValueSetHandler extends EventHandler{
     initialVal @=> ret.curVal;
     return ret;
   }
+
 
   fun EventHandler getEvHandler(){
     return this;
