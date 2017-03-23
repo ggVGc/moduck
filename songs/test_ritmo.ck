@@ -2,7 +2,7 @@ include(song_macros.m4)
 include(_all_parts.m4)
 include(_all_instruments.m4)
 
-def(rit, ritmo([
+def(rit, ritmo(true, [
   fourFour(B*2, 0)
   ,fourFour(B, 0)
   ,fourFour(B2, 0)
