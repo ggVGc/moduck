@@ -15,7 +15,7 @@ define(FAIL_TEST,if(!$1){<<< "$1 failed - `FILIN'" >>>;$2}else{$3})
 define(fori, for(0=>int $1; $1<$2; $1++){$3})
 
 define(WARNING,
-    <<< "Warning: $1 - `FILIN'" >>>;)
+    <<< "Warning: "+$1+" - `FILIN'" >>>;)
 
 
 define(ASSERT,

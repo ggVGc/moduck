@@ -1,9 +1,7 @@
 include(macros.m4)
 
-
 class Responder extends MIDIFlowerPetal{
   Moduck parent;
-
 
   fun static Responder make(Moduck m){
     Responder ret;
@@ -11,50 +9,66 @@ class Responder extends MIDIFlowerPetal{
     return ret;
   }
 
+
   function void noteOn(int key, int velocity){
-    parent.send("value", velocity);
+    parent.send("value", IntRef.make(velocity));
     samp => now;
-    parent.send("noteOn", key);
+    parent.send("note", IntRef.make(key));
   }
 
- function void controlChange(int controller, int value) {
-    parent.send("value", value);
-    samp => now;
-    parent.send("cc", controller);
+  0 => int ccCount;
+
+  function void controlChange(int controller, int value) {
+    ccCount => int lastCount;
     if(value == 0){
-      parent.send("ccOff", controller);
-      parent.send("ccOff"+controller, value);
-    }else{
-      parent.send("ccOn", controller);
-      parent.send("ccOn"+controller, value);
-    }
- }
-
- function void noteOff(int key, int velocity){
-      this.events()[key].signal();
-      parent.send("value", velocity);
+      ccCount-1 => ccCount;
+      parent.send("value", null);
       samp => now;
-      parent.send("noteOff", key);
+      parent.send("cc"+controller, null);
+    }else{
+      ccCount+1 => ccCount;
+      parent.send("value", IntRef.make(value));
+      samp => now;
+      parent.send("cc"+controller, IntRef.make(value));
     }
 
-
- function void channelPressure(int pressure) {
-    parent.send("channelPressure", pressure);
- }
- function void keyPressure(int pressure) {
-    parent.send("keyPressure", pressure);
- }
-
- function void programChange(int program) {
-    parent.send("program", program);
- }
-
-/*
-  function void system(MidiMsg @message) {
-    <<<"system">>>;
+    if(lastCount == 0 && ccCount>0){
+      parent.send("cc", IntRef.make(controller));
+    }else if(ccCount < 0 || lastCount < 0){
+      WARNING("CC count less than 0. This is a bug.");
+    }else{
+      parent.send("cc", null);
+    }
   }
- */
 
+
+  function void noteOff(int key, int velocity){
+    this.events()[key].signal();
+    parent.send("value", null);
+    samp => now;
+    parent.send("note", null);
+  }
+
+
+  function void channelPressure(int pressure) {
+    parent.send("channelPressure", IntRef.make(pressure));
+  }
+
+
+  function void keyPressure(int pressure) {
+    parent.send("keyPressure", IntRef.make(pressure));
+  }
+
+
+  function void programChange(int program) {
+    parent.send("program", IntRef.make(program));
+  }
+
+  /*
+     function void system(MidiMsg @message) {
+     <<<"system">>>;
+     }
+   */
 }
 
 
@@ -66,16 +80,11 @@ public class MidInp extends Moduck{
     MidInp ret;
     MIDIFlower.make(devicePort) @=> ret.flower;
     ret.flower.assign(Responder.make(ret), channel);
-    OUT("noteOn");
-    OUT("noteOff");
+    OUT("note");
     for(0=>int i;i<128;++i){
       OUT("cc"+i);
-      OUT("ccOn"+i);
-      OUT("ccOff"+i);
     }
     OUT("cc");
-    OUT("ccOn");
-    OUT("ccOff");
     OUT("program");
     OUT("channelPressure");
     OUT("keyPressure");
