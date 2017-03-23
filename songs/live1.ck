@@ -38,10 +38,10 @@ def(launchpad, mk(MidInp, MIDI_IN_LAUNCHPAD, 0))
 
 Runner.masterClock
   => pulseRitmo(launchpad).listen(P_Clock).c
-  /* => mk(Printer, "tick").c */
+  => mk(Printer, "tick").c
   => mk(Value, 50).c
   => mk(SampleHold, 100::ms).to(P_Set).listen(P_Trigger).c
-  /* => mk(Printer, "out").c */
+  => mk(Printer, "out").c
   => out.c
 ;
 Runner.setPlaying(1);

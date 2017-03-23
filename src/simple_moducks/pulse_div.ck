@@ -12,7 +12,11 @@ genHandler(ResetHandler, P_Reset,
 genHandler(TrigHandler, P_Trigger,
   HANDLE{
     if(null != v){
-      parent.getVal("divisor") @=> int divisor;
+      (Math.round((100.0 / parent.getVal("scaling")) * parent.getVal("divisor"))$int)
+        @=> int divisor;
+      if(divisor <0){
+        WARNING("Divisor is negative!");
+      }
       if(divisor > 0 && Math.remainder(accum.i, divisor) == 0){
         parent.sendPulse(P_Trigger, v.i);
       }
@@ -36,6 +40,7 @@ public class PulseDiv extends Moduck{
 
     ret.addVal("divisor", divisor);
     ret.addVal("offset", startOffset);
+    ret.addVal("scaling", 100); // percentage
 
     ret.doHandle(P_Reset, IntRef.make(0));
 
