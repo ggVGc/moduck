@@ -26,8 +26,10 @@ genHandler(StepTrigHandler, P_StepTrigger,
   fun void init(){}
 
   HANDLE{
-    parent.sendPulse(P_Trigger, entries[parent.getVal("curStep")]);
-    doStep(parent, entries, loop);
+    if(null != v){
+      parent.sendPulse(P_Trigger, entries[parent.getVal("curStep")]);
+      doStep(parent, entries, loop);
+    }
   },
   int entries[];
   int loop;

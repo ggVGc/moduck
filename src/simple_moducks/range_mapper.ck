@@ -3,15 +3,19 @@ include(macros.m4)
 
 genHandler(TrigHandler, P_Trigger,
   HANDLE{
-    V(srcMin)
-    V(srcMax)
-    V(outMin)
-    V(outMax)
-    if(v < srcMin || v > srcMax){
+    if(null != v){
+      V(srcMin)
+      V(srcMax)
+      V(outMin)
+      V(outMax)
+      if(v.i < srcMin || v.i > srcMax){
       return;
+      }
+      ((v.i-srcMin)$ float) / (srcMax-srcMin) @=> float d;
+      parent.send(P_Trigger, IntRef.make(outMin + ((d * (outMax-outMin)) $ int)));
+    }else{
+      parent.send(P_Trigger, null);
     }
-    ((v-srcMin)$ float) / (srcMax-srcMin) @=> float d;
-    parent.send(P_Trigger, outMin + ((d * (outMax-outMin)) $ int));
   },
 )
 

@@ -9,21 +9,26 @@ class Shared{
 
 genHandler(TrigHandler, P_Trigger, 
   Shred @ shred;
+  IntRef lastShouldTrigger;
 
-  fun void doWait(){
+  fun void doWait(IntRef shouldTrigger){
     parent.getVal("holdTime")::samp => now;
-    parent.send(P_Trigger, null);
+    if(shouldTrigger.i){
+      parent.send(P_Trigger, null);
+    }
   }
 
 
   HANDLE{
     if(null != v && null != sharedVal.val){
       if(null != shred){
-        shred.exit();
+        false => lastShouldTrigger.i;
+        null @=> lastShouldTrigger;
         null @=> shred;
       }
       parent.send(P_Trigger, sharedVal.val);
-      spork ~ doWait() @=> shred;
+      IntRef.make(true) @=> lastShouldTrigger;
+      spork ~ doWait(lastShouldTrigger) @=> shred;
     }
   },
   Shared sharedVal;
