@@ -17,7 +17,7 @@ if [[ "$songName" == "" ]]; then
   echo "" > build/_cur_song
 else
   echo "Building song: $1"
-  cp "songs/$1.ck" build/_cur_song
+  cp "$1.ck" build/_cur_song
   cd build || exit
   m4 _cur_song > tmp
   mv tmp _cur_song

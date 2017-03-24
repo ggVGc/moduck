@@ -31,7 +31,14 @@ class Responder extends MIDIFlowerPetal{
     ccCount => int lastCount;
     if(value == 0){
       --ccCount;
+
+      parent.send("ccValue", IntRef.make(0));
+      samp => now;
+      parent.send("cc", IntRef.make(controller));
+      parent.send("cc"+controller, IntRef.make(value));
+      samp => now;
       parent.send("cc"+controller, null);
+
     }else{
       ++ccCount;
       parent.send("ccValue", IntRef.make(value));
