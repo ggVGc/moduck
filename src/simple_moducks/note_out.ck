@@ -65,8 +65,6 @@ genHandler(GateHandler, P_Gate,
   },
   int devicePort;
   int channel;
-  dur minDur;
-  dur maxDur;
   int valueIsVelocity;
 )
 
@@ -74,16 +72,21 @@ genHandler(GateHandler, P_Gate,
 
 public class NoteOut extends Moduck{
   static int enabled;
-  fun static NoteOut make(int devicePort, int channel, dur minDur, dur maxDur, int valueIsVelocity){
+  fun static NoteOut make(int devicePort, int channel, int valueIsVelocity){
     NoteOut ret;
     OUT(P_Gate);
-    IN(GateHandler, (devicePort, channel, minDur, maxDur, valueIsVelocity));
+    IN(GateHandler, (devicePort, channel, valueIsVelocity));
 
     ret.addVal("velocity", 110);
     ret.addVal("note", 64);
 
     return ret;
   }
+  fun static NoteOut make(int devicePort, int channel, dur dummy1, dur dummy2, int valueIsVelocity){
+    // TODO: Fix any call sites using this constructor
+    Machine.crash();
+  }
+
 }
 
 true => NoteOut.enabled;

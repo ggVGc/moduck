@@ -25,7 +25,9 @@ fun ModuckP makePulseRitmo(){
 
 fun ModuckP makeNoteRitmo(){
   def(rit, ritmo(true, [
-    mk(Sequencer, [0,1,2])
+    mk(Value, 0)
+    ,mk(Sequencer, [0,0,2,2])
+    ,mk(Sequencer, [0,1,2])
     ,mk(Sequencer, [3,4,5])
   ]));
 
@@ -33,7 +35,7 @@ fun ModuckP makeNoteRitmo(){
   return rit;
 }
 
-def(out, mk(NoteOut, MIDI_OUT_ZYNADDSUBFX, 0, 0::ms, 100::ms, true))
+def(out, mk(Repeater));
 
 def(pulseRitmo, makePulseRitmo())
 def(noteRitmo, makeNoteRitmo())
@@ -44,7 +46,10 @@ def(localOffset, mk(Offset, 0))
 def(staticOffset, mk(Offset, 0))
 def(finalDelay, mk(PulseDelay, 0))
 def(scaleMapper, mk(Mapper, Scales.MinorNatural, 12))
+/* def(octaver, mk(Offset, 0)) */
 
+def(octaveOffset, mk(Offset, 3*12));
+def(rootNoteOffset, mk(Offset, 0));
 
 P(Runner.masterClock)
   .b(finalDelay.to(P_Clock))
@@ -57,23 +62,50 @@ P(Runner.masterClock)
   => staticOffset.c
   => finalDelay.c
   => scaleMapper.c
+  /* => (octaver => mk(Mul, 12).c).c */
+  => octaveOffset.c
+  => rootNoteOffset.c
   => mk(Printer, "out").c
   => out.c
 ;
 
 
+
 // MAPPINGS
 
-def(nanoktrl, mk(MidInp, MIDI_IN_NANO_KTRL, 0));
+def(launchpad, mk(MidInp, MIDI_IN_LAUNCHPAD, 0))
+/* def(nanoktrl, mk(MidInp, MIDI_IN_NANO_KTRL, 0)); */
+def(oxygen, mk(MidInp, MIDI_IN_OXYGEN, 0));
+def(circuit, mk(NoteOut, MIDI_OUT_CIRCUIT, 0, false));
 
-nanoktrl
-  => mk(RangeMapper, 0, 127, 0, Util.toSamples(1::second)).from("cc14").c
+/* launchpad => mk(Printer, "note").from("note").c; */
+/* nanoktrl => mk(Printer, "nanoktrl note").from("note").c; */
+/* nanoktrl => mk(Printer, "nanoktrl cc").from("cc").c; */
+oxygen => mk(Printer, "oxygen cc").from("cc").c;
+
+out
+  => circuit.c
+;
+
+oxygen
+  => mk(RangeMapper, 0, 127, 0, Util.toSamples(500::ms)).from("cc74").c
   => noteHolder.to("holdTime").c
 ;
 
+oxygen
+  => mk(RangeMapper, 0, 127, 0, 24).from("cc73").c
+  => staticOffset.to("offset").c
+;
 
 
-def(launchpad, mk(MidInp, MIDI_IN_LAUNCHPAD, 0))
+/* 
+ nanoktrl
+   => mk(RangeMapper, 0, 127, 0, 6).from("cc16").c
+   => octaver.to("value").c
+ ;
+ */
+
+
 
 for(0=>int i;i<7;++i){
   launchpad => pulseRitmo.fromTo("note"+i, ""+i).c;
@@ -83,13 +115,9 @@ for(16=>int i;i<21;++i){
   launchpad => pulseRitmo.fromTo("note"+i, ""+(i-16+7)).c;
 }
 
-/* launchpad => mk(Printer, "note").from("note").c; */
-nanoktrl => mk(Printer, "nanoktrl note").from("note").c;
-nanoktrl => mk(Printer, "nanoktrl cc").from("cc").c;
 
-launchpad => noteRitmo.fromTo("note112", "0").c;
-launchpad => noteRitmo.fromTo("note113", "1").c;
-
+launchpad => noteRitmo.fromTo("note32", "0").c;
+launchpad => noteRitmo.fromTo("note33", "1").c;
 
 
 Runner.setPlaying(1);
