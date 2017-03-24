@@ -3,27 +3,46 @@ include(macros.m4)
 genHandler(ResetHandler, P_Reset,
   HANDLE{
     if(null != v){
-      0 => accum.i;
+      0 => accum.f;
+      0 => highest.i;
+      0 => lastScaling.f;
     }
   },
-  IntRef accum;
+  FloatRef accum;
+  IntRef highest;
+  FloatRef lastScaling;
 )
 
 genHandler(TrigHandler, P_Trigger,
   HANDLE{
     if(null != v){
-      (Math.round((100.0 / parent.getVal("scaling")) * parent.getVal("divisor"))$int)
-        @=> int divisor;
-      if(divisor <0){
-        WARNING("Divisor is negative!");
+      parent.getVal("scaling") / 100.0 => float scaling;
+      if(scaling > 0){
+        if(!Util.equals(lastScaling.f, scaling)){
+          scaling => lastScaling.f;
+          0 => highest.i;
+        }
+        V(divisor)
+        /* 
+         if(divisor <0){
+           WARNING("Divisor is negative! "+divisor);
+         }
+         */
+        Math.floor(accum.f * scaling) => float adjustedAccum;
+        if(divisor > 0){
+          Math.ceil(adjustedAccum / divisor ) $ int => int loopIndex;
+          if(loopIndex > highest.i){
+            parent.sendPulse(P_Trigger, v.i);
+            loopIndex => highest.i;
+          }
+        }
       }
-      if(divisor > 0 && Math.remainder(accum.i, divisor) == 0){
-        parent.sendPulse(P_Trigger, v.i);
-      }
-      accum.i + 1 => accum.i;
+      accum.f + 1 => accum.f;
     }
   },
-  IntRef accum;
+  FloatRef accum;
+  IntRef highest;
+  FloatRef lastScaling;
 )
 
 
@@ -34,9 +53,11 @@ public class PulseDiv extends Moduck{
 
     OUT(P_Trigger);
 
-    IntRef accum;
-    IN(TrigHandler,(accum));
-    IN(ResetHandler,(accum));
+    FloatRef accum;
+    IntRef highest;
+    FloatRef lastScaling;
+    IN(TrigHandler,(accum, highest, lastScaling));
+    IN(ResetHandler,(accum, highest, lastScaling));
 
     ret.addVal("divisor", divisor);
     ret.addVal("offset", startOffset);

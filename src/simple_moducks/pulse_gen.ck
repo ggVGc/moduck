@@ -2,16 +2,17 @@ include(macros.m4)
 
 
 genHandler(TrigHandler, P_Trigger,
-
   fun void doTriggers(int count, dur wait, int val){
     for(0=>int i;i<count;i++){
-      parent.send(P_Trigger, val);
+      parent.sendPulse(P_Trigger, val);
       wait => now;
     }
   }
 
   HANDLE{
-    spork ~ doTriggers(parent.getVal("count"), parent.getVal("delta")::samp, v);
+    if(null != v){
+      spork ~ doTriggers(parent.getVal("count"), parent.getVal("delta")::samp, v.i);
+    }
   },
 )
 

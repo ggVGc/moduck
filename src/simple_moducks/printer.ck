@@ -9,7 +9,7 @@ fun void print(string msg, IntRef v){
   }else{
     "nil" @=> valStr;
   }
-  <<< msg + ": " + valStr + " - ", Math.floor(now/samp) $ int >>>;
+  <<< Math.floor(now/samp) $ int , " - "+ msg + ": " + valStr >>>;
 }
 
 

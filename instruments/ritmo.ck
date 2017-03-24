@@ -13,6 +13,9 @@ fun ModuckP individualsChain(ModuckP rhythms[], ModuckP root){
       => rhythms[i].c
       => out.c
     ;
+    if(rhythms[i].hasHandler(P_Reset)){
+      root => rhythms[i].listen(P_Reset).c;
+    }
   }
   return out;
 }
