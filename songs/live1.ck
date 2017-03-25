@@ -44,7 +44,7 @@ def(speedScaler, mk(PulseDiv, 2))
 def(globalOffset, mk(Offset, 0))
 def(localOffset, mk(Offset, 0))
 def(staticOffset, mk(Offset, 0))
-def(finalDelay, mk(PulseDelay, 0))
+def(finalDelay, mk(PulseDelay, 10))
 def(scaleMapper, mk(Mapper, Scales.MinorNatural, 12))
 /* def(octaver, mk(Offset, 0)) */
 
@@ -103,6 +103,11 @@ oxygen
 oxygen
   => mk(RangeMapper, 0, 127, 0, 200).from("cc84").c
   => speedScaler.to("scaling").c
+;
+
+
+oxygen
+  => finalDelay.fromTo("cc72", "size").c
 ;
 
 
