@@ -6,7 +6,6 @@ fun ModuckP individualsChain(ModuckP rhythms[], ModuckP root){
     def(block, mk(Blocker));
     root
       .b(block.fromTo(""+i, P_Gate))
-      .b(rhythms[i].fromTo(""+i, P_Reset))
     ;
     root
       => block.fromTo(P_Clock, P_Trigger).c
@@ -15,6 +14,7 @@ fun ModuckP individualsChain(ModuckP rhythms[], ModuckP root){
     ;
     if(rhythms[i].hasHandler(P_Reset)){
       root => rhythms[i].listen(P_Reset).c;
+      root => rhythms[i].fromTo(""+i, P_Reset).c;
     }
   }
   return out;
@@ -27,8 +27,10 @@ fun ModuckP combinedChain(ModuckP rhythms[], ModuckP root){
     def(block, mk(Blocker));
     root
       .b(block.fromTo(""+i, P_Gate))
-      .b(rhythms[i].listen(P_Reset))
     ;
+    if(rhythms[i].hasHandler(P_Reset)){
+      root => rhythms[i].listen(P_Reset).c;
+    }
     root
       => rhythms[i].c
       => block.to(P_Trigger).c
