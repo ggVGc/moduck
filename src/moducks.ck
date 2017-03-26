@@ -2,6 +2,7 @@
 Machine.add("simple_moducks/clock_gen.ck");
 Machine.add("simple_moducks/printer.ck");
 Machine.add("simple_moducks/sequencer.ck");
+Machine.add("simple_moducks/sample_hold.ck");
 Machine.add("simple_moducks/value.ck");
 Machine.add("simple_moducks/note_out.ck");
 Machine.add("simple_moducks/mid_inp.ck");
@@ -18,7 +19,6 @@ Machine.add("simple_moducks/subtract.ck");
 Machine.add("simple_moducks/offset.ck");
 Machine.add("simple_moducks/blackhole.ck");
 Machine.add("simple_moducks/blocker.ck");
-Machine.add("simple_moducks/sample_hold.ck");
 Machine.add("simple_moducks/range_mapper.ck");
 Machine.add("simple_moducks/multiply.ck");
 Machine.add("simple_moducks/pulse_gen.ck");

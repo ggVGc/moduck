@@ -28,7 +28,9 @@ genHandler(TrigHandler, P_Trigger,
       }
       parent.send(P_Trigger, sharedVal.val);
       IntRef.make(true) @=> lastShouldTrigger;
-      spork ~ doWait(lastShouldTrigger) @=> shred;
+      if(!parent.getVal("vorever")){
+        spork ~ doWait(lastShouldTrigger) @=> shred;
+      }
     }
   },
   Shared sharedVal;
@@ -51,6 +53,7 @@ public class SampleHold extends Moduck{
     IN(TrigHandler, (shared));
     IN(SetHandler, (shared));
     ret.addVal("holdTime", Util.toSamples(holdTime));
+    ret.addVal("forever", false);
     return ret;
   }
 }
