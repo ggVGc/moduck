@@ -11,10 +11,12 @@ def(out2, mk(NoteOut, MIDI_OUT_CIRCUIT, 0, false));
 
 
 launchpad => mk(Printer, "lp cc").from("cc").c;
+/* keys => mk(Printer, "oxygen cc").from("cc").c; */
 
 launchpad => buf.fromTo("cc104", P_Clear).c;
 
 
+keys => out.fromTo("cc7", "velocity").c;
 
 def(pulse, mk(PulseDiv, Bar*2));
 
@@ -22,20 +24,24 @@ Runner.masterClock
  => pulse.c
 ;
 
-Runner.masterClock
-  => mk(PulseDiv, B).c
-  => mk(Offset, 40).c
-  => mk(SampleHold, 50::ms).c
-  => out.c
-;
+/* 
+ Runner.masterClock
+   => mk(PulseDiv, B).c
+   => mk(Offset, 40).c
+   => mk(SampleHold, 50::ms).c
+   => out.c
+ ;
+ */
 
 pulse
  => buf.to(P_Reset).c
 ;
 
 
+keys => out.from("note").c;
 
-keys => buf.fromTo("note", P_Set).c;
+
+/* keys => buf.fromTo("note", P_Set).c; */
 
 /* 
  pulse
