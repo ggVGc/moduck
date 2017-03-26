@@ -1,7 +1,6 @@
 
 
-fun ModuckP individualsChain(ModuckP rhythms[], ModuckP root){
-  def(out, mk(Repeater, P_Trigger));
+fun ModuckP individualsChain(ModuckP rhythms[], ModuckP root, ModuckP out){
   for(0=>int i;i<rhythms.size();++i){
     def(block, mk(Blocker));
     root
@@ -21,8 +20,7 @@ fun ModuckP individualsChain(ModuckP rhythms[], ModuckP root){
 }
 
 
-fun ModuckP combinedChain(ModuckP rhythms[], ModuckP root){
-  def(out, mk(Repeater, P_Trigger));
+fun ModuckP combinedChain(ModuckP rhythms[], ModuckP root, ModuckP out){
   for(0=>int i;i<rhythms.size();++i){
     def(block, mk(Blocker));
     root
@@ -54,12 +52,12 @@ fun ModuckP ritmo(int individualMode, ModuckP rhythms[]){
   def(root, mk(Repeater, rootTags))
 
 
-  ModuckP out;
+  def(out, mk(Repeater, [P_Trigger, "input"]));
 
   if(individualMode){
-    individualsChain(rhythms, root) @=> out;
+    individualsChain(rhythms, root, out);
   }else{
-    combinedChain(rhythms, root) @=> out;
+    combinedChain(rhythms, root, out);
   }
 
   return mk(Wrapper, root, out);

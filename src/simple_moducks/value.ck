@@ -4,6 +4,8 @@ public class Value extends Moduck{
   fun static SampleHold make(int v){
     SampleHold.make(0::ms) @=> SampleHold ret;
     ret.setVal("forever", true);
+    samp => now;
+    ret.doHandle(P_Set, IntRef.make(v));
     return ret;
   }
 

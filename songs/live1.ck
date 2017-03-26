@@ -3,42 +3,54 @@ include(song_macros.m4)
 include(_all_parts.m4)
 include(_all_instruments.m4)
 
-[ fourFour(B*2, 0)
-  ,fourFour(B, 0)
-  ,fourFour(B2, 0)
-  ,fourFour(B4, 0)
-  ,fourFour(B8, 0)
-  ,fourFour(B16, 0)
-  ,fourFour(B32, 0)
 
-  ,fourFour(B+B2, 0)
-  ,fourFour(B2+B4, 0)
-  ,fourFour(B4+B8, 0)
-  ,fourFour(B8+B16, 0)
-  ,fourFour(B16+B32, 0)
-] @=> ModuckP pulseRitmoRhythms[];
+/* 
+ [ fourFour(B*2, 0)
+   ,fourFour(B, 0)
+   ,fourFour(B2, 0)
+   ,fourFour(B4, 0)
+   ,fourFour(B8, 0)
+   ,fourFour(B16, 0)
+   ,fourFour(B32, 0)
+ 
+   ,fourFour(B+B2, 0)
+   ,fourFour(B2+B4, 0)
+   ,fourFour(B4+B8, 0)
+   ,fourFour(B8+B16, 0)
+   ,fourFour(B16+B32, 0)
+ ] @=> ModuckP pulseRitmoRhythms[];
+ */
 
-fun ModuckP makePulseRitmo(){
-  def(rit, ritmo(true, pulseRitmoRhythms));
-  return rit;
-}
+/* 
+ fun ModuckP makeNoteRitmo(){
+   def(rit, ritmo(true, [
+     mk(Value, 0)
+     ,mk(Sequencer, [0,0,2,2])
+     ,mk(Sequencer, [0,1,2])
+     ,mk(Sequencer, [3,4,5])
+   ]));
+ 
+ 
+   return rit;
+ }
+ */
 
-fun ModuckP makeNoteRitmo(){
-  def(rit, ritmo(true, [
-    mk(Value, 0)
-    ,mk(Sequencer, [0,0,2,2])
-    ,mk(Sequencer, [0,1,2])
-    ,mk(Sequencer, [3,4,5])
-  ]));
 
+[
+  fourFour(B, 14)
+  ,fourFour(B, 14+1)
+  ,fourFour(B, 14+2)
+]@=> ModuckP seqs[];
 
-  return rit;
-}
+[
+  mk(Sequencer, [Util.toSamples(D2), Util.toSamples(D), Util.toSamples(D4)])
+] @=> ModuckP gateSeqs[];
 
 def(out, mk(Repeater));
 
-def(pulseRitmo, makePulseRitmo())
-def(noteRitmo, makeNoteRitmo())
+def(mainRitmo, ritmo(true, seqs))
+def(trigRitmo, ritmo(true, seqs))
+def(gateRitmo, ritmo(true, gateSeqs))
 def(noteHolder, mk(SampleHold, 100::ms))
 def(speedScaler, mk(PulseDiv, 2))
 def(globalOffset, mk(Offset, 0))
@@ -51,16 +63,28 @@ def(scaleMapper, mk(Mapper, Scales.MinorNatural, 12))
 def(octaveOffset, mk(Offset, 3*12));
 def(rootNoteOffset, mk(Offset, 0));
 
-for(0=>int i;i<pulseRitmoRhythms.size();++i){
-  pulseRitmo => noteRitmo.fromTo(recv(""+i), P_Reset).c;
-}
+/* 
+ for(0=>int i;i<seqs.size();++i){
+   mainRitmo => trigRitmo.fromTo(recv(""+i), P_Reset).c;
+ }
+ */
+
+mainRitmo => gateRitmo.c;
+mainRitmo => gateRitmo.fromTo("input", P_Reset).c;
+mainRitmo => gateRitmo.fromTo(recv(""+0), ""+0).c;
+
+gateRitmo
+  => mk(Printer, "hold time").c
+  => noteHolder.to("holdTime").c
+;
 
 P(Runner.masterClock)
   .b(finalDelay.to(P_Clock))
   => mk(PulseGen, 2, Runner.timePerTick()/2).c
   => speedScaler.c
-  => pulseRitmo.c
-  => noteRitmo.c
+  => mainRitmo.c
+  /* => trigRitmo.c */
+  => mk(Delay, samp).c // Wait for gateRitmo
   => noteHolder.to(P_Set).listen(P_Trigger).c
   => globalOffset.c
   => localOffset.c
@@ -121,16 +145,16 @@ oxygen
 
 
 for(0=>int i;i<7;++i){
-  launchpad => pulseRitmo.fromTo("note"+i, ""+i).c;
+  launchpad => mainRitmo.fromTo("note"+i, ""+i).c;
 }
 
 for(16=>int i;i<21;++i){
-  launchpad => pulseRitmo.fromTo("note"+i, ""+(i-16+7)).c;
+  launchpad => mainRitmo.fromTo("note"+i, ""+(i-16+7)).c;
 }
 
 
-launchpad => noteRitmo.fromTo("note32", "0").c;
-launchpad => noteRitmo.fromTo("note33", "1").c;
+/* launchpad => noteRitmo.fromTo("note32", "0").c; */
+/* launchpad => noteRitmo.fromTo("note33", "1").c; */
 
 
 Runner.setPlaying(1);
