@@ -30,8 +30,7 @@ Runner.masterClock
 ;
 
 pulse
-  => mk(Printer, "reset").c
-  => buf.to(P_Reset).c
+ => buf.to(P_Reset).c
 ;
 
 

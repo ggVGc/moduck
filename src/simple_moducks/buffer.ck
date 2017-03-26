@@ -6,6 +6,8 @@ class BufEntry{
   dur timeStamp;
   IntRef val;
   false => int triggered;
+  0 => int index;
+
 }
 
 
@@ -14,9 +16,9 @@ class Shared{
   BufEntry entries[0];
   false => int clearing;
   time startTime; // gets reset on loop
-  time lastTime;
+  now => time lastTime;
+  int accum;
 }
-
 
 genHandler(TrigHandler, P_Trigger,
   HANDLE{
@@ -24,7 +26,15 @@ genHandler(TrigHandler, P_Trigger,
       now - shared.startTime => dur delta;
       for(0=>int i;i<shared.entries.size();++i){
         shared.entries[i] @=> BufEntry e;
-        if(e != null && !e.triggered && e.timeStamp <= delta){
+        false => int shouldTrigger;
+        if(e!=null){
+          if(parent.getVal("timeBased")){
+            (e.timeStamp <= delta) => shouldTrigger;
+          }else{
+            (e.index <= shared.accum) => shouldTrigger;
+          }
+        }
+        if(shouldTrigger && !e.triggered){
           if(shared.clearing){
             null @=> shared.entries[i];
           }else{
@@ -33,7 +43,8 @@ genHandler(TrigHandler, P_Trigger,
           }
         }
       }
-      now @=> shared.lastTime;
+      now => shared.lastTime;
+      ++shared.accum;
     }
   },
   Shared shared;
@@ -45,12 +56,14 @@ genHandler(ResetHandler, P_Reset,
     if(null != v){
       now => shared.startTime;
       now => shared.lastTime;
+      0 => shared.accum;
       for(0=>int i;i<shared.entries.size();++i){
         if(null != shared.entries[i]){
           false => shared.entries[i].triggered;
         }
       }
     }
+    parent.send(P_Trigger, null);
   },
   Shared shared;
 )
@@ -74,7 +87,7 @@ genHandler(SetHandler, P_Set,
     v @=> e.val;
 
     now - shared.startTime => e.timeStamp;
-
+    shared.accum => e.index;
   },
   Shared shared;
 )
@@ -113,6 +126,7 @@ public class Buffer extends Moduck{
     IN(ResetHandler,(shared));
     ret.addVal("length", Util.toSamples(length));
     ret.addVal("loop", loop);
+    ret.addVal("timeBased", false);
     return ret;
   }
 
