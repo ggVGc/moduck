@@ -28,7 +28,7 @@ genHandler(TrigHandler, P_Trigger,
       }
       parent.send(P_Trigger, sharedVal.val);
       IntRef.make(true) @=> lastShouldTrigger;
-      if(!parent.getVal("vorever")){
+      if(!parent.getVal("forever")){
         spork ~ doWait(lastShouldTrigger) @=> shred;
       }
     }

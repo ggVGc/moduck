@@ -1,5 +1,6 @@
 
 include(pulses.m4)
+include(macros.m4)
 
 
 public class Moduck extends ModuckBase {
@@ -70,10 +71,14 @@ public class Moduck extends ModuckBase {
   }
 
 
+  fun int hasValue(string tag){
+    return Util.contains(tag, _valHandlerKeys);
+  }
+
   fun string findDefaultInputTag(){
     for(0=>int i;i<handlerKeys.size();++i){
       handlerKeys[i] @=> string k;
-      if(!Util.contains(k, _valHandlerKeys)){
+      if(!hasValue(k)){
         return k;
       }
     }
@@ -162,6 +167,9 @@ public class Moduck extends ModuckBase {
   }
 
   fun int getVal(string tag){
+    if(!hasValue(tag)){
+      WARNING("Getting invalid value: "+tag);
+    }
     return _valHandlers[tag].curVal;
   }
 
@@ -199,7 +207,7 @@ class ValueSetHandler extends EventHandler{
   }
 
 
-  fun static ValueSetHandler make(Moduck owner, string tag, int initialVal){
+  fun static ValueSetHandler make(ModuckBase owner, string tag, int initialVal){
     ValueSetHandler ret;
     owner @=> ret.parent;
     tag @=> ret.tag;
