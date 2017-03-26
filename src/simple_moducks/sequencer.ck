@@ -2,11 +2,11 @@ include(macros.m4)
 
 
 fun void doStep(ModuckBase parent, int entries[], int loop){
-  parent.getVal("curStep") => int cur;
+  parent.getVal("curStep") => int lastCurStep;
 
-  entries[cur] => int v;
+
   false => int looped;
-  if(cur == entries.size() - 1){
+  if(lastCurStep == parent.getVal("length") - 1){
     if(parent.getVal("loop")){
       parent.setVal("curStep", 0);
     /* <<<"Seq looped">>>; */
@@ -14,20 +14,32 @@ fun void doStep(ModuckBase parent, int entries[], int loop){
     }
   }else{
     /* <<<"Seq Stepped">>>; */
-    parent.setVal("curStep", cur + 1);
+    parent.setVal("curStep", lastCurStep + 1);
   }
-  parent.sendPulse(P_Stepped, v);
-  if(looped){
-    parent.sendPulse(P_Looped, v);
+
+  if(lastCurStep < entries.size()){
+    entries[lastCurStep] => int v;
+    parent.sendPulse(P_Stepped, v);
+    if(looped){
+      parent.sendPulse(P_Looped, v);
+    }
   }
 }
+
+fun void doTrigger(ModuckBase parent, int entries[]){
+  V(curStep)
+  if(curStep < entries.size()){
+    parent.sendPulse(P_Trigger, entries[curStep]);
+  }
+}
+
 
 genHandler(StepTrigHandler, P_StepTrigger,
   fun void init(){}
 
   HANDLE{
     if(null != v){
-      parent.sendPulse(P_Trigger, entries[parent.getVal("curStep")]);
+      doTrigger(parent, entries);
       doStep(parent, entries, loop);
     }
   },
@@ -40,7 +52,9 @@ genHandler(StepHandler, P_Step,
   fun void init(){}
 
   HANDLE{
-    doStep(parent, entries, loop);
+    if(null != v){
+      doStep(parent, entries, loop);
+    }
   },
   int entries[];
   int loop;
@@ -51,7 +65,9 @@ genHandler(TrigHandler, P_Trigger,
   fun void init(){}
 
   HANDLE{
-    parent.sendPulse(P_Trigger, entries[parent.getVal("curStep")]);
+    if(null != v){
+      doTrigger(parent, entries);
+    }
   },
   int entries[];
 )
@@ -91,8 +107,9 @@ public class Sequencer extends Moduck{
     IN(ResetHandler, ());
 
     ret.addVal("curStep", 0);
-    ret.addVal("loop", loop);
-    ret.addVal("targetStep", 0);
+    ret.addVal("loop", loop); // Loop or not
+    ret.addVal("targetStep", 0); // Step index which will be set from P_Set signal
+    ret.addVal("length", entries.size()); // Step index which will be set from P_Set signal
 
     return ret;
   }

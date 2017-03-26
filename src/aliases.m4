@@ -59,10 +59,6 @@ fun Moduck multi(Moduck src, ChainData targets[]){
   return Patch.connectMulti(src, targets);
 }
 
-fun Sequencer seq(int ents[]){
-  return Sequencer.make(ents, true);
-}
-
 fun Moduck chain(Moduck first, ChainData rest[]){
   return Patch.chain(first, rest);
 }
