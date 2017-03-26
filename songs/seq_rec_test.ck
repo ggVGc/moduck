@@ -6,10 +6,28 @@ def(seq,
 );
 
 
+def(keys, mk(MidInp, MIDI_IN_OXYGEN, 0));
+def(out, mk(NoteOut, MIDI_OUT_CIRCUIT, 0, false));
+
+keys => out.from("note").c;
+
+seq
+  => seq.fromTo("curStep", "targetStep").c
+;
+
+keys
+  => mk(Printer, "").from("note").c
+  => seq.to(P_Set).c
+;
+
+
+seq
+  => mk(Printer, "target").from("targetStep").c;
 
 Runner.masterClock
   => mk(PulseDiv, B).c
   => seq.c
+  => out.c
   => mk(Printer, "").c
 ;
 

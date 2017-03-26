@@ -28,7 +28,9 @@ fun void doStep(ModuckBase parent, int entries[], int loop){
 
 fun void doTrigger(ModuckBase parent, int entries[]){
   V(curStep)
+  <<<"SIZE: "+entries.size()>>>;
   if(curStep < entries.size()){
+    <<<"CUR: "+entries[curStep]>>>;
     parent.sendPulse(P_Trigger, entries[curStep]);
   }
 }
@@ -77,8 +79,13 @@ genHandler(TrigHandler, P_Trigger,
 genHandler(SetHandler, P_Set,
   HANDLE{
     if(null != v){
-      v.i => entries[parent.getVal("targetStep")];
-      parent.sendPulse(P_Set, parent.getVal("targetStep"));
+      <<< "SET: "+v.i >>>;
+      V(targetStep)
+      if(targetStep >= entries.size()){
+        entries.size(targetStep+1);
+      }
+      v.i => entries[targetStep];
+      parent.sendPulse(P_Set, targetStep);
     }
   },
   int entries[];
