@@ -20,16 +20,20 @@ genHandler(TrigHandler, P_Trigger,
 
 
   HANDLE{
-    if(null != v && null != sharedVal.val){
-      if(null != shred){
-        false => lastShouldTrigger.i;
-        null @=> lastShouldTrigger;
-        null @=> shred;
-      }
-      parent.send(P_Trigger, sharedVal.val);
-      IntRef.make(true) @=> lastShouldTrigger;
-      if(!parent.getVal("forever")){
-        spork ~ doWait(lastShouldTrigger) @=> shred;
+    if(null != v){
+      if(sharedVal.val == null){
+        parent.send(P_Trigger, null);
+      } else {
+        if(null != shred){
+          false => lastShouldTrigger.i;
+          null @=> lastShouldTrigger;
+          null @=> shred;
+        }
+        parent.send(P_Trigger, sharedVal.val);
+        IntRef.make(true) @=> lastShouldTrigger;
+        if(!parent.getVal("forever")){
+          spork ~ doWait(lastShouldTrigger) @=> shred;
+        }
       }
     }
   },

@@ -14,13 +14,10 @@ out => circuit.c;
 
 // MAPPINGS
 
-samp => now;
-lpOut.set("velocity", 120);
-samp => now;
-lpOut.doHandle(P_Default, IntRef.make(86));
 
 def(launchpad, mk(MidInp, MIDI_IN_LAUNCHPAD, 0))
 def(oxygen, mk(MidInp, MIDI_IN_OXYGEN, 0));
+oxygen => lpOut.from("note").c;
 
 oxygen=> out.from("note").c;
 
