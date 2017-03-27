@@ -114,7 +114,7 @@ genHandler(ClearHandler, P_Clear,
 
 
 public class Buffer extends Moduck{
-  maker(Buffer, dur length, int loop){
+  maker0(Buffer){
     Buffer ret;
     Shared shared;
     ret @=> shared.buf;
@@ -124,14 +124,8 @@ public class Buffer extends Moduck{
     IN(ClearAllHandler,(shared));
     IN(ClearHandler,(shared));
     IN(ResetHandler,(shared));
-    ret.addVal("length", Util.toSamples(length));
-    ret.addVal("loop", loop);
     ret.addVal("timeBased", false);
     return ret;
-  }
-
-  fun static Buffer make(dur length){
-    return Buffer.make(length, true);
   }
 }
 

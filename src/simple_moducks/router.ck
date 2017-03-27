@@ -17,6 +17,18 @@ genHandler(ResetHandler, P_Reset,
 )
 
 
+genHandler(NewIndexHandler, recv("index"),
+ IntRef lastIndex;
+ HANDLE{
+  if(lastIndex != null){
+    parent.send(""+lastIndex.i, null);
+  }
+  IntRef.make(parent.getVal("index")) @=>  lastIndex;
+ },
+ int startIndex;
+)
+
+
 public class Router extends Moduck{
   fun static Router make(int startIndex){
     Router ret;
