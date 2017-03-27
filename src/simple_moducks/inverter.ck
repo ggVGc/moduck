@@ -16,8 +16,8 @@ genHandler(TrigHandler, P_Trigger,
 public class Inverter extends Moduck{
   maker(Inverter, int v){
     Inverter ret;
-    IN(TrigHandler, ());
     OUT(P_Trigger);
+    IN(TrigHandler, ());
     ret.addVal("value", v);
     return ret;
   }

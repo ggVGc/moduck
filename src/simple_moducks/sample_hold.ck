@@ -44,6 +44,9 @@ genHandler(TrigHandler, P_Trigger,
 genHandler(SetHandler, P_Set, 
   HANDLE{
     v @=> sharedVal.val;
+    if(parent.getVal("triggerOnSet")){
+      parent.send(P_Trigger, v);
+    }
   },
   Shared sharedVal;
 )
@@ -58,6 +61,7 @@ public class SampleHold extends Moduck{
     IN(SetHandler, (shared));
     ret.addVal("holdTime", Util.toSamples(holdTime));
     ret.addVal("forever", false);
+    ret.addVal("triggerOnSet", false);
     return ret;
   }
 

@@ -40,7 +40,8 @@ def(playBlocker2, mk(Blocker));
 holder1 =>  playBlocker1.to(P_Gate).c;
 holder2 =>  playBlocker2.to(P_Gate).c;
 
-def(switcher, mk(Switcher));
+/* def(switcher, mk(Switcher)); */
+def(toggler, mk(Toggler));
 
 
 
@@ -63,9 +64,9 @@ def(circuit2, mk(NoteOut, MIDI_OUT_CIRCUIT, 1, false));
 out1 => circuit1.c;
 out2 => circuit2.c;
 
-keysIn => switcher.c;
+keysIn => toggler.c;
 
-switcher
+toggler
   .b(out1.from("0"))
   .b(out2.from("1"))
 ;
@@ -95,8 +96,8 @@ oxygen => lpOut.from("note").c;
 
 /* nanoktrl => mk(Printer, "nanoktrl note").from("note").c; */
 /* nanoktrl => mk(Printer, "nanoktrl cc").from("cc").c; */
-launchpad => mk(Printer, "lp note").from("note").c;
-launchpad => mk(Printer, "lp cc").from("cc").c;
+/* launchpad => mk(Printer, "lp note").from("note").c; */
+/* launchpad => mk(Printer, "lp cc").from("cc").c; */
 oxygen => mk(Printer, "oxygen cc").from("cc").c;
 
 
@@ -125,7 +126,7 @@ launchpad
   => recRouter.to("index").c
 ;
 
-launchpad => switcher.fromTo("note118", P_Gate).c;
+launchpad => toggler.fromTo("note118", P_Toggle).c;
 /* launchpad => holder2.from("note119").c; */
 
 oxygen => keysIn.from("note").c;

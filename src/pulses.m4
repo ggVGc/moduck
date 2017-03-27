@@ -11,6 +11,7 @@ define(P_Clear, "clear")
 define(P_ClearAll, "clear_all")
 define(P_Play, "play")
 define(P_Rec, "rec")
+define(P_Toggle, "toggle")
 define(P_Default, "")
 
 define(pulseRecvPrefix, "received_")
