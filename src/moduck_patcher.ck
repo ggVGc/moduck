@@ -91,6 +91,11 @@ public class ModuckP extends Moduck{
     return this;
   }
 
+  fun ModuckP set(string tag, IntRef v){
+    setVal(tag, v);
+    return this;
+  }
+
   fun ModuckP set(string tag, int v){
     setVal(tag, v);
     return this;

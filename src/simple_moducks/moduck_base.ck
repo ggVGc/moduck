@@ -34,10 +34,14 @@ public class ModuckBase{
     Machine.crash();
   }
 
-
-  fun ModuckBase setVal(string key, int v){
+  
+  fun ModuckBase setVal(string key, IntRef v){
     <<<"ModuckBase.setVal - Error: This should never trigger">>>;
     Machine.crash();
+  }
+
+  fun ModuckBase setVal(string key, int v){
+    return setVal(key, IntRef.make(v));
   }
 }
 

@@ -64,8 +64,8 @@ public class Moduck extends ModuckBase {
   }
 
 
-  fun ModuckBase setVal(string tag, int v){
-    doHandle(tag, IntRef.make(v));
+  fun ModuckBase setVal(string tag, IntRef v){
+    doHandle(tag, v);
     samp => now;
     return this;
   }
