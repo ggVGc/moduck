@@ -192,6 +192,7 @@ class ValueSetHandler extends EventHandler{
 
   fun void handle(IntRef val){
     if(null != val){
+      parent.onValueChange(tag, curVal, val.i);
       val.i @=> curVal;
     }
 

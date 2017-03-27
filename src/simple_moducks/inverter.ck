@@ -1,0 +1,24 @@
+include(macros.m4)
+include(song_macros.m4)
+
+
+genHandler(TrigHandler, P_Trigger, 
+  HANDLE{
+    if(v == null){
+      parent.send(P_Trigger, IntRef.make(parent.getVal("value")));
+    }else{
+      parent.send(P_Trigger, null);
+    }
+  },
+  ;
+)
+
+public class Inverter extends Moduck{
+  maker(Inverter, int v){
+    Inverter ret;
+    IN(TrigHandler, ());
+    OUT(P_Trigger);
+    ret.addVal("value", v);
+    return ret;
+  }
+}

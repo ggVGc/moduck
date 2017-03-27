@@ -43,6 +43,10 @@ public class ModuckBase{
   fun ModuckBase setVal(string key, int v){
     return setVal(key, IntRef.make(v));
   }
+
+
+  fun void onValueChange(string key, int oldVal, int newVal){ }
+
 }
 
 

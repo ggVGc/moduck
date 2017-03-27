@@ -2,7 +2,7 @@
 
 class ProbablyFun extends IntFun{
   fun IntRef call(int v){
-Math.randomf() @=> float x;
+    Math.randomf() @=> float x;
     if(Math.randomf()*100 <= parent.getVal("chance")){
       return IntRef.make(v);
     }else{

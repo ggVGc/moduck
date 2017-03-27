@@ -30,8 +30,19 @@ for(0=>int elemInd;elemInd<bufs.size();++elemInd){
 }
 
 
+def(holder1, mk(SampleHold));
+def(holder2, mk(SampleHold));
+
+
 def(playBlocker1, mk(Blocker));
 def(playBlocker2, mk(Blocker));
+
+holder1 =>  playBlocker1.to(P_Gate).c;
+holder2 =>  playBlocker2.to(P_Gate).c;
+
+def(switcher, mk(Switcher));
+
+
 
 
 playBlocker1 => out1.c;
@@ -52,11 +63,18 @@ def(circuit2, mk(NoteOut, MIDI_OUT_CIRCUIT, 1, false));
 out1 => circuit1.c;
 out2 => circuit2.c;
 
+keysIn => switcher.c;
 
-(keysIn=> mk(SampleHold).to(P_Set).to(P_Trigger).c)
-  .b(playBlocker1)
-  .b(playBlocker2)
+switcher
+  .b(out1.from("0"))
+  .b(out2.from("1"))
 ;
+/* 
+ keysIn
+   .b(playBlocker1)
+   .b(playBlocker2)
+ ;
+ */
 
 
 
@@ -107,8 +125,8 @@ launchpad
   => recRouter.to("index").c
 ;
 
-launchpad => playBlocker1.fromTo("note118", P_Gate).c;
-launchpad => playBlocker2.fromTo("note119", P_Gate).c;
+launchpad => switcher.fromTo("note118", P_Gate).c;
+/* launchpad => holder2.from("note119").c; */
 
 oxygen => keysIn.from("note").c;
 
