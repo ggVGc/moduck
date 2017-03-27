@@ -6,15 +6,23 @@ def(out, mk(Repeater));
 
 
 
-
+def(lpOut, mk(NoteOut, MIDI_OUT_LAUNCHPAD, 0, false));
 
 def(circuit, mk(NoteOut, MIDI_OUT_CIRCUIT, 0, false));
 out => circuit.c;
 
+
 // MAPPINGS
+
+samp => now;
+lpOut.set("velocity", 120);
+samp => now;
+lpOut.doHandle(P_Default, IntRef.make(86));
 
 def(launchpad, mk(MidInp, MIDI_IN_LAUNCHPAD, 0))
 def(oxygen, mk(MidInp, MIDI_IN_OXYGEN, 0));
+
+oxygen=> out.from("note").c;
 
 
 /* nanoktrl => mk(Printer, "nanoktrl note").from("note").c; */
