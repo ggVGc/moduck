@@ -33,10 +33,6 @@ for(0=>int elemInd;elemInd<bufs.size();++elemInd){
 def(playBlocker1, mk(Blocker));
 def(playBlocker2, mk(Blocker));
 
-keysIn
-  .b(playBlocker1)
-  .b(playBlocker2)
-;
 
 playBlocker1 => out1.c;
 playBlocker2 => out2.c;
@@ -57,6 +53,12 @@ out1 => circuit1.c;
 out2 => circuit2.c;
 
 
+(keysIn=> mk(SampleHold).to(P_Set).to(P_Trigger).c)
+  .b(playBlocker1)
+  .b(playBlocker2)
+;
+
+
 
 // MAPPINGS
 
@@ -64,6 +66,7 @@ out2 => circuit2.c;
 def(launchpad, mk(MidInp, MIDI_IN_LAUNCHPAD, 0))
 def(oxygen, mk(MidInp, MIDI_IN_OXYGEN, 0));
 oxygen => lpOut.from("note").c;
+
 
 
 
@@ -107,10 +110,7 @@ launchpad
 launchpad => playBlocker1.fromTo("note118", P_Gate).c;
 launchpad => playBlocker2.fromTo("note119", P_Gate).c;
 
-oxygen
-  .b(playBlocker1.from("note"))
-  .b(playBlocker2.from("note"))
-;
+oxygen => keysIn.from("note").c;
 
 playBlocker1
   => mk(Value, 118).from(recv(P_Gate)).c

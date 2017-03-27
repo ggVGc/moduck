@@ -60,4 +60,11 @@ public class SampleHold extends Moduck{
     ret.addVal("forever", false);
     return ret;
   }
+
+  fun static SampleHold make(){
+    make(0::ms) @=> SampleHold ret;
+    samp =>  now;
+    ret.setVal("forever", true);
+    return ret;
+  }
 }
