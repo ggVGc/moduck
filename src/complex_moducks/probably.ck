@@ -13,9 +13,9 @@ class ProbablyFun extends IntFun{
 
 public class Probably{
   // Chance in percentage, between 0 and 100
-  fun static Processor make(int chance){
+  fun static ValProcessor make(int chance){
     ProbablyFun f;
-    Processor.make(f) @=> Processor ret;
+    ValProcessor.make(f) @=> ValProcessor ret;
     ret.addVal("chance", chance);
     return ret;
   }

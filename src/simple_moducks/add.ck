@@ -5,9 +5,9 @@ class AddFun extends IntFun{
 }
 
 public class Add{
-  fun static Processor make(int v){
+  fun static ValProcessor make(int v){
     AddFun f;
-    Processor.make(f) @=> Processor ret;
+    ValProcessor.make(f) @=> ValProcessor ret;
     ret.addVal("value", v);
     return ret;
   }

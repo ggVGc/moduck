@@ -1,5 +1,6 @@
 include(macros.m4)
 include(song_macros.m4)
+include(funcs.m4)
 
 public class Toggler{
   maker0(Moduck){
@@ -13,8 +14,11 @@ public class Toggler{
     Value.make(0) @=> Moduck on;
     Patch.connect(Value.make(0), Inverter.make(0)) @=> Moduck off;
 
-    Patch.connect(in, P_Toggle, blockerA, P_Trigger);
-    Patch.connect(in, P_Toggle, blockerB, P_Trigger);
+    Processor.make(Not.make(Eq.make(null))) @=>  Moduck inToggle;
+    Patch.connect(in, P_Toggle, inToggle, P_Trigger);
+
+    Patch.connect(inToggle, P_Trigger, blockerA, P_Trigger);
+    Patch.connect(inToggle, P_Trigger, blockerB, P_Trigger);
 
     Patch.connect(blockerA, off);
     Patch.connect(blockerB, on);

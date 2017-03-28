@@ -15,6 +15,7 @@ Machine.add("simple_moducks/mapper.ck");
 Machine.add("simple_moducks/pulse_delay.ck");
 Machine.add("simple_moducks/attenuator.ck");
 Machine.add("simple_moducks/processor.ck");
+Machine.add("simple_moducks/val_processor.ck");
 Machine.add("simple_moducks/subtract.ck");
 Machine.add("simple_moducks/offset.ck");
 Machine.add("simple_moducks/blackhole.ck");

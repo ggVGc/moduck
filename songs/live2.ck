@@ -5,7 +5,7 @@ include(_all_instruments.m4)
 
 
 
-fun ModuckP makeThing(int sequenceCount, int outCount){
+fun ModuckP makeSeqThing(int sequenceCount, int outCount){
   [P_Trigger, "seqInd"] @=> string rootTags[];
   string outTags[0];
   for(0=>int i;i<outCount;++i){
@@ -41,8 +41,8 @@ fun ModuckP makeThing(int sequenceCount, int outCount){
 }
 
 
-def(thing1, makeThing(4,2));
-/* def(thing2, makeThing()); */
+def(thing1, makeSeqThing(4,2));
+/* def(thing2, makeSeqThing()); */
 
 def(keysIn, mk(Repeater));
 

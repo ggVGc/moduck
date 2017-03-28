@@ -12,6 +12,7 @@ Machine.add("runner_base.ck");
 
 Machine.add("simple_moducks/moduck.ck");
 Machine.add("types/int_fun.ck");
+Machine.add("types/int_ref_fun.ck");
 
 Machine.add("simple_moducks/delay.ck");
 Machine.add("simple_moducks/repeater.ck");
