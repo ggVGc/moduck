@@ -43,4 +43,8 @@ public class Router extends Moduck{
     ret.addVal("index", startIndex);
     return ret;
   }
+
+  fun static Router make(){
+    return make(0);
+  }
 }
