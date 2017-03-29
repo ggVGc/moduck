@@ -3,10 +3,41 @@ include(song_macros.m4)
 include(_all_instruments.m4)
 
 
+/* 
+ def(srcRouter, mk(Router));
+ root => srcRouter.listen(P_Trigger).fromTo("srcInd", "index").c;
+  for(0=>int elemInd;elemInd<sources.size();++elemInd){
+    sources[elemInd] @=> ModuckP src;
+    srcRouter => src.from(""+elemInd).c;
+    src => srcOut.c;
+  }
+ */
 
 
-fun ModuckP makeSeqThing(int sequenceCount, int outCount){
-  [P_Trigger, "seqInd"] @=> string rootTags[];
+fun ModuckP makeRecBufs(int count){
+  def(root, mk(Repeater, [P_Trigger, "index", "rec"]));
+  def(out, mk(Repeater, [P_Trigger]));
+  def(router, mk(Router, 0));
+  def(recBlocker, mk(Blocker));
+  root => router.listen("index").c;
+  root => recBlocker.fromTo("rec", P_Gate).c;
+  ModuckP bufs[count];
+  for(0=>int i;i<count;++i){
+    mk(Buffer) @=> ModuckP b;
+    b @=> bufs[i];
+
+    router
+      => b.from(""+count).c
+      => out.c;
+    recBlocker => b.to(P_Set).c;
+  }
+
+  return mk(Wrapper, root, out);
+}
+
+
+fun ModuckP makeTogglingOuts(ModuckP source, int outCount){
+  [P_Trigger, "srcInd"] @=> string rootTags[];
   string outTags[0];
   for(0=>int i;i<outCount;++i){
     rootTags << "toggleOut"+i;
@@ -14,7 +45,6 @@ fun ModuckP makeSeqThing(int sequenceCount, int outCount){
   }
   def(root, mk(Repeater, rootTags));
   def(out, mk(Repeater, outTags));
-  def(seqRouter, mk(Router));
 
   ModuckP outBlockers[outCount];
   for(0=>int i;i<outCount;++i){
@@ -23,98 +53,61 @@ fun ModuckP makeSeqThing(int sequenceCount, int outCount){
     def(toggler, mk(Toggler));
     toggler => blocker.fromTo("1", P_Gate).c;
     root => toggler.fromTo("toggleOut"+i, P_Toggle).c;
-    seqRouter
+    source
       => blocker.c
       => out.to(""+i).c
     ;
   }
 
-  root
-    => seqRouter.c
-  ;
-
-  for(0=>int i;i<sequenceCount;++i){
-    root => seqRouter.fromTo("seqInd", "index").c;
-  }
 
   return mk(Wrapper, root, out);
 }
 
-
-def(thing1, makeSeqThing(4,2));
-/* def(thing2, makeSeqThing()); */
-
-def(keysIn, mk(Repeater));
-
 def(metronome, mk(Repeater));
-
-
-
-
-
-defl(bufs,
-    mk(Buffer),
-    mk(Buffer),
-    mk(Buffer),
-    mk(Buffer)
-);
-
-def(recRouter, mk(Router, 0));
-keysIn => recRouter.c;
-
-
-for(0=>int elemInd;elemInd<bufs.size();++elemInd){
-  bufs[elemInd] @=> ModuckP buf;
-  recRouter => buf.fromTo(""+elemInd, P_Set).c;
-}
-
-
-def(holder1, mk(SampleHold));
-def(holder2, mk(SampleHold));
-
-
-def(playBlocker1, mk(Blocker));
-def(playBlocker2, mk(Blocker));
-
-holder1 =>  playBlocker1.to(P_Gate).c;
-holder2 =>  playBlocker2.to(P_Gate).c;
-
-/* def(switcher, mk(Switcher)); */
-def(toggler, mk(Toggler));
-
-
-
-
-
 Runner.masterClock
   => mk(PulseDiv, B).c
   => metronome.c
 ;
 
 
+def(keysIn, mk(Repeater));
+
+
+makeRecBufs(4) @=> ModuckP bufs;
+Runner.masterClock => bufs.c;
+def(thing1, makeTogglingOuts(bufs, 2));
+/* def(thing2, makeTogglingOuts()); */
+
+keysIn => thing1.c;
+Runner.masterClock => thing1.c;
+
+
+/* 
+ for(0=>int bufInd;bufInd<bufs.size();++bufInd){
+   bufs[bufInd] @=> ModuckP buf;
+   recRouter => buf.fromTo(""+bufInd, P_Set).c;
+ }
+ */
+
+
+
 def(lpOut, mk(NoteOut, MIDI_OUT_LAUNCHPAD, 0, false));
 
 def(circuit1, mk(NoteOut, MIDI_OUT_CIRCUIT, 0, false));
 def(circuit2, mk(NoteOut, MIDI_OUT_CIRCUIT, 1, false));
-thing1 => circuit1.from("0").c;
-thing1 => circuit2.from("1").c;
-/* thing2 => circuit2.c; */
+thing1
+=> mk(Repeater).from("0").c
+=> mk(Value, 60).c
+=> mk(SampleHold, 100::ms).to(P_Set).listen(P_Trigger).c
+=> circuit1.c;
 
-/* keysIn => toggler.c; */
+thing1
+=> mk(Repeater).from("1").c
+=> mk(Value, 42).c
+=> mk(SampleHold, 100::ms).to(P_Set).listen(P_Trigger).c
+=> circuit2.c;
 
-/* 
- toggler
-   .b(out1.from("0"))
-   .b(out2.from("1"))
- ;
- */
-/* 
- keysIn
-   .b(playBlocker1)
-   .b(playBlocker2)
- ;
- */
-
+/* thing1 => circuit2.from("1").c; */
 
 
 // MAPPINGS
@@ -145,57 +138,16 @@ oxygen => mk(Printer, "oxygen cc").from("cc").c;
 ;
 
 launchpad
-  .b((mk(Value, 0) => thing1.to("seqInd").c).from("cc104"))
-  .b((mk(Value, 1) => thing1.to("seqInd").c).from("cc105"))
-  .b((mk(Value, 2) => thing1.to("seqInd").c).from("cc106"))
-  .b((mk(Value, 3) => thing1.to("seqInd").c).from("cc107"))
+  .b((mk(Value, 0) => thing1.to("srcInd").c).from("cc104"))
+  .b((mk(Value, 1) => thing1.to("srcInd").c).from("cc105"))
+  .b((mk(Value, 2) => thing1.to("srcInd").c).from("cc106"))
+  .b((mk(Value, 3) => thing1.to("srcInd").c).from("cc107"))
 ;
-
 
 launchpad => thing1.fromTo("cc110", "toggleOut0").c;
 launchpad => thing1.fromTo("cc111", "toggleOut1").c;
-  /* .b(thing1.fromTo("cc111", "toggleOut1")) */
 
-
-
-/* 
- for(0=>int i;i<4;++i){
-   launchpad
-     => mk(Value, i).from("cc"+(104+i)).c
-     => recRouter.to("index").c
-   ;
- }
- */
-
-recRouter => mk(Printer, "new index").from(recv("index")).c;
-
-
-/* 
- launchpad
-   => mk(Value, 0).from("cc104").c
-   => recRouter.to("index").c
- ;
- 
- launchpad
-   => mk(Value, 0).from("cc104").c
-   => recRouter.to("index").c
- ;
- */
-
-/* launchpad => thing1.fromTo("note112", P_Toggle).c; */
-/* launchpad => holder2.from("note119").c; */
-
-/* oxygen => keysIn.from("note").c; */
-
-playBlocker1
-  => mk(Value, 118).from(recv(P_Gate)).c
-  => lpOut.c
-;
-
-playBlocker2
-  => mk(Value, 119).from(recv(P_Gate)).c
-  => lpOut.c
-;
+oxygen => keysIn.from("note").c;
 
 MidiMsg msg;
 MidiOut midOut;
