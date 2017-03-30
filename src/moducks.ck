@@ -4,6 +4,7 @@ Machine.add("simple_moducks/printer.ck");
 Machine.add("simple_moducks/sequencer.ck");
 Machine.add("simple_moducks/sample_hold.ck");
 Machine.add("simple_moducks/value.ck");
+Machine.add("simple_moducks/trig_value.ck");
 Machine.add("simple_moducks/note_out.ck");
 Machine.add("simple_moducks/mid_inp.ck");
 Machine.add("simple_moducks/pulse_div.ck");
