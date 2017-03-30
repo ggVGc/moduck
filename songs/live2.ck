@@ -3,6 +3,10 @@ include(song_macros.m4)
 include(_all_instruments.m4)
 
 
+define(SEQ_COUNT, 4);
+define(OUT_DEVICE_COUNT, 2);
+define(ROW_COUNT, 3);
+
 // TODO: this is just a bad special case of Ritmo..
 fun ModuckP makeRecBufs(int count){
   def(root, mk(Repeater, [P_Trigger, P_Reset, P_Gate, "index", "rec"]));
@@ -80,13 +84,13 @@ def(bufResetter, mk(Repeater));
 ModuckP outs[0];
 ModuckP bufs[0];
 ModuckP recToggles[0];
-for(0=>int i;i<4;++i){
-  makeRecBufs(4) @=> ModuckP b;
+for(0=>int i;i<ROW_COUNT;++i){
+  makeRecBufs(SEQ_COUNT) @=> ModuckP b;
   Runner.masterClock => b.c;
   bufs << b;
   keysIn => b.to(P_Gate).c;
   bufResetter => b.to(P_Reset).c;
-  def(out, makeTogglingOuts(b, 2));
+  def(out, makeTogglingOuts(b, OUT_DEVICE_COUNT));
   outs << out;
 
   def(recTog, mk(Toggler) => mk(Inverter, 0).c);
@@ -144,48 +148,32 @@ for(0=>int outInd;outInd<outs.size();++outInd){
 }
 
 
-launchpad
-  .b((mk(Value, 0) => bufs[0].to("index").c).from("note0"))
-  .b((mk(Value, 1) => bufs[0].to("index").c).from("note1"))
-  .b((mk(Value, 2) => bufs[0].to("index").c).from("note2"))
-  .b((mk(Value, 3) => bufs[0].to("index").c).from("note3"))
-;
+fun void makeOutsUIRow(int rowId){
+  for(0=>int i;i<SEQ_COUNT;++i){
+    launchpad
+      => mk(Value, i).from("note"+(rowId*16+i)).c
+      => bufs[rowId].to("index").c
+    ;
+  }
 
-launchpad => recToggles[0].from("note5").c;
-launchpad => outs[0].fromTo("note6", "toggleOut0").c;
-launchpad => outs[0].fromTo("note7", "toggleOut1").c;
+  launchpad=>recToggles[rowId].from("note"+(rowId*16+5)).c;
+  launchpad=>outs[rowId].fromTo("note"+(rowId*16+6),"toggleOut0").c;
+  launchpad=>outs[rowId].fromTo("note"+(rowId*16+7),"toggleOut1").c;
 
-/* 
- launchpad
-   .b((mk(Value, 0) => bufs[1].to("index").c).from("note0"))
-   .b((mk(Value, 1) => bufs[1].to("index").c).from("note1"))
-   .b((mk(Value, 2) => bufs[1].to("index").c).from("note2"))
-   .b((mk(Value, 3) => bufs[1].to("index").c).from("note3"))
- ;
- 
- 
- launchpad => recToggles[1].from("note5").c;
- launchpad => outs[1].fromTo("note6", "toggleOut0").c;
- launchpad => outs[1].fromTo("note7", "toggleOut1").c;
- */
+  mkToggleIndicator(bufs[rowId],recv("rec"),rowId*16+5);
+  mkToggleIndicator(outs[rowId],"outActive0",rowId*16+6);
+  mkToggleIndicator(outs[rowId],"outActive1",rowId*16+7);
+}
+
+for(0=>int i;i<ROW_COUNT;++i){
+  makeOutsUIRow(i);
+}
 
 
 fun void mkToggleIndicator(ModuckP src, string tag,int noteNum){
   def(indicator, mk(TrigValue, noteNum) => mk(NoteOut, MIDI_OUT_LAUNCHPAD, 0, false).c);
   src => indicator.from(tag).c;
 }
-
-
-mkToggleIndicator(bufs[0], recv("rec"), 5);
-mkToggleIndicator(outs[0], "outActive0", 6);
-mkToggleIndicator(outs[0], "outActive1", 7);
-
-
-
-
-/* mkToggleIndicator(bufs[1], recv("rec"), 16+5); */
-/* mkToggleIndicator(bufs[2], recv("rec"), 16*2+5); */
-/* mkToggleIndicator(bufs[3], recv("rec"), 16*3+5); */
 
 
 // Send launchpad reset message
