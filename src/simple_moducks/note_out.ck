@@ -1,5 +1,8 @@
 include(macros.m4)
 
+// TODO: This whole file is old, temporary and needs to be rewritten similar to MidInp
+
+
 genHandler(GateHandler, P_Gate, 
     MidiOut midOut;
     null @=> IntRef lastVal;
@@ -12,10 +15,16 @@ genHandler(GateHandler, P_Gate,
     }
 
 
-    fun void sendNoteOff(int n){
+    fun void sendNoteOff(int n, ModuckBase parent){
       MidiMsg msg;
-      128 + channel => msg.data1; // NoteOff
-      n => msg.data2;
+      if(parent.getVal("isCC")){
+        176 + channel => msg.data1; // NoteOff
+        n => msg.data2;
+      }else{
+        128 + channel => msg.data1; // NoteOff
+        n => msg.data2;
+      }
+      0 => msg.data3;
       midOut.send(msg);
     }
 
@@ -26,12 +35,16 @@ genHandler(GateHandler, P_Gate,
           // Note on
 
           if(null != lastVal){
-            sendNoteOff(lastVal.i);
+            sendNoteOff(lastVal.i, parent);
           }
 
           /* <<< "NOTEOUT:" +tag +":"+v>>>; */
           MidiMsg msg;
-          144 + channel => msg.data1; // NoteOn
+          if(parent.getVal("isCC")){
+            176 + channel => msg.data1; // NoteOn
+          }else{
+            144 + channel => msg.data1; // NoteOn
+          }
 
           /* if(tag == P_Trigger){ */
             // TODO: Implement again
@@ -57,7 +70,7 @@ genHandler(GateHandler, P_Gate,
         }else{
           // Note off
           if(null != lastVal){
-            sendNoteOff(lastVal.i);
+            sendNoteOff(lastVal.i, parent);
           }
         }
       }
@@ -79,6 +92,8 @@ public class NoteOut extends Moduck{
 
     ret.addVal("velocity", 110);
     ret.addVal("note", 64);
+
+    ret.addVal("isCC", false);
 
     return ret;
   }

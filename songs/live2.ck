@@ -1,11 +1,12 @@
 
 include(song_macros.m4)
 include(_all_instruments.m4)
+include(funcs.m4)
 
 
 define(SEQ_COUNT, 2);
 define(OUT_DEVICE_COUNT, 2);
-define(ROW_COUNT, 2);
+define(ROW_COUNT, 4);
 
 // TODO: this is just a bad special case of Ritmo..
 fun ModuckP makeRecBufs(int count){
@@ -61,7 +62,6 @@ fun ModuckP makeTogglingOuts(ModuckP source, int outCount){
     toggler => mk(Inverter, 0).c => out.to("outActive"+i).c;
     source
       => blocker.c
-      => mk(Printer, "Post Blocker").c
       => out.to(""+i).c
     ;
   }
@@ -78,26 +78,26 @@ Runner.masterClock
 
 
 def(keysIn, mk(Repeater));
-
-
 def(bufRestarter, mk(Repeater));
 ModuckP outs[0];
 ModuckP bufs[0];
-ModuckP recToggles[0];
+def(inRouter, mk(Router, 0, false));
+def(recToggle,
+  mk(Repeater)
+  => mk(Toggler).to(P_Toggle).c
+  => mk(Inverter, 0).c
+);
+keysIn => inRouter.c;
 for(0=>int i;i<ROW_COUNT;++i){
   makeRecBufs(SEQ_COUNT) @=> ModuckP b;
   Runner.masterClock => b.c;
   bufs << b;
-  keysIn => b.to(P_Gate).c;
+  inRouter => b.fromTo(""+i, P_Gate).c;
   bufRestarter => mk(Value, 0).c => b.to(P_GoTo).c;
   def(out, makeTogglingOuts(b, OUT_DEVICE_COUNT));
   outs << out;
 
-  def(recTog, mk(Toggler) => mk(Inverter, 0).c);
-  recTog => b.to("rec").c;
-  def(recTogRep, mk(Repeater));
-  recTogRep => recTog.to(P_Toggle).c;
-  recToggles << recTogRep;
+  recToggle => b.to("rec").c;
 
   Runner.masterClock => out.c;
 }
@@ -144,7 +144,17 @@ oxygen => keysIn.from("note").c;
 
 
 for(0=>int outInd;outInd<outs.size();++outInd){
-  oxygen => outs[outInd].from("note").c;
+  launchpad
+    => mk(Bigger, 0).from("cc"+(104+outInd)).c
+    => mk(TrigValue, outInd).c
+    => inRouter.to("index").c
+  ;
+  mkToggleIndicator(
+    inRouter
+    => MUtil.onlyHigh().from(recv("index")).c
+    => mk(Processor, Eq.make(outInd)).c
+    => mk(TrigValue, outInd).c
+    ,P_Trigger,104+outInd, true);
 }
 
 
@@ -156,23 +166,31 @@ fun void makeOutsUIRow(int rowId){
     ;
   }
 
-  launchpad=>recToggles[rowId].from("note"+(rowId*16+5)).c;
   launchpad=>outs[rowId].fromTo("note"+(rowId*16+6),"toggleOut0").c;
   launchpad=>outs[rowId].fromTo("note"+(rowId*16+7),"toggleOut1").c;
 
-  mkToggleIndicator(bufs[rowId],recv("rec"),rowId*16+5);
-  mkToggleIndicator(outs[rowId],"outActive0",rowId*16+6);
-  mkToggleIndicator(outs[rowId],"outActive1",rowId*16+7);
+
+  mkToggleIndicator(outs[rowId],"outActive0",rowId*16+6, false);
+  mkToggleIndicator(outs[rowId],"outActive1",rowId*16+7, false);
+
 }
+
+
+launchpad
+  => mk(Bigger, 0).from("cc111").c
+  => recToggle.c
+;
+mkToggleIndicator(bufs[0], recv("rec"), 111, true);
 
 for(0=>int i;i<ROW_COUNT;++i){
   makeOutsUIRow(i);
 }
 
 
-fun void mkToggleIndicator(ModuckP src, string tag,int noteNum){
-  def(indicator, mk(TrigValue, noteNum) => mk(NoteOut, MIDI_OUT_LAUNCHPAD, 0, false).c);
+fun ModuckP mkToggleIndicator(ModuckP src, string tag,int noteNum, int isCC){
+  def(indicator, mk(TrigValue, noteNum) => mk(NoteOut, MIDI_OUT_LAUNCHPAD, 0, false).set("isCC", isCC).c);
   src => indicator.from(tag).c;
+  return indicator;
 }
 
 

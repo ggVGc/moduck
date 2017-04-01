@@ -1,5 +1,6 @@
 
 include(pulses.m4)
+include(funcs.m4)
 
 public class MUtil{
 
@@ -113,6 +114,11 @@ public class MUtil{
 
   fun static ModuckP update(ModuckP m, string dstTag, ModuckP processor){
     return update(m, recv(dstTag), dstTag, processor);
+  }
+
+
+  fun static ModuckP onlyHigh(){
+    return ModuckP.make(Processor.make(NotEq.make(null), false));
   }
 
   /*
