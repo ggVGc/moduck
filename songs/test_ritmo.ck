@@ -1,6 +1,8 @@
 include(song_macros.m4)
-include(_all_parts.m4)
-include(_all_instruments.m4)
+/* include(_all_parts.m4) */
+/* include(_all_instruments.m4) */
+include(instruments/ritmo.ck)
+include(parts/rhythms.ck)
 
 def(rit, ritmo(true, [
   fourFour(B*2, 0)
@@ -23,7 +25,7 @@ def(rit, ritmo(true, [
 def(val, mk(Value, 3))
 def(inp, mk(MidInp, MIDI_IN_LAUNCHPAD, 0))
 
-def(out, mk(NoteOut, MIDI_OUT_ZYNADDSUBFX, 0, 0::ms, 100::ms, true))
+def(out, mk(NoteOut, MIDI_OUT_CIRCUIT, 0, true));
 
 /* 
  inp

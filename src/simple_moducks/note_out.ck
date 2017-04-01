@@ -99,6 +99,7 @@ public class NoteOut extends Moduck{
   }
   fun static NoteOut make(int devicePort, int channel, dur dummy1, dur dummy2, int valueIsVelocity){
     // TODO: Fix any call sites using this constructor
+    <<<"USING INCORRECT NOTEOUT CONSTRUCTOR!">>>;
     Machine.crash();
   }
 
