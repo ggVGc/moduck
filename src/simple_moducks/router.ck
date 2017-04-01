@@ -27,12 +27,12 @@ public class Router extends Moduck{
   Shared shared;
   fun void onValueChange(string tag, int old, int newVal){
     send(""+old, null);
-    if(shared.lastVal != null && getVal("outOnChange")){
+    if(shared.lastVal != null){
       send(""+newVal, shared.lastVal);
     }
   }
 
-  fun static Router make(int startIndex, int outOnChange){
+  fun static Router make(int startIndex){
     Router ret;
     for(0 => int i;i<MAX_ROUTER_TARGETS;++i){
       ret.addOut(""+i);
@@ -41,14 +41,9 @@ public class Router extends Moduck{
     IN(ResetHandler, (startIndex));
 
     ret.addVal("index", startIndex);
-    ret.addVal("outOnChange", outOnChange);
     return ret;
   }
 
-
-  fun static Router make(int startInd){
-    return make(startInd, true);
-  }
 
   fun static Router make(){
     return make(0);

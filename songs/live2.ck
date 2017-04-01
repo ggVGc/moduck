@@ -81,7 +81,7 @@ def(keysIn, mk(Repeater));
 def(bufRestarter, mk(Repeater));
 ModuckP outs[0];
 ModuckP bufs[0];
-def(inRouter, mk(Router, 0, false));
+def(inRouter, mk(Router, 0));
 def(recToggle,
   mk(Repeater)
   => mk(Toggler).to(P_Toggle).c
