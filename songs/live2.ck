@@ -3,9 +3,9 @@ include(song_macros.m4)
 include(_all_instruments.m4)
 
 
-define(SEQ_COUNT, 4);
+define(SEQ_COUNT, 2);
 define(OUT_DEVICE_COUNT, 2);
-define(ROW_COUNT, 3);
+define(ROW_COUNT, 1);
 
 // TODO: this is just a bad special case of Ritmo..
 fun ModuckP makeRecBufs(int count){
@@ -15,7 +15,7 @@ fun ModuckP makeRecBufs(int count){
   def(recRouter, mk(Router, 0));
   def(recBlocker, mk(Blocker));
   root
-    .b(playRouter.listen("index"))
+    .b(playRouter.listen(["index", P_Trigger]))
     .b(recRouter.listen("index"))
     .b(recBlocker.fromTo("rec", P_Gate))
     .b(out.fromTo(P_Gate, P_Trigger)) // Play notes that we receive, even if not recording
@@ -29,9 +29,9 @@ fun ModuckP makeRecBufs(int count){
   for(0=>int i;i<count;++i){
     mk(Buffer) @=> ModuckP buf;
     buf @=> bufs[i];
-    root => buf.listen([P_Reset, P_Trigger]).c;
+    root => buf.listen([P_Reset]).c;
     playRouter
-      .b(buf.fromTo(recv("index"), P_Reset))
+      /* .b(buf.fromTo(recv("index"), P_Reset)) */
       .b((buf => out.c).from(""+i));
     recRouter => buf.fromTo(""+i, P_Set).c;
     buf => out.c;
@@ -151,7 +151,7 @@ for(0=>int outInd;outInd<outs.size();++outInd){
 fun void makeOutsUIRow(int rowId){
   for(0=>int i;i<SEQ_COUNT;++i){
     launchpad
-      => mk(Value, i).from("note"+(rowId*16+i)).c
+      => mk(TrigValue, i).from("note"+(rowId*16+i)).c
       => bufs[rowId].to("index").c
     ;
   }
