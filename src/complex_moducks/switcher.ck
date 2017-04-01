@@ -7,6 +7,7 @@ public class Switcher{
     Repeater.make([P_Trigger, P_Gate]) @=> Repeater in;
     Inverter.make(0) @=> Inverter inverter;
     Router.make(0) @=> Router router;
+    router.doHandle(P_Trigger, IntRef.make(0));
     Patch.connect(in, P_Trigger, router, P_Trigger);
 
     Value.make(0) @=>  Moduck v0;

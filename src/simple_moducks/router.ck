@@ -3,7 +3,7 @@ include(macros.m4)
 include(constants.m4)
 
 class Shared{
-  IntRef lastVal;
+  null @=> IntRef lastVal;
 }
 
 
