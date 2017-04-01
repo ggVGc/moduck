@@ -5,7 +5,7 @@ include(funcs.m4)
 
 
 define(SEQ_COUNT, 2);
-define(OUT_DEVICE_COUNT, 2);
+define(OUT_DEVICE_COUNT, 4);
 define(ROW_COUNT, 4);
 
 // TODO: this is just a bad special case of Ritmo..
@@ -29,7 +29,7 @@ fun ModuckP makeRecBufs(int count){
     buf @=> bufs[i];
     root => buf.listen([P_Reset,P_GoTo]).c;
     playRouter
-      .b(buf.fromTo(recv("index"), P_Reset))
+      /* .b(buf.fromTo(recv("index"), P_Reset)) */
       .b((buf => out.c).from(""+i));
     recRouter
       => recBlocker.from(""+i).c
@@ -166,12 +166,16 @@ fun void makeOutsUIRow(int rowId){
     ;
   }
 
-  launchpad=>outs[rowId].fromTo("note"+(rowId*16+6),"toggleOut0").c;
-  launchpad=>outs[rowId].fromTo("note"+(rowId*16+7),"toggleOut1").c;
+  launchpad=>outs[rowId].fromTo("note"+(rowId*16+4),"toggleOut0").c;
+  launchpad=>outs[rowId].fromTo("note"+(rowId*16+5),"toggleOut1").c;
+  launchpad=>outs[rowId].fromTo("note"+(rowId*16+6),"toggleOut2").c;
+  launchpad=>outs[rowId].fromTo("note"+(rowId*16+7),"toggleOut3").c;
 
 
-  mkToggleIndicator(outs[rowId],"outActive0",rowId*16+6, false);
-  mkToggleIndicator(outs[rowId],"outActive1",rowId*16+7, false);
+  mkToggleIndicator(outs[rowId],"outActive0",rowId*16+4, false);
+  mkToggleIndicator(outs[rowId],"outActive1",rowId*16+5, false);
+  mkToggleIndicator(outs[rowId],"outActive2",rowId*16+6, false);
+  mkToggleIndicator(outs[rowId],"outActive3",rowId*16+7, false);
 
 }
 
