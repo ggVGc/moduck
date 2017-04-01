@@ -5,8 +5,8 @@ include(song_macros.m4)
 genHandler(GateHandler, P_Gate, 
   HANDLE{
     (null != v) => active.i;
-    if(v == null){
-      parent.send(P_Trigger, null);
+    if(parent.getVal("offFromGate") && v==null){
+    parent.send(P_Trigger,null);
     }
   },
   IntRef active;
@@ -24,12 +24,18 @@ genHandler(TrigHandler, P_Trigger,
 
 
 public class Blocker extends Moduck{
-  maker0(Blocker){
+  maker(Blocker, int offFromGate){
     Blocker ret;
     IntRef active;
+    false => active.i;
     OUT(P_Trigger);
     IN(TrigHandler, (active));
     IN(GateHandler, (active));
+    ret.addVal("offFromGate", offFromGate);
     return ret;
+  }
+
+  fun static Blocker make(){
+    return make(false);
   }
 }

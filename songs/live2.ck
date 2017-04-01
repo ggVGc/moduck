@@ -5,11 +5,11 @@ include(_all_instruments.m4)
 
 define(SEQ_COUNT, 2);
 define(OUT_DEVICE_COUNT, 2);
-define(ROW_COUNT, 1);
+define(ROW_COUNT, 2);
 
 // TODO: this is just a bad special case of Ritmo..
 fun ModuckP makeRecBufs(int count){
-  def(root, mk(Repeater, [P_Trigger, P_Reset, P_Gate, "index", "rec"]));
+  def(root, mk(Repeater, [P_Trigger, P_Reset, P_GoTo, P_Gate, "index", "rec"]));
   def(out, mk(Repeater, [P_Trigger]));
   def(playRouter, mk(Router, 0));
   def(recRouter, mk(Router, 0));
@@ -20,20 +20,19 @@ fun ModuckP makeRecBufs(int count){
     .b(recBlocker.fromTo("rec", P_Gate))
     .b(out.fromTo(P_Gate, P_Trigger)) // Play notes that we receive, even if not recording
   ;
-  root
-    => recBlocker.from(P_Gate).c
-    => recRouter.c
-  ;
+  root => recBlocker.from(P_Gate).c;
 
   ModuckP bufs[count];
   for(0=>int i;i<count;++i){
     mk(Buffer) @=> ModuckP buf;
     buf @=> bufs[i];
-    root => buf.listen([P_Reset]).c;
+    root => buf.listen([P_Reset,P_GoTo]).c;
     playRouter
-      /* .b(buf.fromTo(recv("index"), P_Reset)) */
+      .b(buf.fromTo(recv("index"), P_Reset))
       .b((buf => out.c).from(""+i));
-    recRouter => buf.fromTo(""+i, P_Set).c;
+    recRouter
+      => recBlocker.from(""+i).c
+      => buf.to(P_Set).c;
     buf => out.c;
   }
 
@@ -54,7 +53,7 @@ fun ModuckP makeTogglingOuts(ModuckP source, int outCount){
 
   ModuckP outBlockers[outCount];
   for(0=>int i;i<outCount;++i){
-    def(blocker, mk(Blocker));
+    def(blocker, mk(Blocker, true));
     blocker @=> outBlockers[i];
     def(toggler, mk(Toggler));
     toggler => blocker.fromTo("1", P_Gate).c;
@@ -62,6 +61,7 @@ fun ModuckP makeTogglingOuts(ModuckP source, int outCount){
     toggler => mk(Inverter, 0).c => out.to("outActive"+i).c;
     source
       => blocker.c
+      => mk(Printer, "Post Blocker").c
       => out.to(""+i).c
     ;
   }
@@ -80,7 +80,7 @@ Runner.masterClock
 def(keysIn, mk(Repeater));
 
 
-def(bufResetter, mk(Repeater));
+def(bufRestarter, mk(Repeater));
 ModuckP outs[0];
 ModuckP bufs[0];
 ModuckP recToggles[0];
@@ -89,7 +89,7 @@ for(0=>int i;i<ROW_COUNT;++i){
   Runner.masterClock => b.c;
   bufs << b;
   keysIn => b.to(P_Gate).c;
-  bufResetter => b.to(P_Reset).c;
+  bufRestarter => mk(Value, 0).c => b.to(P_GoTo).c;
   def(out, makeTogglingOuts(b, OUT_DEVICE_COUNT));
   outs << out;
 
@@ -104,8 +104,8 @@ for(0=>int i;i<ROW_COUNT;++i){
 
 
 Runner.masterClock
-  => mk(PulseDiv, Bar*2).c
-  => bufResetter.c
+  => mk(PulseDiv, Bar).c
+  => bufRestarter.c
 ;
 
 

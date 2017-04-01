@@ -69,6 +69,24 @@ genHandler(ResetHandler, P_Reset,
 )
 
 
+genHandler(GoToHandler, P_GoTo,
+  HANDLE{
+    if(null != v){
+      now => shared.startTime;
+      now => shared.lastTime;
+      v.i => shared.accum;
+      for(0=>int i;i<shared.entries.size();++i){
+        if(null != shared.entries[i]){
+          (i < shared.accum) => shared.entries[i].triggered;
+        }
+      }
+    }
+  },
+  Shared shared;
+)
+
+
+
 genHandler(SetHandler, P_Set,
   HANDLE{
     -1 => int ind;
@@ -123,6 +141,7 @@ public class Buffer extends Moduck{
     IN(SetHandler,(shared));
     IN(ClearAllHandler,(shared));
     IN(ClearHandler,(shared));
+    IN(GoToHandler,(shared));
     IN(ResetHandler,(shared));
     ret.addVal("timeBased", false);
     return ret;
