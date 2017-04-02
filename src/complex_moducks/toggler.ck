@@ -40,6 +40,14 @@ public class Toggler{
     hold.doHandle(P_Set, null);
 
 
-    return Wrapper.make(in, switcher);
+    Repeater.make([P_Trigger, P_Active, "0", "1"]) @=> Moduck out;
+    Patch.connect(switcher, out);
+    Patch.connect(switcher, "0", out, "0");
+    Patch.connect(switcher, "1", out, "1");
+
+    Patch.connect(blockerA, recv(P_Gate), out, P_Active);
+
+
+    return Wrapper.make(in, out);
   }
 }

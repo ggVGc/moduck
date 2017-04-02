@@ -20,12 +20,13 @@ fun ModuckP individualsChain(ModuckP rhythms[], ModuckP root, ModuckP out, strin
 }
 
 
-fun ModuckP combinedChain(ModuckP rhythms[], ModuckP root, ModuckP out, string extraTags[]){
+fun ModuckP combinedChain(ModuckP rhythms[], ModuckP root, ModuckP out, string extraTags[], ModuckP holdBlocker){
   for(0=>int i;i<rhythms.size();++i){
     rhythms[i] @=> ModuckP rh;
     def(block, mk(Blocker));
-    root
-      .b(block.fromTo(""+i, P_Gate))
+    (root => mk(Repeater).from(""+i).c)
+      .b(MUtil.onlyHigh() => block.to(P_Gate).c)
+      .b(MUtil.onlyLow() => holdBlocker.c => block.to(P_Gate).c)
     ;
     if(rh.hasHandler(P_Reset)){
       root => rh.listen(P_Reset).c;
@@ -40,7 +41,7 @@ fun ModuckP combinedChain(ModuckP rhythms[], ModuckP root, ModuckP out, string e
       def(tagBlocker, mk(Blocker));
       root => tagBlocker.fromTo(""+i, P_Gate).c;
       root
-        => tagBlocker.fromTo("selected_"+tag, P_Trigger).c
+        => tagBlocker.fromTo("active_"+tag, P_Trigger).c
         => rh.to(tag).c
       ;
     }
@@ -61,15 +62,15 @@ fun ModuckP ritmo(int individualMode, ModuckP rhythms[]){
 
 fun ModuckP ritmo(int individualMode, string extraTags[], ModuckP rhythms[]){
   Util.concatStrings([
-    [P_Clock, P_Reset]
+    [P_Clock, P_Reset,P_Hold]
     ,extraTags
-    ,Util.prefixStrings("selected_", extraTags)
+    ,Util.prefixStrings("active_", extraTags)
     ,Util.numberedStrings("", Util.range(0, rhythms.size()-1))
   ])
     @=> string rootTags[];
 
   def(root, mk(Repeater, rootTags))
-  def(out, mk(Repeater, [P_Trigger, "input"]));
+  def(out, mk(Repeater, [P_Trigger]));
 
   for(0=>int rhythmInd;rhythmInd<rhythms.size();++rhythmInd){
     rhythms[rhythmInd] @=> ModuckP rh;
@@ -79,10 +80,16 @@ fun ModuckP ritmo(int individualMode, string extraTags[], ModuckP rhythms[]){
     }
   }
 
+  def(holdBlocker, mk(Blocker));
+  holdBlocker => mk(Printer, "GATE").from(recv(P_Gate)).c;
+  root
+    => holdBlocker.fromTo(P_Hold, P_Gate).c;
+  holdBlocker.doHandle(P_Gate, null);
+
   if(individualMode){
     individualsChain(rhythms, root, out, extraTags);
   }else{
-    combinedChain(rhythms, root, out, extraTags);
+    combinedChain(rhythms, root, out, extraTags, holdBlocker);
   }
 
 

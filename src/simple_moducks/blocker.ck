@@ -6,7 +6,7 @@ genHandler(GateHandler, P_Gate,
   HANDLE{
     (null != v) => active.i;
     if(parent.getVal("offFromGate") && v==null){
-    parent.send(P_Trigger,null);
+      parent.send(P_Trigger,null);
     }
   },
   IntRef active;

@@ -27,7 +27,7 @@ fun ModuckP makeRecBufs(int count){
     .listen([P_GoTo])
     .listen(rit.getSourceTags())
     .fromTo(P_Trigger, P_Clock).c;
-  recBlocker => rit.to("selected_"+P_Set).c;
+  recBlocker => rit.to("active_"+P_Set).c;
 
   def(out, mk(Repeater, [P_Trigger]));
   root => out.fromTo(P_Gate, P_Trigger).c;
@@ -90,11 +90,15 @@ def(recToggle,
   => mk(Toggler).to(P_Toggle).c
   => mk(Inverter, 0).c
 );
+def(bufHoldToggle, mk(Repeater));
+def(_holdToggler, mk(Toggler));
+bufHoldToggle => _holdToggler.to(P_Toggle).c;
 keysIn => inRouter.c;
 for(0=>int i;i<ROW_COUNT;++i){
   makeRecBufs(SEQ_COUNT) @=> ModuckP b;
   Runner.masterClock => b.c;
   bufs << b;
+  _holdToggler => b.to(P_Hold).c;
   inRouter => b.fromTo(""+i, P_Gate).c;
   bufRestarter => mk(TrigValue, 0).c => b.to(P_GoTo).c;
   def(out, makeTogglingOuts(b, OUT_DEVICE_COUNT));
@@ -132,6 +136,8 @@ def(launchpad, mk(MidInp, MIDI_IN_LAUNCHPAD, 0))
 def(oxygen, mk(MidInp, MIDI_IN_OXYGEN, 0));
 
 
+launchpad => bufHoldToggle.from("note112").c;
+mkToggleIndicator(_holdToggler, P_Active, 112, false);
 // MAPPINGS
 
 /* nanoktrl => mk(Printer, "nanoktrl note").from("note").c; */
