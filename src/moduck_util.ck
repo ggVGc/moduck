@@ -121,6 +121,11 @@ public class MUtil{
     return ModuckP.make(Processor.make(NotEq.make(null), false));
   }
 
+  fun static ModuckP onlyLow(){
+    return ModuckP.make(Processor.make(Eq.make(null), false))
+           => ModuckP.make(Inverter.make(0)).c;
+  }
+
   /*
     fun static ModuckP update(ModuckP m, ModuckP processor){
       return update(m, P_Default, P_Default, processor);

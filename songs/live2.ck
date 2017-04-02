@@ -8,33 +8,36 @@ define(SEQ_COUNT, 2);
 define(OUT_DEVICE_COUNT, 4);
 define(ROW_COUNT, 4);
 
-// TODO: this is just a bad special case of Ritmo..
-fun ModuckP makeRecBufs(int count){
-  def(root, mk(Repeater, [P_Trigger, P_Reset, P_GoTo, P_Gate, "index", "rec"]));
-  def(out, mk(Repeater, [P_Trigger]));
-  def(playRouter, mk(Router, 0));
-  def(recRouter, mk(Router, 0));
-  def(recBlocker, mk(Blocker));
-  root
-    .b(playRouter.listen(["index", P_Trigger]))
-    .b(recRouter.listen("index"))
-    .b(recBlocker.fromTo("rec", P_Gate))
-    .b(out.fromTo(P_Gate, P_Trigger)) // Play notes that we receive, even if not recording
-  ;
-  root => recBlocker.from(P_Gate).c;
 
-  ModuckP bufs[count];
+fun ModuckP makeRecBufs(int count){
+  def(recBlocker, mk(Blocker));
+  def(rit, ritmo(false
+    ,[P_GoTo, P_Set, P_Trigger]
+    ,[ mk(Buffer)
+      ,mk(Buffer)
+      ,mk(Buffer)
+      ,mk(Buffer)
+  ]));
+  def(root, mk(Repeater, Util.concatStrings([rit.getSourceTags(), [P_GoTo, P_Gate, "rec"]])));
+
+
+  root => recBlocker.fromTo("rec", P_Gate).c;
+  root => recBlocker.from(P_Gate).c;
+  root => rit
+    .listen([P_GoTo])
+    .listen(rit.getSourceTags())
+    .fromTo(P_Trigger, P_Clock).c;
+  recBlocker => rit.to("selected_"+P_Set).c;
+
+  def(out, mk(Repeater, [P_Trigger]));
+  root => out.fromTo(P_Gate, P_Trigger).c;
+
+  rit => out.c;
+
   for(0=>int i;i<count;++i){
-    mk(Buffer) @=> ModuckP buf;
-    buf @=> bufs[i];
-    root => buf.listen([P_Reset,P_GoTo]).c;
-    playRouter
-      /* .b(buf.fromTo(recv("index"), P_Reset)) */
-      .b((buf => out.c).from(""+i));
-    recRouter
-      => recBlocker.from(""+i).c
-      => buf.to(P_Set).c;
-    buf => out.c;
+    rit
+      => MUtil.onlyLow().from(recv(""+i)).c
+      => out.c;
   }
 
   return mk(Wrapper, root, out);
@@ -93,7 +96,7 @@ for(0=>int i;i<ROW_COUNT;++i){
   Runner.masterClock => b.c;
   bufs << b;
   inRouter => b.fromTo(""+i, P_Gate).c;
-  bufRestarter => mk(Value, 0).c => b.to(P_GoTo).c;
+  bufRestarter => mk(TrigValue, 0).c => b.to(P_GoTo).c;
   def(out, makeTogglingOuts(b, OUT_DEVICE_COUNT));
   outs << out;
 
@@ -145,24 +148,24 @@ oxygen => keysIn.from("note").c;
 
 for(0=>int outInd;outInd<outs.size();++outInd){
   launchpad
-    => mk(Bigger, 0).from("cc"+(104+outInd)).c
-    => mk(TrigValue, outInd).c
-    => inRouter.to("index").c
+    =>mk(Bigger,0).from("cc"+(104+outInd)).c
+    =>mk(TrigValue,outInd).c
+    =>inRouter.to("index").c
   ;
   mkToggleIndicator(
-    inRouter
-    => MUtil.onlyHigh().from(recv("index")).c
-    => mk(Processor, Eq.make(outInd)).c
-    => mk(TrigValue, outInd).c
-    ,P_Trigger,104+outInd, true);
+  inRouter
+  =>MUtil.onlyHigh().from(recv("index")).c
+  =>mk(Processor,Eq.make(outInd)).c
+  =>mk(TrigValue,outInd).c
+  ,P_Trigger,104+outInd,true);
 }
 
 
 fun void makeOutsUIRow(int rowId){
   for(0=>int i;i<SEQ_COUNT;++i){
     launchpad
-      => mk(TrigValue, i).from("note"+(rowId*16+i)).c
-      => bufs[rowId].to("index").c
+      =>mk(TrigValue,i).from("note"+(rowId*16+i)).c
+      =>bufs[rowId].to(""+i).c
     ;
   }
 

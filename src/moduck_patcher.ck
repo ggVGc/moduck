@@ -64,6 +64,14 @@ class Connector{
     return fromTo(tag, tag);
   }
 
+  fun Connector listen(string tags[]){
+    for(0=>int elemInd;elemInd<tags.size();++elemInd){
+      tags[elemInd] @=> string tag;
+      listen(tag);
+    }
+    return this;
+  }
+
   fun static Connector make(Moduck m, string fromTags[], string dstTags[]){
     Connector ret;
     ChainData.make(fromTags, m, dstTags) @=> ret.data;

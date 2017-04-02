@@ -162,6 +162,21 @@ public class Moduck extends ModuckBase {
     }
   }
 
+  fun string[] getSourceTags(){
+    string ret[0];
+    for(0 => int i; i<handlerKeys.size(); i++){
+      handlerKeys[i] @=> string k;
+        ret << k;
+    }
+    for(0 => int i; i<_valHandlerKeys.size(); i++){
+      _valHandlerKeys[i] @=> string k;
+      if(!isRecvPulse(k)){
+        ret << k;
+      }
+    }
+    return ret;
+  }
+
   fun int hasHandler(string tag){
     return _handlers[tag] != null;
   }

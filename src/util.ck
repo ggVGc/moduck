@@ -194,6 +194,15 @@ public class Util{
     return ret;
   }
 
+
+  fun static string[] prefixStrings(string prefix, string strings[]){
+    string ret[strings.size()];
+    for(0 => int i; i<strings.size(); i++){
+      prefix+strings[i] => ret[i];
+    }
+    return ret;
+  }
+
   fun static int equals(float a, float b){
     return b > a-0.0001 && b < a+0.0001;
   }
