@@ -126,6 +126,35 @@ public class MUtil{
            => ModuckP.make(Inverter.make(0)).c;
   }
 
+
+  fun static ModuckP passThrough(ModuckP src, string ignoreTags[]){
+    src.getSourceTags() @=> string origTags[];
+    ModuckP.make(Repeater.make(origTags)) @=> ModuckP in;
+    for(0=>int tagInd;tagInd<origTags.size();++tagInd){
+      origTags[tagInd] @=> string tag;
+      if(!Util.contains(tag, ignoreTags)){
+        in => src.listen(tag).c;
+      }else{
+        in => ModuckP.make(Blackhole.make()).from(tag).c;
+      }
+    }
+    return ModuckP.make(Wrapper.make(in, src));
+  }
+
+
+
+  fun static ModuckP gatesToToggles(ModuckP src, string tags[]){
+    passThrough(src, tags) @=> ModuckP ret;
+    for(0=>int tagInd;tagInd<tags.size();++tagInd){
+      tags[tagInd] @=> string tag;
+      ModuckP.make(Toggler.make()) @=> ModuckP toggl;
+      ret => toggl.fromTo(recv(tag), P_Toggle).c;
+      toggl => src.to(tag).c;
+    }
+    return ret;
+  }
+
+
   /*
     fun static ModuckP update(ModuckP m, ModuckP processor){
       return update(m, P_Default, P_Default, processor);

@@ -6,7 +6,7 @@ include(funcs.m4)
 
 define(SEQ_COUNT, 4);
 define(OUT_DEVICE_COUNT, 4);
-define(ROW_COUNT, 4);
+define(ROW_COUNT, 3);
 
 
 fun ModuckP makeRecBufs(int count){
@@ -20,9 +20,8 @@ fun ModuckP makeRecBufs(int count){
   ]));
   def(root, mk(Repeater, Util.concatStrings([rit.getSourceTags(), [P_GoTo, P_Gate, "rec"]])));
 
-
   root => recBlocker.fromTo("rec", P_Gate).c;
-  root => recBlocker.from(P_Gate).c;
+  root => recBlocker.fromTo(P_Gate, P_Trigger).c;
   root => rit
     .listen([P_GoTo])
     .listen(rit.getSourceTags())
@@ -100,7 +99,12 @@ def(_holdToggler, mk(Toggler));
 bufHoldToggle => _holdToggler.to(P_Toggle).c;
 keysIn => inRouter.c;
 for(0=>int i;i<ROW_COUNT;++i){
-  makeRecBufs(SEQ_COUNT) @=> ModuckP b;
+  MUtil.gatesToToggles(makeRecBufs(SEQ_COUNT), Util.numberedStrings("", Util.range(0,SEQ_COUNT-1))) @=> ModuckP b;
+  samp => now;
+  for(0=>int sqInd;sqInd<SEQ_COUNT;++sqInd){
+    // Toggle all off
+    b.doHandle(""+sqInd, IntRef.make(0));
+  }
   Runner.masterClock => b.c;
   bufs << b;
   _holdToggler => b.to(P_Hold).c;
@@ -159,16 +163,16 @@ oxygen => keysIn.from("note").c;
 
 for(0=>int outInd;outInd<outs.size();++outInd){
   launchpad
-    =>mk(Bigger,0).from("cc"+(104+outInd)).c
+    =>mk(Bigger,0).from("note"+(8+outInd*16)).c
     =>mk(TrigValue,outInd).c
     =>inRouter.to("index").c
   ;
   mkToggleIndicator(
-  inRouter
-  =>MUtil.onlyHigh().from(recv("index")).c
-  =>mk(Processor,Eq.make(outInd)).c
-  =>mk(TrigValue,outInd).c
-  ,P_Trigger,104+outInd,true);
+    inRouter
+    =>MUtil.onlyHigh().from(recv("index")).c
+    =>mk(Processor, Eq.make(outInd)).c
+    =>mk(TrigValue, outInd).c
+  ,P_Trigger,8+outInd*16,false);
 }
 
 

@@ -20,14 +20,16 @@ fun ModuckP individualsChain(ModuckP rhythms[], ModuckP root, ModuckP out, strin
 }
 
 
-fun ModuckP combinedChain(ModuckP rhythms[], ModuckP root, ModuckP out, string extraTags[], ModuckP holdBlocker){
+fun ModuckP combinedChain(ModuckP rhythms[], ModuckP root, ModuckP out, string extraTags[], ModuckP _ /* holdBlocker */){
   for(0=>int i;i<rhythms.size();++i){
     rhythms[i] @=> ModuckP rh;
     def(block, mk(Blocker));
-    (root => mk(Repeater).from(""+i).c)
-      .b(MUtil.onlyHigh() => block.to(P_Gate).c)
-      .b(MUtil.onlyLow() => holdBlocker.c => block.to(P_Gate).c)
-    ;
+    root => mk(Repeater).from(""+i).c => block.to(P_Gate).c;
+    /* 
+       .b(MUtil.onlyHigh() => block.to(P_Gate).c)
+       .b(MUtil.onlyLow() => holdBlocker.c => block.to(P_Gate).c)
+     ;
+     */
     if(rh.hasHandler(P_Reset)){
       root => rh.listen(P_Reset).c;
     }
