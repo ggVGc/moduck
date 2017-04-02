@@ -4,7 +4,7 @@ include(_all_instruments.m4)
 include(funcs.m4)
 
 
-define(SEQ_COUNT, 2);
+define(SEQ_COUNT, 4);
 define(OUT_DEVICE_COUNT, 4);
 define(ROW_COUNT, 4);
 
@@ -29,7 +29,11 @@ fun ModuckP makeRecBufs(int count){
     .fromTo(P_Trigger, P_Clock).c;
   recBlocker => rit.to("active_"+P_Set).c;
 
-  def(out, mk(Repeater, [P_Trigger]));
+  [P_Trigger] @=> string outTags[];
+  for(0=>int i;i<count;++i){
+    outTags << "active_"+i;
+  }
+  def(out, mk(Repeater, outTags));
   root => out.fromTo(P_Gate, P_Trigger).c;
 
   rit => out.c;
@@ -38,6 +42,7 @@ fun ModuckP makeRecBufs(int count){
     rit
       => MUtil.onlyLow().from(recv(""+i)).c
       => out.c;
+    rit => out.listen("active_"+i).c;
   }
 
   return mk(Wrapper, root, out);
@@ -166,6 +171,14 @@ for(0=>int outInd;outInd<outs.size();++outInd){
   ,P_Trigger,104+outInd,true);
 }
 
+
+for(0=>int rowInd;rowInd<ROW_COUNT;++rowInd){
+  for(0=>int patternInd;patternInd<SEQ_COUNT;++patternInd){
+    bufs[rowInd]
+      => mk(TrigValue, rowInd*16+patternInd).from("active_"+patternInd).c
+      => mk(NoteOut, MIDI_OUT_LAUNCHPAD, 0, false).c;
+  }
+}
 
 fun void makeOutsUIRow(int rowId){
   for(0=>int i;i<SEQ_COUNT;++i){

@@ -36,6 +36,9 @@ fun ModuckP combinedChain(ModuckP rhythms[], ModuckP root, ModuckP out, string e
       => block.to(P_Trigger).c
       => out.c
     ;
+
+    block => out.fromTo(recv(P_Gate), "active_"+i).c;
+
     for(0=>int tagInd;tagInd<extraTags.size();++tagInd){
       extraTags[tagInd] @=> string tag;
       def(tagBlocker, mk(Blocker));
@@ -70,7 +73,11 @@ fun ModuckP ritmo(int individualMode, string extraTags[], ModuckP rhythms[]){
     @=> string rootTags[];
 
   def(root, mk(Repeater, rootTags))
-  def(out, mk(Repeater, [P_Trigger]));
+  def(out, mk(Repeater,
+      Util.concatStrings([
+        [P_Trigger],
+        Util.numberedStrings("active_", Util.range(0, rhythms.size()-1))
+      ])));
 
   for(0=>int rhythmInd;rhythmInd<rhythms.size();++rhythmInd){
     rhythms[rhythmInd] @=> ModuckP rh;
@@ -82,9 +89,8 @@ fun ModuckP ritmo(int individualMode, string extraTags[], ModuckP rhythms[]){
 
   def(holdBlocker, mk(Blocker));
   holdBlocker => mk(Printer, "GATE").from(recv(P_Gate)).c;
-  root
-    => holdBlocker.fromTo(P_Hold, P_Gate).c;
-  holdBlocker.doHandle(P_Gate, null);
+  root => holdBlocker.fromTo(P_Hold, P_Gate).c;
+  holdBlocker.doHandle(P_Gate, IntRef.make(0));
 
   if(individualMode){
     individualsChain(rhythms, root, out, extraTags);
