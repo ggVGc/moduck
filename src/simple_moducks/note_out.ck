@@ -4,16 +4,7 @@ include(macros.m4)
 
 
 genHandler(GateHandler, P_Gate, 
-    MidiOut midOut;
     null @=> IntRef lastVal;
-
-    fun void init(){
-      midOut.open(devicePort) => int success;
-      if(!success){
-        <<< "Error: Failed opening midi device: " + devicePort >>>;
-      }
-    }
-
 
     fun void sendNoteOff(int n, ModuckBase parent){
       MidiMsg msg;
@@ -76,19 +67,19 @@ genHandler(GateHandler, P_Gate,
       }
       parent.send(P_Gate, v);
   },
-  int devicePort;
   int channel;
   int valueIsVelocity;
+  MidiOut @ midOut;
 )
 
 
 
 public class NoteOut extends Moduck{
   static int enabled;
-  fun static NoteOut make(int devicePort, int channel, int valueIsVelocity){
+  fun static NoteOut make(MidiOut device, int channel, int valueIsVelocity){
     NoteOut ret;
     OUT(P_Gate);
-    IN(GateHandler, (devicePort, channel, valueIsVelocity));
+    IN(GateHandler, (channel, valueIsVelocity, device));
 
     ret.addVal("velocity", 110);
     ret.addVal("note", 64);

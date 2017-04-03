@@ -127,9 +127,16 @@ Runner.masterClock
 
 // OUTPUTS
 
-def(lpOut, mk(NoteOut, MIDI_OUT_LAUNCHPAD, 0, false));
-def(circuit1, mk(NoteOut, MIDI_OUT_CIRCUIT, 0, false));
-def(circuit2, mk(NoteOut, MIDI_OUT_CIRCUIT, 1, false));
+MidiOut launchpadDeviceOut;
+<<<"Opening launchpad out">>>;
+launchpadDeviceOut.open(MIDI_OUT_LAUNCHPAD);
+MidiOut circuitDeviceOut;
+<<<"Opening circuit out">>>;
+circuitDeviceOut.open(MIDI_OUT_CIRCUIT);
+
+def(lpOut, mk(NoteOut, launchpadDeviceOut, 0, false));
+def(circuit1, mk(NoteOut, circuitDeviceOut, 0, false));
+def(circuit2, mk(NoteOut, circuitDeviceOut, 1, false));
 
 for(0=>int outInd;outInd<outs.size();++outInd){
   outs[outInd]
@@ -141,12 +148,16 @@ for(0=>int outInd;outInd<outs.size();++outInd){
 
 // DEVICES
 
+<<<"Opening launchpad in">>>;
 def(launchpad, mk(MidInp, MIDI_IN_LAUNCHPAD, 0))
+<<<"Opening oxygen in">>>;
 def(oxygen, mk(MidInp, MIDI_IN_OXYGEN, 0));
 
 
 launchpad => bufHoldToggle.from("note112").c;
-mkToggleIndicator(_holdToggler, P_Active, 112, false);
+mkIndicator(_holdToggler, P_Active, 112, false);
+
+
 // MAPPINGS
 
 /* nanoktrl => mk(Printer, "nanoktrl note").from("note").c; */
@@ -167,7 +178,7 @@ for(0=>int outInd;outInd<outs.size();++outInd){
     =>mk(TrigValue,outInd).c
     =>inRouter.to("index").c
   ;
-  mkToggleIndicator(
+  mkIndicator(
     inRouter
     =>MUtil.onlyHigh().from(recv("index")).c
     =>mk(Processor, Eq.make(outInd)).c
@@ -180,7 +191,7 @@ for(0=>int rowInd;rowInd<ROW_COUNT;++rowInd){
   for(0=>int patternInd;patternInd<SEQ_COUNT;++patternInd){
     bufs[rowInd]
       => mk(TrigValue, rowInd*16+patternInd).from("active_"+patternInd).c
-      => mk(NoteOut, MIDI_OUT_LAUNCHPAD, 0, false).c;
+      => mk(NoteOut, launchpadDeviceOut, 0, false).c;
   }
 }
 
@@ -198,27 +209,26 @@ fun void makeOutsUIRow(int rowId){
   launchpad=>outs[rowId].fromTo("note"+(rowId*16+7),"toggleOut3").c;
 
 
-  mkToggleIndicator(outs[rowId],"outActive0",rowId*16+4, false);
-  mkToggleIndicator(outs[rowId],"outActive1",rowId*16+5, false);
-  mkToggleIndicator(outs[rowId],"outActive2",rowId*16+6, false);
-  mkToggleIndicator(outs[rowId],"outActive3",rowId*16+7, false);
+  mkIndicator(outs[rowId],"outActive0",rowId*16+4, false);
+  mkIndicator(outs[rowId],"outActive1",rowId*16+5, false);
+  mkIndicator(outs[rowId],"outActive2",rowId*16+6, false);
+  mkIndicator(outs[rowId],"outActive3",rowId*16+7, false);
 
 }
-
 
 launchpad
   => mk(Bigger, 0).from("cc111").c
   => recToggle.c
 ;
-mkToggleIndicator(bufs[0], recv("rec"), 111, true);
+mkIndicator(bufs[0], recv("rec"), 111, true);
 
 for(0=>int i;i<ROW_COUNT;++i){
   makeOutsUIRow(i);
 }
 
 
-fun ModuckP mkToggleIndicator(ModuckP src, string tag,int noteNum, int isCC){
-  def(indicator, mk(TrigValue, noteNum) => mk(NoteOut, MIDI_OUT_LAUNCHPAD, 0, false).set("isCC", isCC).c);
+fun ModuckP mkIndicator(ModuckP src, string tag,int noteNum, int isCC){
+  def(indicator, mk(TrigValue, noteNum) => mk(NoteOut, launchpadDeviceOut, 0, false).set("isCC", isCC).c);
   src => indicator.from(tag).c;
   return indicator;
 }
@@ -226,10 +236,8 @@ fun ModuckP mkToggleIndicator(ModuckP src, string tag,int noteNum, int isCC){
 
 // Send launchpad reset message
 MidiMsg msg;
-MidiOut midOut;
-midOut.open(MIDI_IN_LAUNCHPAD) => int succ;
 176 => msg.data1;
-midOut.send(msg);
+launchpadDeviceOut.send(msg);
 
 Runner.setPlaying(1);
 Util.runForever();
