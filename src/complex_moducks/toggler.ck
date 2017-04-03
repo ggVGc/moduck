@@ -3,7 +3,12 @@ include(song_macros.m4)
 include(funcs.m4)
 
 public class Toggler{
-  maker0(Moduck){
+
+  fun static Moduck make(){
+    return make(true);
+  }
+
+  maker(Moduck, int initiallyOn){
     Repeater.make([P_Trigger, P_Toggle]) @=> Repeater in;
     Switcher.make() @=> Moduck switcher;
     SampleHold.make() @=> SampleHold hold;
@@ -37,16 +42,16 @@ public class Toggler{
 
     hold.setVal("triggerOnSet", true);
     samp =>  now;
-    hold.doHandle(P_Set, null);
+    if(initiallyOn){
+      hold.doHandle(P_Set, null);
+    }else{
+      hold.doHandle(P_Set, IntRef.make(0));
+    }
 
 
-    Repeater.make([P_Trigger, P_Active, "0", "1"]) @=> Moduck out;
+    Repeater.make([P_Trigger, P_Active]) @=> Moduck out;
     Patch.connect(switcher, out);
-    Patch.connect(switcher, "0", out, "0");
-    Patch.connect(switcher, "1", out, "1");
-
     Patch.connect(blockerA, recv(P_Gate), out, P_Active);
-
 
     return Wrapper.make(in, out);
   }

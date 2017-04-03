@@ -143,11 +143,11 @@ public class MUtil{
 
 
 
-  fun static ModuckP gatesToToggles(ModuckP src, string tags[]){
+  fun static ModuckP gatesToToggles(ModuckP src, string tags[], int initiallyOn){
     passThrough(src, tags) @=> ModuckP ret;
     for(0=>int tagInd;tagInd<tags.size();++tagInd){
       tags[tagInd] @=> string tag;
-      ModuckP.make(Toggler.make()) @=> ModuckP toggl;
+      ModuckP.make(Toggler.make(initiallyOn)) @=> ModuckP toggl;
       ret => toggl.fromTo(recv(tag), P_Toggle).c;
       toggl => src.to(tag).c;
     }

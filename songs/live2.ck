@@ -64,7 +64,7 @@ fun ModuckP makeTogglingOuts(ModuckP source, int outCount){
     def(blocker, mk(Blocker, true));
     blocker @=> outBlockers[i];
     def(toggler, mk(Toggler));
-    toggler => blocker.fromTo("1", P_Gate).c;
+    toggler => blocker.fromTo(P_Active, P_Gate).c;
     root => toggler.fromTo("toggleOut"+i, P_Toggle).c;
     toggler => mk(Inverter, 0).c => out.to("outActive"+i).c;
     source
@@ -99,12 +99,7 @@ def(_holdToggler, mk(Toggler));
 bufHoldToggle => _holdToggler.to(P_Toggle).c;
 keysIn => inRouter.c;
 for(0=>int i;i<ROW_COUNT;++i){
-  MUtil.gatesToToggles(makeRecBufs(SEQ_COUNT), Util.numberedStrings("", Util.range(0,SEQ_COUNT-1))) @=> ModuckP b;
-  samp => now;
-  for(0=>int sqInd;sqInd<SEQ_COUNT;++sqInd){
-    // Toggle all off
-    b.doHandle(""+sqInd, IntRef.make(0));
-  }
+  MUtil.gatesToToggles(makeRecBufs(SEQ_COUNT), Util.numberedStrings("", Util.range(0,SEQ_COUNT-1)), false) @=> ModuckP b;
   Runner.masterClock => b.c;
   bufs << b;
   _holdToggler => b.to(P_Hold).c;
