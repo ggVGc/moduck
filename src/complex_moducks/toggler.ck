@@ -23,7 +23,7 @@ public class Toggler{
     def(out, mk(Repeater, [P_Trigger, P_Active]));
 
     in
-      .b(inToggle)
+      .b(inToggle.from(P_Toggle))
       .b(switcher => out.c)
     ;
 
