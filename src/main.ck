@@ -20,12 +20,12 @@ Machine.add("simple_moducks/wrapper.ck");
 
 Machine.add("types/chain_data.ck");
 Machine.add("patch.ck");
+Machine.add("moduck_patcher.ck");
 Machine.add("moducks.ck");
 samp => now;
 Machine.add("complex_moducks/probably.ck");
 Machine.add("complex_moducks/switcher.ck");
 Machine.add("complex_moducks/toggler.ck");
-Machine.add("moduck_patcher.ck");
 Machine.add("scales.ck");
 Machine.add("moduck_util.ck");
 Machine.add("runner.ck");

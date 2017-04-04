@@ -6,7 +6,7 @@ include(funcs.m4)
 
 define(SEQ_COUNT, 4);
 define(OUT_DEVICE_COUNT, 4);
-define(ROW_COUNT, 3);
+define(ROW_COUNT, 7);
 
 
 fun ModuckP makeRecBufs(int count){
@@ -80,6 +80,7 @@ fun ModuckP makeTogglingOuts(ModuckP source, int outCount){
 def(metronome, mk(Repeater));
 Runner.masterClock
   => mk(PulseDiv, B).c
+  => mk(SampleHold, 100::ms).c
   => metronome.c
 ;
 
@@ -129,7 +130,6 @@ MidiOut circuitDeviceOut;
 <<<"Opening circuit out">>>;
 circuitDeviceOut.open(MIDI_OUT_CIRCUIT);
 
-def(lpOut, mk(NoteOut, launchpadDeviceOut, 0, false));
 def(circuit1, mk(NoteOut, circuitDeviceOut, 0, false));
 def(circuit2, mk(NoteOut, circuitDeviceOut, 1, false));
 
@@ -161,7 +161,6 @@ launchpad => mk(Printer, "lp note").from("note").c;
 /* launchpad => mk(Printer, "lp cc").from("cc").c; */
 oxygen => mk(Printer, "oxygen cc").from("cc").c;
 oxygen => mk(Printer, "oxygen note").from("note").c;
-oxygen => lpOut.from("note").c;
 
 
 oxygen => keysIn.from("note").c;
@@ -198,17 +197,10 @@ fun void makeOutsUIRow(int rowId){
     ;
   }
 
-  launchpad=>outs[rowId].fromTo("note"+(rowId*16+4),"toggleOut0").c;
-  launchpad=>outs[rowId].fromTo("note"+(rowId*16+5),"toggleOut1").c;
-  launchpad=>outs[rowId].fromTo("note"+(rowId*16+6),"toggleOut2").c;
-  launchpad=>outs[rowId].fromTo("note"+(rowId*16+7),"toggleOut3").c;
-
-
-  mkIndicator(outs[rowId],"outActive0",rowId*16+4, false);
-  mkIndicator(outs[rowId],"outActive1",rowId*16+5, false);
-  mkIndicator(outs[rowId],"outActive2",rowId*16+6, false);
-  mkIndicator(outs[rowId],"outActive3",rowId*16+7, false);
-
+  for(0=>int outputId;outputId<OUT_DEVICE_COUNT;++outputId){
+    launchpad=>outs[rowId].fromTo("note"+(rowId*16+4+outputId),"toggleOut"+outputId).c;
+    mkIndicator(outs[rowId],"outActive"+outputId,rowId*16+4+outputId, false);
+  }
 }
 
 launchpad
@@ -223,10 +215,17 @@ for(0=>int i;i<ROW_COUNT;++i){
 
 
 fun ModuckP mkIndicator(ModuckP src, string tag,int noteNum, int isCC){
-  def(indicator, mk(TrigValue, noteNum) => mk(NoteOut, launchpadDeviceOut, 0, false).set("isCC", isCC).c);
+  def(indicator, mk(TrigValue, noteNum) => mk(NoteOut, launchpadDeviceOut, 0, false).set("isCC", isCC).set("velocity", 100).c);
   src => indicator.from(tag).c;
   return indicator;
 }
+
+
+metronome
+  => mk(TrigValue, 8*16).c
+  => mk(NoteOut, launchpadDeviceOut, 0, false).c
+;
+
 
 
 // Send launchpad reset message

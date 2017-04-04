@@ -9,36 +9,38 @@ public class Toggler{
   }
 
   maker(Moduck, int initiallyOn){
-    Repeater.make([P_Trigger, P_Toggle]) @=> Repeater in;
-    Switcher.make() @=> Moduck switcher;
-    SampleHold.make() @=> SampleHold hold;
-    Blocker.make() @=> Moduck blockerA;
-    Blocker.make() @=> Moduck blockerB;
-    Inverter.make(0) @=>  Moduck inverter;
+    def(in, mk(Repeater, [P_Trigger, P_Toggle]));
+    def(switcher, mk(Switcher));
+    def(hold, mk(SampleHold));
+    def(blockerA, mk(Blocker));
+    def(blockerB, mk(Blocker));
+    def(inverter, mk(Inverter, 0));
+    def(inToggle, mk(Processor, Not.make(Eq.make(null))));
 
-    Value.make(0) @=> Moduck on;
-    Patch.connect(Value.make(0), Inverter.make(0)) @=> Moduck off;
+    def(on, mk(Value, 0));
+    def(off, mk(Value, 0) => mk(Inverter, 0).c);
 
-    Processor.make(Not.make(Eq.make(null))) @=>  Moduck inToggle;
-    Patch.connect(in, P_Toggle, inToggle, P_Trigger);
+    def(out, mk(Repeater, [P_Trigger, P_Active]));
 
-    Patch.connect(inToggle, P_Trigger, blockerA, P_Trigger);
-    Patch.connect(inToggle, P_Trigger, blockerB, P_Trigger);
+    in
+      .b(inToggle)
+      .b(switcher => out.c)
+    ;
 
-    Patch.connect(blockerA, off);
-    Patch.connect(blockerB, on);
+    inToggle
+      .b(blockerA => out.fromTo(recv(P_Gate), P_Active).c)
+      .b(blockerB)
+    ;
 
-    Patch.connect(on, P_Trigger, hold, P_Set);
-    Patch.connect(off, P_Trigger, hold, P_Set);
+    blockerA => off.c => hold.to(P_Set).c;
+    blockerB => on.c => hold.to(P_Set).c;
 
-    Patch.connect(hold, recv(P_Set), hold, P_Trigger);
-
-    Patch.connect(hold, P_Trigger, inverter, P_Trigger);
-    Patch.connect(inverter, P_Trigger, blockerB, P_Gate);
-    Patch.connect(hold, P_Trigger, blockerA, P_Gate);
-
-    Patch.connect(hold, P_Trigger, switcher, P_Gate);
-    Patch.connect(in, P_Trigger, switcher, P_Trigger);
+    hold
+      .b(inverter => blockerB.to(P_Gate).c)
+      .b(blockerA.to(P_Gate))
+      .b(switcher.to(P_Gate))
+      .b(hold.fromTo(recv(P_Set), P_Trigger))
+    ;
 
     hold.setVal("triggerOnSet", true);
     samp =>  now;
@@ -47,11 +49,6 @@ public class Toggler{
     }else{
       hold.doHandle(P_Set, IntRef.make(0));
     }
-
-
-    Repeater.make([P_Trigger, P_Active]) @=> Moduck out;
-    Patch.connect(switcher, out);
-    Patch.connect(blockerA, recv(P_Gate), out, P_Active);
 
     return Wrapper.make(in, out);
   }

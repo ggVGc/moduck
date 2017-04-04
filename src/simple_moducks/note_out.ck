@@ -76,7 +76,7 @@ genHandler(GateHandler, P_Gate,
 
 public class NoteOut extends Moduck{
   static int enabled;
-  fun static NoteOut make(MidiOut device, int channel, int valueIsVelocity){
+  fun static NoteOut make(MidiOut @ device, int channel, int valueIsVelocity){
     NoteOut ret;
     OUT(P_Gate);
     IN(GateHandler, (channel, valueIsVelocity, device));
