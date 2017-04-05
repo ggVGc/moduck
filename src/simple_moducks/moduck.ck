@@ -196,6 +196,12 @@ public class Moduck extends ModuckBase {
     return _outs[tag];
   }
 
+  fun void bang(){
+    doHandle(P_Trigger, IntRef.make(0));
+    samp =>  now;
+    doHandle(P_Trigger, null);
+  }
+
 }
 
 

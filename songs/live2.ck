@@ -39,7 +39,7 @@ fun ModuckP makeRecBufs(int count){
 
   for(0=>int i;i<count;++i){
     rit
-      => MUtil.onlyLow().from(recv(""+i)).c
+      => MBUtil.onlyLow().from(recv(""+i)).c
       => out.c;
     rit => out.listen("active_"+i).c;
   }

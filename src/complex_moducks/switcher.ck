@@ -3,15 +3,22 @@ include(macros.m4)
 include(song_macros.m4)
 
 public class Switcher{
-  maker0(Moduck){
-    Repeater.make([P_Trigger, P_Gate]) @=> Repeater in;
+
+  fun static Moduck make(){
+    return make(true);
+  }
+
+  maker(Moduck, int outOnChange){
+    def(in, mk(Repeater, [P_Trigger, P_Gate, "outOnChange"]));
+
     Inverter.make(0) @=> Inverter inverter;
-    Router.make(0) @=> Router router;
-    router.doHandle(P_Trigger, IntRef.make(0));
+    def(router, mk(Router, 0, outOnChange));
+    in => router.listen("outOnChange").c;
+    /* router.doHandle(P_Trigger, IntRef.make(0)); */
     Patch.connect(in, P_Trigger, router, P_Trigger);
 
-    Value.make(0) @=>  Moduck v0;
-    Value.make(1) @=>  Moduck v1;
+    TrigValue.make(0) @=>  Moduck v0;
+    TrigValue.make(1) @=>  Moduck v1;
 
     Patch.connect(in, P_Gate, v1, P_Trigger);
 

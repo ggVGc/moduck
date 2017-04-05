@@ -23,6 +23,8 @@ Machine.add("patch.ck");
 Machine.add("moduck_patcher.ck");
 Machine.add("moducks.ck");
 samp => now;
+Machine.add("moduck_util_base.ck");
+samp => now;
 Machine.add("complex_moducks/probably.ck");
 Machine.add("complex_moducks/switcher.ck");
 Machine.add("complex_moducks/toggler.ck");
