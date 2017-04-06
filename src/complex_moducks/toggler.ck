@@ -27,6 +27,10 @@ public class Toggler{
 
     in => outBlocker.c => out.c;
     outBlocker => out.fromTo(recv(P_Gate), P_Active).c;
+    if(initiallyOn){
+      samp =>  now;
+      in.doHandle(P_Toggle, IntRef.make(0));
+    }
     return Wrapper.make(in, out);
   }
 
