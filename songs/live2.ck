@@ -7,20 +7,20 @@ define(OUT_DEVICE_COUNT, 4);
 define(ROW_COUNT, 2);
 
 
-define(frm, ModuckP._from($1))
 
 fun ModuckP makeRecBufs(int count){
   def(recBlocker, mk(Blocker));
   def(rit, ritmo(false
-    ,[P_GoTo, P_Set, P_Trigger]
+    ,[P_GoTo, P_Set]
     ,[ mk(Buffer)
       ,mk(Buffer)
       ,mk(Buffer)
       ,mk(Buffer)
   ]));
 
+
   def(root, mk(Repeater, Util.concatStrings(
-      [rit.getSourceTags(), [P_GoTo, P_Gate, "rec"]])));
+      [rit.getSourceTags(), [P_GoTo, P_Gate, "rec", "length"]])));
 
   root
     .b(recBlocker
@@ -29,9 +29,23 @@ fun ModuckP makeRecBufs(int count){
     ).b(rit
       .listen(P_GoTo)
       .listen(rit.getSourceTags())
-      .fromTo(P_Trigger, P_Clock)
     );
   recBlocker => rit.to("active_"+P_Set).c;
+
+  def(restarter, mk(Repeater));
+
+  restarter
+    => mk(TrigValue, 0).c
+    => rit.to(P_GoTo).c
+  ;
+
+  root
+    => frm(P_Clock).c
+    => (mk(PulseDiv, Bar).hook(root.fromTo("length", "divisor")) ).c
+    => restarter.c
+  ;
+
+  /* restarter => mk(Printer, "RESTART").c; */
 
   [P_Trigger] @=> string outTags[];
   for(0=>int i;i<count;++i){
@@ -92,7 +106,6 @@ fun ModuckP makeTogglingOuts(ModuckP source, int outCount){
 
 
 def(keysIn, mk(Repeater));
-def(bufRestarter, mk(Repeater));
 ModuckP outs[0];
 ModuckP bufs[0];
 def(inRouter, mk(Router, 0));
@@ -110,7 +123,6 @@ for(0=>int i;i<ROW_COUNT;++i){
   bufs << b;
   _holdToggler => b.to(P_Hold).c;
   inRouter => frm(""+i).to(b, P_Gate).c;
-  bufRestarter => mk(TrigValue, 0).c => b.to(P_GoTo).c;
   def(out, makeTogglingOuts(b, OUT_DEVICE_COUNT));
   outs << out;
 
@@ -128,11 +140,6 @@ Runner.masterClock
   => metronome.c
 ;
 
-
-Runner.masterClock
-  => mk(PulseDiv, Bar).c
-  => bufRestarter.c
-;
 
 
 // OUTPUTS
@@ -213,7 +220,6 @@ fun void setupOutputSelection(){
       inRouter
       => MBUtil.onlyHigh().from(recv("index")).c
       => mk(Processor, Eq.make(outInd)).c
-      => mk(Printer, "DIDDD "+outInd).c
       => mk(TrigValue, outInd).c
     ,P_Trigger, ind, false);
   }

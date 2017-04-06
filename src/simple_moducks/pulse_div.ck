@@ -48,7 +48,7 @@ genHandler(TrigHandler, P_Trigger,
 
 public class PulseDiv extends Moduck{
   
-  fun static PulseDiv make(int divisor, int startOffset){
+  fun static PulseDiv make(int divisor){
     PulseDiv ret;
 
     OUT(P_Trigger);
@@ -60,7 +60,7 @@ public class PulseDiv extends Moduck{
     IN(ResetHandler,(accum, highest, lastScaling));
 
     ret.addVal("divisor", divisor);
-    ret.addVal("offset", startOffset);
+    /* ret.addVal("offset", startOffset); */
     ret.addVal("scaling", 100); // percentage
 
     ret.doHandle(P_Reset, IntRef.make(0));
@@ -68,8 +68,4 @@ public class PulseDiv extends Moduck{
     return ret;
   }
 
-
-  fun static PulseDiv make(int divisor){
-    return make(divisor, 0);
-  }
 }

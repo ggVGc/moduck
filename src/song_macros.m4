@@ -48,4 +48,6 @@ define(defl,[
 define(mkc, `mk($@)'.c)
 define(mkcc, `mk($@)'.cc)
 
+define(frm, ModuckP._from($1))
+
 
