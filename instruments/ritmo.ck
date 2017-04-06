@@ -90,7 +90,6 @@ fun ModuckP ritmo(int individualMode, string extraTags[], ModuckP rhythms[]){
   }
 
   def(holdBlocker, mk(Blocker));
-  holdBlocker => mk(Printer, "GATE").from(recv(P_Gate)).c;
   root => holdBlocker.fromTo(P_Hold, P_Gate).c;
   holdBlocker.doHandle(P_Gate, IntRef.make(0));
 

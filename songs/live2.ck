@@ -1,7 +1,7 @@
-
 include(song_macros.m4)
 include(_all_instruments.m4)
 include(funcs.m4)
+
 
 
 define(SEQ_COUNT, 4);
@@ -77,14 +77,6 @@ fun ModuckP makeTogglingOuts(ModuckP source, int outCount){
 }
 
 
-def(metronome, mk(Repeater));
-Runner.masterClock
-  => mk(PulseDiv, B).c
-  => mk(SampleHold, 100::ms).c
-  => metronome.c
-;
-
-
 def(keysIn, mk(Repeater));
 def(bufRestarter, mk(Repeater));
 ModuckP outs[0];
@@ -114,6 +106,15 @@ for(0=>int i;i<ROW_COUNT;++i){
 }
 
 
+
+def(metronome, mk(Repeater));
+Runner.masterClock
+  => mk(PulseDiv, B).c
+  => mk(SampleHold, 100::ms).c
+  => metronome.c
+;
+
+
 Runner.masterClock
   => mk(PulseDiv, Bar).c
   => bufRestarter.c
@@ -128,6 +129,11 @@ launchpadDeviceOut.open(MIDI_OUT_LAUNCHPAD);
 MidiOut circuitDeviceOut;
 <<<"Opening circuit out">>>;
 circuitDeviceOut.open(MIDI_OUT_CIRCUIT);
+
+// Send launchpad reset message
+MidiMsg msg;
+176 => msg.data1;
+launchpadDeviceOut.send(msg);
 
 def(circuit1, mk(NoteOut, circuitDeviceOut, 0, false));
 def(circuit2, mk(NoteOut, circuitDeviceOut, 1, false));
@@ -165,20 +171,27 @@ oxygen => mk(Printer, "oxygen note").from("note").c;
 oxygen => keysIn.from("note").c;
 
 
-for(0=>int outInd;outInd<outs.size();++outInd){
-  launchpad
-    =>mk(Bigger,0).from("note"+(8+outInd*16)).c
-    =>mk(TrigValue,outInd).c
-    =>inRouter.to("index").c
-  ;
-  mkIndicator(
-    inRouter
-    =>MBUtil.onlyHigh().from(recv("index")).c
-    =>mk(Processor, Eq.make(outInd)).c
-    =>mk(TrigValue, outInd).c
-  ,P_Trigger,8+outInd*16,false);
+fun void setupOutputSelection(){
+  for(0=>int outInd;outInd<outs.size();++outInd){
+    // Select outputs with side buttons
+    8+outInd*16 => int ind;
+    launchpad
+      => mk(Bigger,0).from("note"+ind).c
+      => mk(TrigValue,outInd).c
+      => inRouter.to("index").c
+    ;
+
+    mkIndicator(
+      inRouter
+      => MBUtil.onlyHigh().from(recv("index")).c
+      => mk(Processor, Eq.make(outInd)).c
+      => mk(Printer, "DIDDD "+outInd).c
+      => mk(TrigValue, outInd).c
+    ,P_Trigger, ind, false);
+  }
 }
 
+setupOutputSelection();
 
 for(0=>int rowInd;rowInd<ROW_COUNT;++rowInd){
   for(0=>int patternInd;patternInd<SEQ_COUNT;++patternInd){
@@ -225,12 +238,6 @@ metronome
   => mk(NoteOut, launchpadDeviceOut, 0, false).c
 ;
 
-
-
-// Send launchpad reset message
-MidiMsg msg;
-176 => msg.data1;
-launchpadDeviceOut.send(msg);
-
 Runner.setPlaying(1);
+inRouter.doHandle("index", IntRef.make(0));
 Util.runForever();
