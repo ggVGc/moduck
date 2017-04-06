@@ -79,8 +79,27 @@ class Connector{
   }
 }
 
+class ToConnector{
+  string srcTag;
+  fun Connector to(ModuckP targetModuck, string dstTag){
+    return targetModuck.fromTo(srcTag, dstTag);
+  }
+  fun Connector to(ModuckP targetModuck){
+    return to(targetModuck, P_Default);
+  }
+  fun ModuckP c(Moduck m){
+    return m => ModuckP.make(Repeater.make()).from(srcTag).c;
+  }
+}
+
 
 public class ModuckP extends Moduck{
+
+  fun static ToConnector _from(string tag){
+    ToConnector ret;
+    tag @=> ret.srcTag;
+    return ret;
+  }
 
   fun ModuckP c(Moduck other){
     return Connector.make(this, [P_Default], [P_Default]).c(other);

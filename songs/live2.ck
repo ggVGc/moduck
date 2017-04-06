@@ -2,12 +2,12 @@ include(song_macros.m4)
 include(_all_instruments.m4)
 include(funcs.m4)
 
-
-
 define(SEQ_COUNT, 4);
 define(OUT_DEVICE_COUNT, 4);
 define(ROW_COUNT, 2);
 
+
+define(frm, ModuckP._from($1))
 
 fun ModuckP makeRecBufs(int count){
   def(recBlocker, mk(Blocker));
@@ -18,14 +18,17 @@ fun ModuckP makeRecBufs(int count){
       ,mk(Buffer)
       ,mk(Buffer)
   ]));
+
   def(root, mk(Repeater, Util.concatStrings([rit.getSourceTags(), [P_GoTo, P_Gate, "rec"]])));
 
-  root => recBlocker.fromTo("rec", P_Gate).c;
-  root => recBlocker.fromTo(P_Gate, P_Trigger).c;
-  root => rit
-    .listen([P_GoTo])
-    .listen(rit.getSourceTags())
-    .fromTo(P_Trigger, P_Clock).c;
+  root
+    .b(recBlocker.fromTo("rec", P_Gate))
+    .b(recBlocker.fromTo(P_Gate, P_Trigger))
+    .b(rit
+      .listen(P_GoTo)
+      .listen(rit.getSourceTags())
+      .fromTo(P_Trigger, P_Clock)
+    );
   recBlocker => rit.to("active_"+P_Set).c;
 
   [P_Trigger] @=> string outTags[];
@@ -33,13 +36,15 @@ fun ModuckP makeRecBufs(int count){
     outTags << "active_"+i;
   }
   def(out, mk(Repeater, outTags));
-  root => out.fromTo(P_Gate, P_Trigger).c;
+  root
+    => frm(P_Gate).to(out, P_Trigger).c;
 
   rit => out.c;
 
   for(0=>int i;i<count;++i){
     rit
-      => MBUtil.onlyLow().from(recv(""+i)).c
+      => frm(recv(""+i)).c
+      => MBUtil.onlyLow().c
       => out.c;
     rit => out.listen("active_"+i).c;
   }
@@ -62,11 +67,16 @@ fun ModuckP makeTogglingOuts(ModuckP source, int outCount){
   ModuckP outBlockers[outCount];
   for(0=>int i;i<outCount;++i){
     def(blocker, mk(Blocker, true));
-    blocker @=> outBlockers[i];
     def(toggler, mk(Toggler, false));
-    toggler => blocker.to(P_Gate).c;
-    root => toggler.fromTo("toggleOut"+i, P_Toggle).c;
-    toggler => out.to("outActive"+i).c;
+
+    blocker @=> outBlockers[i];
+
+    root => frm("toggleOut"+i).to(toggler, P_Toggle).c;
+
+    toggler 
+      .b(blocker.to(P_Gate))
+      .b(out.to("outActive"+i))
+    ;
     source
       => blocker.c
       => out.to(""+i).c
@@ -95,7 +105,7 @@ for(0=>int i;i<ROW_COUNT;++i){
   Runner.masterClock => b.c;
   bufs << b;
   _holdToggler => b.to(P_Hold).c;
-  inRouter => b.fromTo(""+i, P_Gate).c;
+  inRouter => frm(""+i).to(b, P_Gate).c;
   bufRestarter => mk(TrigValue, 0).c => b.to(P_GoTo).c;
   def(out, makeTogglingOuts(b, OUT_DEVICE_COUNT));
   outs << out;
@@ -140,8 +150,8 @@ def(circuit2, mk(NoteOut, circuitDeviceOut, 1, false));
 
 for(0=>int outInd;outInd<outs.size();++outInd){
   outs[outInd]
-    .b(circuit1.from("0"))
-    .b(circuit2.from("1"))
+    .b(frm("0").to(circuit1))
+    .b(frm("1").to(circuit2))
   ;
 }
 
