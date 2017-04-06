@@ -20,7 +20,7 @@ class Shared{
   int accum;
 }
 
-genHandler(TrigHandler, P_Trigger,
+genHandler(ClockHandler, P_Clock,
   HANDLE{
     if(null != v){
       now - shared.startTime => dur delta;
@@ -45,6 +45,20 @@ genHandler(TrigHandler, P_Trigger,
       }
       now => shared.lastTime;
       ++shared.accum;
+
+      if(shared.clearing){
+        true => int allEmpty;
+        for(0=>int entInd;entInd<shared.entries.size();++entInd){
+          shared.entries[entInd] @=> BufEntry e;
+          if(e != null){
+            false => allEmpty;
+            break;
+          }
+        }
+        if(allEmpty){
+          parent.send("hasData", null);
+        }
+      }
     }
   },
   Shared shared;
@@ -63,6 +77,7 @@ genHandler(ResetHandler, P_Reset,
         }
       }
     }
+    parent.send("hasData", null);
     parent.send(P_Trigger, null);
   },
   Shared shared;
@@ -106,6 +121,7 @@ genHandler(SetHandler, P_Set,
 
     now - shared.startTime => e.timeStamp;
     shared.accum => e.index;
+    parent.send("hasData", IntRef.yes());
   },
   Shared shared;
 )
@@ -116,6 +132,7 @@ genHandler(ClearAllHandler, P_ClearAll,
   HANDLE{
     if(null != v){
       shared.entries.size(0);
+      parent.send("hasData", null);
     }
   },
   Shared shared;
@@ -137,7 +154,8 @@ public class Buffer extends Moduck{
     Shared shared;
     ret @=> shared.buf;
     OUT(P_Trigger);
-    IN(TrigHandler,(shared));
+    OUT("hasData");
+    IN(ClockHandler,(shared));
     IN(SetHandler,(shared));
     IN(ClearAllHandler,(shared));
     IN(ClearHandler,(shared));

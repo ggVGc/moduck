@@ -3,8 +3,9 @@ include(song_macros.m4)
 
 public class OnceTrigger{
   maker0(Moduck){
-    def(in, mk(Repeater, [P_Clock, P_Set]));
+    def(in, mk(Repeater, [P_Trigger, P_Set]));
     def(out, mk(Repeater));
+
     def(blk, mk(Blocker));
     def(blkControl, mk(SampleHold) => blk.to(P_Gate).c);
     blkControl.set("triggerOnSet", true);
@@ -16,6 +17,7 @@ public class OnceTrigger{
     ;
 
     in
+      => frm(P_Trigger).c
       => blk.c
       => MBUtil.onlyHigh().c
       => mk(TrigValue, 0).c

@@ -29,6 +29,7 @@ Machine.add("complex_moducks/probably.ck");
 Machine.add("complex_moducks/switcher.ck");
 Machine.add("complex_moducks/toggler.ck");
 Machine.add("complex_moducks/once_trigger.ck");
+Machine.add("complex_moducks/rec_buf.ck");
 Machine.add("scales.ck");
 Machine.add("moduck_util.ck");
 Machine.add("runner.ck");

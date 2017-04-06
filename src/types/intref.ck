@@ -7,4 +7,8 @@ public class IntRef{
     v => i.i;
     return i;
   }
+
+  fun static IntRef yes(){
+    return make(0);
+  }
 }

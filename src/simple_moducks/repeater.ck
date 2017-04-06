@@ -26,6 +26,7 @@ class RepeatHandler extends EventHandler{
 
 public class Repeater extends Moduck{
 
+
   fun static Repeater make(string tags[]){
     Repeater ret;
     for(0=>int i;i<tags.size();++i){
@@ -35,11 +36,13 @@ public class Repeater extends Moduck{
     return ret;
   }
 
+  fun static Repeater make(string tags[][]){
+    return make(Util.concatStrings(tags));
+  }
 
   fun static Repeater make(string tag){
     return make([tag]);
   }
-
 
   fun static Repeater make(){
     return make(P_Trigger);

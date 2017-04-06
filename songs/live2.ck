@@ -45,8 +45,6 @@ fun ModuckP makeRecBufs(int count){
     => restarter.c
   ;
 
-  /* restarter => mk(Printer, "RESTART").c; */
-
   [P_Trigger] @=> string outTags[];
   for(0=>int i;i<count;++i){
     outTags << "active_"+i;
@@ -258,10 +256,12 @@ fun ModuckP mkIndicator(ModuckP src, string tag,int noteNum, int isCC){
 }
 
 
-metronome
-  => mk(TrigValue, 7*16).c
-  => mk(NoteOut, launchpadDeviceOut, 0, false).c
-;
+/* 
+ metronome
+   => mk(TrigValue, 7*16).c
+   => mk(NoteOut, launchpadDeviceOut, 0, false).c
+ ;
+ */
 
 Runner.setPlaying(1);
 inRouter.doHandle("index", IntRef.make(0));
