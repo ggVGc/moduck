@@ -6,7 +6,7 @@ include(funcs.m4)
 
 define(SEQ_COUNT, 4);
 define(OUT_DEVICE_COUNT, 4);
-define(ROW_COUNT, 7);
+define(ROW_COUNT, 2);
 
 
 fun ModuckP makeRecBufs(int count){
@@ -63,10 +63,10 @@ fun ModuckP makeTogglingOuts(ModuckP source, int outCount){
   for(0=>int i;i<outCount;++i){
     def(blocker, mk(Blocker, true));
     blocker @=> outBlockers[i];
-    def(toggler, mk(Toggler));
-    toggler => blocker.fromTo(P_Active, P_Gate).c;
+    def(toggler, mk(Toggler, false));
+    toggler => blocker.to(P_Gate).c;
     root => toggler.fromTo("toggleOut"+i, P_Toggle).c;
-    toggler => mk(Inverter, 0).c => out.to("outActive"+i).c;
+    toggler => out.to("outActive"+i).c;
     source
       => blocker.c
       => out.to(""+i).c
@@ -92,8 +92,7 @@ ModuckP bufs[0];
 def(inRouter, mk(Router, 0));
 def(recToggle,
   mk(Repeater)
-  => mk(Toggler).to(P_Toggle).c
-  => mk(Inverter, 0).c
+  => mk(Toggler, false).to(P_Toggle).c
 );
 def(bufHoldToggle, mk(Repeater));
 def(_holdToggler, mk(Toggler));
@@ -150,7 +149,7 @@ def(oxygen, mk(MidInp, MIDI_IN_OXYGEN, 0));
 
 
 launchpad => bufHoldToggle.from("note112").c;
-mkIndicator(_holdToggler, P_Active, 112, false);
+mkIndicator(_holdToggler, P_Default, 112, false);
 
 
 // MAPPINGS
@@ -174,7 +173,7 @@ for(0=>int outInd;outInd<outs.size();++outInd){
   ;
   mkIndicator(
     inRouter
-    =>MUtil.onlyHigh().from(recv("index")).c
+    =>MBUtil.onlyHigh().from(recv("index")).c
     =>mk(Processor, Eq.make(outInd)).c
     =>mk(TrigValue, outInd).c
   ,P_Trigger,8+outInd*16,false);
@@ -222,7 +221,7 @@ fun ModuckP mkIndicator(ModuckP src, string tag,int noteNum, int isCC){
 
 
 metronome
-  => mk(TrigValue, 8*16).c
+  => mk(TrigValue, 7*16).c
   => mk(NoteOut, launchpadDeviceOut, 0, false).c
 ;
 

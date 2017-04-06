@@ -11,8 +11,7 @@ public class Toggler{
     def(on, mk(TrigValue, 0));
     def(off, mk(TrigValue, 0) => mk(Inverter, 0).c);
 
-    def(outBlocker, mk(Blocker));
-    def(out, mk(Repeater, [P_Trigger, P_Active]));
+    def(out, mk(Repeater));
 
     toggleIn => inSwitcher.c;
     inSwitcher => MBUtil.onlyHigh().from("0").c => on.c;
@@ -23,14 +22,15 @@ public class Toggler{
     off => activeRep.c;
 
     activeRep => inSwitcher.to(P_Gate).c;
-    activeRep => outBlocker.to(P_Gate).c;
+    activeRep => out.c;
 
-    in => outBlocker.c => out.c;
-    outBlocker => out.fromTo(recv(P_Gate), P_Active).c;
     if(initiallyOn){
       samp =>  now;
       in.doHandle(P_Toggle, IntRef.make(0));
     }
+
+    out => mk(Printer, "Togg Active").c;
+
     return Wrapper.make(in, out);
   }
 
