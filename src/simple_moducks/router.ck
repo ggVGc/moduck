@@ -27,9 +27,11 @@ public class Router extends Moduck{
   Shared shared;
 
   fun void onValueChange(string tag, int old, int newVal){
-    send(""+old, null);
-    if(shared.lastVal != null && getVal("outOnChange")){
-      send(""+newVal, shared.lastVal);
+    if(shared.lastVal != null){
+      send(""+old, null);
+      if(getVal("outOnChange")){
+        send(""+newVal, shared.lastVal);
+      }
     }
   }
 

@@ -5,22 +5,23 @@ include(funcs.m4)
 public class Toggler{
   maker(Moduck, int initiallyOn){
     def(in, mk(Repeater, [P_Trigger, P_Toggle]));
-    def(toggleIn, in => mk(Repeater).from(P_Toggle).c);
-    def(inSwitcher, mk(Switcher, false));
-    def(on, mk(TrigValue, 0));
-    def(off, mk(TrigValue, 0) => mk(Inverter, 0).c);
     def(out, mk(Repeater));
-    def(activeRep, mk(Repeater));
+    def(inSwitcher, mk(Switcher, false));
 
-    toggleIn => inSwitcher.c;
-    inSwitcher => MBUtil.onlyHigh().from("0").c => on.c;
-    inSwitcher => MBUtil.onlyHigh().from("1").c => off.c;
+    in => inSwitcher.from(P_Toggle).c;
 
-    on => activeRep.c;
-    off => activeRep.c;
+    inSwitcher
+      => MBUtil.onlyHigh().from("0").c
+      => mk(TrigValue, 0).c
+      => out.c;
 
-    activeRep => inSwitcher.to(P_Gate).c;
-    activeRep => out.c;
+    inSwitcher
+      => MBUtil.onlyHigh().from("1").c
+      => mk(TrigValue, 0).c
+      => mk(Inverter, 0).c
+      => out.c;
+
+    out => inSwitcher.to(P_Gate).c;
 
     if(initiallyOn){
       samp =>  now;
