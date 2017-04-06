@@ -19,12 +19,14 @@ fun ModuckP makeRecBufs(int count){
       ,mk(Buffer)
   ]));
 
-  def(root, mk(Repeater, Util.concatStrings([rit.getSourceTags(), [P_GoTo, P_Gate, "rec"]])));
+  def(root, mk(Repeater, Util.concatStrings(
+      [rit.getSourceTags(), [P_GoTo, P_Gate, "rec"]])));
 
   root
-    .b(recBlocker.fromTo("rec", P_Gate))
-    .b(recBlocker.fromTo(P_Gate, P_Trigger))
-    .b(rit
+    .b(recBlocker
+      .fromTo("rec", P_Gate)
+      .fromTo(P_Gate, P_Trigger)
+    ).b(rit
       .listen(P_GoTo)
       .listen(rit.getSourceTags())
       .fromTo(P_Trigger, P_Clock)
@@ -35,13 +37,15 @@ fun ModuckP makeRecBufs(int count){
   for(0=>int i;i<count;++i){
     outTags << "active_"+i;
   }
-  def(out, mk(Repeater, outTags));
-  root
-    => frm(P_Gate).to(out, P_Trigger).c;
 
+  def(out, mk(Repeater, outTags));
+
+  root => frm(P_Gate).to(out, P_Trigger).c;
   rit => out.c;
 
   for(0=>int i;i<count;++i){
+    // Send out any low signals,
+    // to prevent hanging notes when disabling buffers
     rit
       => frm(recv(""+i)).c
       => MBUtil.onlyLow().c
