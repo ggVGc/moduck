@@ -170,6 +170,20 @@ oxygen => mk(Printer, "oxygen note").from("note").c;
 
 oxygen => keysIn.from("note").c;
 
+setupOutputSelection();
+setupActiveBufsIndicators();
+
+launchpad
+  => mk(Bigger, 0).from("cc111").c
+  => recToggle.c ;
+
+mkIndicator(bufs[0], recv("rec"), 111, true);
+
+for(0=>int i;i<ROW_COUNT;++i){
+  makeOutsUIRow(i);
+}
+
+
 
 fun void setupOutputSelection(){
   for(0=>int outInd;outInd<outs.size();++outInd){
@@ -191,15 +205,17 @@ fun void setupOutputSelection(){
   }
 }
 
-setupOutputSelection();
 
-for(0=>int rowInd;rowInd<ROW_COUNT;++rowInd){
-  for(0=>int patternInd;patternInd<SEQ_COUNT;++patternInd){
-    bufs[rowInd]
-      => mk(TrigValue, rowInd*16+patternInd).from("active_"+patternInd).c
-      => mk(NoteOut, launchpadDeviceOut, 0, false).c;
+fun void setupActiveBufsIndicators(){
+  for(0=>int rowInd;rowInd<ROW_COUNT;++rowInd){
+    for(0=>int bufId;bufId<SEQ_COUNT;++bufId){
+      bufs[rowInd]
+        => mk(TrigValue, rowInd*16+bufId).from("active_"+bufId).c
+        => mk(NoteOut, launchpadDeviceOut, 0, false).c;
+    }
   }
 }
+
 
 fun void makeOutsUIRow(int rowId){
   for(0=>int i;i<SEQ_COUNT;++i){
@@ -214,17 +230,6 @@ fun void makeOutsUIRow(int rowId){
     mkIndicator(outs[rowId],"outActive"+outputId,rowId*16+4+outputId, false);
   }
 }
-
-launchpad
-  => mk(Bigger, 0).from("cc111").c
-  => recToggle.c
-;
-mkIndicator(bufs[0], recv("rec"), 111, true);
-
-for(0=>int i;i<ROW_COUNT;++i){
-  makeOutsUIRow(i);
-}
-
 
 fun ModuckP mkIndicator(ModuckP src, string tag,int noteNum, int isCC){
   def(indicator, mk(TrigValue, noteNum) => mk(NoteOut, launchpadDeviceOut, 0, false).set("isCC", isCC).set("velocity", 100).c);
