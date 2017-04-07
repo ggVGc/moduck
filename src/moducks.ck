@@ -22,10 +22,11 @@ Machine.add("simple_moducks/offset.ck");
 Machine.add("simple_moducks/blackhole.ck");
 Machine.add("simple_moducks/range_mapper.ck");
 Machine.add("simple_moducks/multiply.ck");
+Machine.add("simple_moducks/add.ck");
 Machine.add("simple_moducks/bigger.ck");
 Machine.add("simple_moducks/pulse_gen.ck");
+Machine.add("simple_moducks/counter.ck");
 /* Machine.add("simple_moducks/trigger.ck"); */
 /* Machine.add("simple_moducks/clamper.ck"); */
-/* Machine.add("simple_moducks/add.ck"); */
 /* Machine.add("simple_moducks/persistent_base.ck"); */
 /* Machine.add("simple_moducks/persistent.ck"); */

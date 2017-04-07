@@ -133,6 +133,7 @@ genHandler(ClearAllHandler, P_ClearAll,
     if(null != v){
       shared.entries.size(0);
       parent.send("hasData", null);
+      parent.send(P_Trigger, null);
     }
   },
   Shared shared;

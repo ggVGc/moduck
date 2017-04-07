@@ -3,7 +3,7 @@ include(macros.m4)
 
 class RecBuf{
   maker0(Moduck){
-    def(in, mk(Repeater, [P_Clock, P_Set, P_GoTo, P_ClearAll, P_Clear, "toggleRec"]));
+    def(in, mk(Repeater, [P_Clock, P_Set, P_ClearAll, P_Clear, "toggleRec", "overdubToggle"]));
     def(out, mk(Repeater, [P_Trigger, "recording", "hasData"]));
 
     def(buf, mk(Buffer));
@@ -11,32 +11,79 @@ class RecBuf{
     def(recBlocker, mk(Blocker));
     def(recToggler, mk(Toggler, false));
     def(recStopDiv, mk(PulseDiv, Bar));
+    def(counter, mk(Counter));
+    def(restartDiv, mk(PulseDiv, Bar));
 
-    def(restartBuf, mk(Value, 0) => 
-        mk(Printer, "restarting buf").c
+    def(onBeginRec, recToggler => MBUtil.onlyHigh().c)
+    def(onEndRec, recToggler => MBUtil.onlyLow().c => mk(Inverter).c);
+
+    def(restartBuf, mk(Value, 0)
+        => mk(Printer, "restarting buf").c
         => buf.to(P_GoTo).c);
 
-    in => buf.listen([P_Clock, P_GoTo, P_Clear, P_ClearAll]).c;
+    in
+      => frm(P_Clock).c
+      => restartDiv.ifNot(out, "recording").c
+      => restartBuf.c;
 
+    counter => mk(Printer, "count").from("count").c;
+
+    in => buf.listen([P_Clock, P_Clear, P_ClearAll]).c;
+
+    buf 
+      => frm(recv(P_Clock)).c
+      => mk(PulseDiv, Bar)
+          .hook(recBlocker.fromTo(recv(P_Gate), P_Reset))
+          .iff(out, "recording").c
+      => counter.c
+    ;
+
+    // Queue a rec toggle
     in
       => frm("toggleRec").c
       => recWaiter.to(P_Set).c;
 
-    (recToggler => MBUtil.onlyHigh().c)
-      .b(recStopDiv.to(P_Reset))
-      .b(restartBuf.ifNot(out, "hasData"))
-    ;
 
+    // Trigger rec waiter from input when not recording
     in
       => frm(P_Set).c
       => recWaiter.ifNot(out, "recording").c;
 
+    // Trigger rec toggle from Clock, every recStopDiv division
+    // when not recording
     in
       => frm(P_Clock).c
       => recStopDiv.iff(out, "recording").c
       => recWaiter.c;
 
+    // Trigger rec toggle from waiter
     recWaiter => recToggler.to(P_Toggle).c;
+
+    def(divisorVal, mk(Value, 0));
+    counter
+      => mk(Bigger, 0).from("count").c
+      => mk(Add, -1).c
+      => mk(Mul, Bar).c
+      => divisorVal.to(P_Set).c;
+
+    onEndRec
+      .b(divisorVal
+          => mk(Printer, "New Divisor").c
+          => restartDiv.to("divisor").c
+      )
+      .b(
+          mk(Printer, "On End Rec")
+          => mk(Delay, samp).c => restartDiv.to(P_Reset).c
+      )
+    ;
+    
+    onBeginRec
+      .b(mk(Printer, "Begin Rec"))
+      .b(recStopDiv.to(P_Reset))
+      .b(counter.to(P_Reset))
+      .b(restartBuf.ifNot(out, "hasData"))
+      .b(recBlocker.to(P_Gate))
+    ;
 
     recToggler
       => recBlocker.to(P_Gate).c
@@ -81,7 +128,6 @@ launchpad => mk(Printer, "did").from("cc104").c;
 launchpad => frm("note0").to(recbu, P_ClearAll).c;
 launchpad => frm("note1").to(recbu, P_Clear).c;
 launchpad => frm("note16").to(recbu, "toggleRec").c;
-launchpad => frm("note17").c => mk(Value, 0).c => recbu.to(P_GoTo).c;
 
 
 Runner.masterClock => recbu.to(P_Clock).c;
@@ -110,6 +156,12 @@ recbu
   => mk(NoteOut, launchpadDeviceOut, 0, false).c
 ;
 
+MidiOut circuitDeviceOut;
+<<<"Opening circuit out">>>;
+circuitDeviceOut.open(MIDI_OUT_CIRCUIT);
+def(circuit, mk(NoteOut, circuitDeviceOut, 0, false));
+
+recbu => circuit.c;
 
 
 
