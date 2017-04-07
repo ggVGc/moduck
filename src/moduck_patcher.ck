@@ -175,6 +175,20 @@ public class ModuckP extends Moduck{
     return ModuckP.make(Patch.propagate(this, tag));
   }
 
+  fun ModuckP ifNot(Moduck m, string tag){
+    return ModuckP.make(Blocker.make()).hook(
+      (m => ModuckP.make(Inverter.make()).from(tag).c).to(P_Gate)
+    )
+    => this.c;
+  }
+
+  fun ModuckP iff(Moduck m, string tag){
+    return ModuckP.make(Blocker.make()).hook(
+      (m => ModuckP.make(Repeater.make()).from(tag).c).to(P_Gate)
+    )
+    => this.c;
+  }
+
   fun static ModuckP make(Moduck m){
     ModuckP ret;
     m._handlers @=> ret._handlers;
@@ -194,6 +208,7 @@ public class ModuckP extends Moduck{
     }
     return ret;
   }
+
 
   /*
     fun static Connector From(string tag){

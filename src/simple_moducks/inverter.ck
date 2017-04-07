@@ -21,4 +21,8 @@ public class Inverter extends Moduck{
     ret.addVal("value", v);
     return ret;
   }
+
+  fun static Inverter make(){
+    return make(0);
+  }
 }

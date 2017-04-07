@@ -17,9 +17,11 @@ Machine.add("types/int_ref_fun.ck");
 Machine.add("simple_moducks/delay.ck");
 Machine.add("simple_moducks/repeater.ck");
 Machine.add("simple_moducks/wrapper.ck");
-
 Machine.add("types/chain_data.ck");
 Machine.add("patch.ck");
+Machine.add("simple_moducks/inverter.ck");
+Machine.add("simple_moducks/blocker.ck");
+
 Machine.add("moduck_patcher.ck");
 Machine.add("moducks.ck");
 samp => now;
