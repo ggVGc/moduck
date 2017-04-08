@@ -122,26 +122,30 @@ class Conditional{
     return this;
   }
 
-  fun ModuckP _setThen(ModuckP rep){
+  fun void _setThen(Moduck in, ModuckP out){
     if(thenCon != null){
-      return rep.b(thenCon.when(condM.asModuck(), condTag).asModuck());
+      (in => thenCon.when(condM.asModuck(), condTag).c).asModuck() => out.c;
     }else{
-      return rep.b(thenM.when(condM.asModuck(), condTag).asModuck());
+      (in => thenM.when(condM.asModuck(), condTag).c).asModuck() => out.c;
     }
   }
 
 
   fun ModuckP els(ModuckP elseM){
-    ModuckP.make(Repeater.make()) @=> ModuckP ret;
-    _setThen(ret);
-    return ret.b(elseM.whenNot(condM.asModuck(), condTag).asModuck());
+    Repeater.make() @=> Moduck in;
+    ModuckP.make(Repeater.make()) @=> ModuckP out;
+    _setThen(in, out);
+    (in => elseM.whenNot(condM.asModuck(), condTag).c).asModuck() => out.c;
+    return ModuckP.make(Wrapper.make(in, out.asModuck()));
   }
 
 
   fun ModuckP els(Connector elseCon){
-    ModuckP.make(Repeater.make()) @=> ModuckP ret;
-    _setThen(ret);
-    return ret.b(elseCon.whenNot(condM.asModuck(), condTag).asModuck());
+    Repeater.make() @=> Moduck in;
+    ModuckP.make(Repeater.make()) @=> ModuckP out;
+    _setThen(in, out);
+    (in => elseCon.whenNot(condM.asModuck(), condTag).c).asModuck() => out.c;
+    return ModuckP.make(Wrapper.make(in, out.asModuck()));
   }
 
 

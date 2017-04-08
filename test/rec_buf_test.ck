@@ -40,8 +40,16 @@ fun ModuckP red(){
   return mk(TrigValue, 70);
 }
 
+fun ModuckP red2(){
+  return mk(TrigValue, 79);
+}
+
 fun ModuckP green(){
-  return mk(TrigValue, 100);
+  return mk(TrigValue, 80);
+}
+
+fun ModuckP green2(){
+  return mk(TrigValue, 108);
 }
 
 fun ModuckP yellow(){
@@ -49,7 +57,7 @@ fun ModuckP yellow(){
 }
 
 
-for(0=>int i;i<4;++i){
+for(0=>int i;i<8;++i){
   def(buf, mk(RecBuf, Bar));
   def(ui, recBufUI(buf));
   uis << ui;
@@ -61,11 +69,18 @@ for(0=>int i;i<4;++i){
   buf => circuit.to("note").c;
 
   def(prio, mk(Prio));
-  prio => lpOut.to("note"+(16+i)).c;
+  prio => lpOut.to("note"+(16+i)).c; 
+
+
+  def(trigCol,
+    iff(buf, P_Recording).then(red2()).els(green2())
+  );
+
 
   buf
     .b("hasData", green() => prio.to(0).c)
     .b(P_Recording, red() => prio.to(1).c)
+    .b(P_Trigger, trigCol => prio.to(2).c)
   ;
 }
 
