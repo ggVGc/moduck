@@ -101,12 +101,63 @@ class ToConnector{
 }
 
 
+class Conditional{
+  ModuckP @ condM;
+  string condTag;
+  ModuckP @ thenM;
+  Connector @ thenCon;
+
+  fun Conditional then(ModuckP m){
+    m @=> thenM;
+    return this;
+  }
+  fun Conditional then(Connector con){
+    con @=> thenCon;
+    return this;
+  }
+
+  fun ModuckP _setThen(ModuckP rep){
+    if(thenCon != null){
+      return rep.b(thenCon.when(condM.asModuck(), condTag).asModuck());
+    }else{
+      return rep.b(thenM.when(condM.asModuck(), condTag).asModuck());
+    }
+  }
+
+
+  fun ModuckP els(ModuckP elseM){
+    ModuckP.make(Repeater.make()) @=> ModuckP ret;
+    _setThen(ret);
+    return ret.b(elseM.whenNot(condM.asModuck(), condTag).asModuck());
+  }
+
+
+  fun ModuckP els(Connector elseCon){
+    ModuckP.make(Repeater.make()) @=> ModuckP ret;
+    _setThen(ret);
+    return ret.b(elseCon.whenNot(condM.asModuck(), condTag).asModuck());
+  }
+
+
+  fun static Conditional make(ModuckP cond, string tag){
+    Conditional ret;
+    cond @=> ret.condM;
+    tag => ret.condTag;
+    return ret;
+  }
+}
+
+
 public class ModuckP extends Moduck{
 
   fun static ToConnector _from(string tag){
     ToConnector ret;
     tag @=> ret.srcTag;
     return ret;
+  }
+
+  fun Conditional iff(ModuckP m, string tag){
+    return Conditional.make(m, tag);
   }
 
   fun ModuckP c(Moduck other){

@@ -132,17 +132,18 @@ fun ModuckP recBufUI(ModuckP recBuf){
 
   in => mk(Printer, "clearAllSwitch").from("clearAllSwitch").c;
 
-  (in => frm(P_Trigger).c)
-    .b(recBuf.to(P_ClearAll).when(in, "clearAllSwitch"))
-    .b(recBuf.to("toggleRec").whenNot(in, "clearAllSwitch"))
-  ;
-
   /* 
    (in => frm(P_Trigger).c)
-     .iff(out, "clearAllSwitch", buf.to(P_ClearAll))
-     .els(buf, "toggleRec")
+     .b(recBuf.to(P_ClearAll).when(in, "clearAllSwitch"))
+     .b(recBuf.to("toggleRec").whenNot(in, "clearAllSwitch"))
    ;
    */
+
+  (in => frm(P_Trigger).c)
+    .iff(in,"clearAllSwitch")
+      .then(recBuf.to(P_ClearAll))
+      .els(recBuf.to("toggleRec"))
+  ;
 
 
   return mk(Wrapper, in, out);
