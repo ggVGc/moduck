@@ -42,14 +42,20 @@ class Connector{
     return trigger(P_Default);
   }
 
+  fun Connector from(int v){
+    return from(""+v);
+  }
+
   fun Connector from(string v){
-    // <<<"from, ", v>>>;
     data.srcTags << v;
     return this;
   }
 
+  fun Connector to(int v){
+    return to(""+v);
+  }
+
   fun Connector to(string v){
-    // <<<"to, ", v>>>;
     data.targetTags << v;
     return this;
   }
@@ -172,6 +178,12 @@ public class ModuckP extends Moduck{
     return b(Connector.make(m, [P_Default], [P_Default]));
   }
 
+
+  fun ModuckP b(string fromTag, ModuckP m){
+    return b(m.from(fromTag));
+  }
+
+
   fun ModuckP b(Connector con){
     con.c(this);
     return this;
@@ -195,11 +207,18 @@ public class ModuckP extends Moduck{
     return ModuckP.make(Patch.connectMulti(this, datas));
   }
 
+  fun Connector from(int tag){
+    return from(""+tag);
+  }
 
   fun Connector from(string tag){
     return Connector.make(this, [tag], null);
   }
 
+  
+  fun Connector to(int tag){
+    return to(""+tag);
+  }
 
   fun Connector to(string tag){
     return Connector.make(this, null, [tag]);

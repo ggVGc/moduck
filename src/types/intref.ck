@@ -1,6 +1,6 @@
 
 public class IntRef{
-  int i;
+  0 => int i;
 
   fun static IntRef make(int v){
     IntRef i;

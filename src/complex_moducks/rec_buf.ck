@@ -4,7 +4,7 @@ include(song_macros.m4)
 public class RecBuf{
   maker(Moduck, int quantization){
     def(in, mk(Repeater, [P_Clock, P_Set, P_ClearAll, P_Clear, "toggleRec", "overdubToggle"]));
-    def(out, mk(Repeater, [P_Trigger, "recording", "hasData"]));
+    def(out, mk(Repeater, [P_Trigger, P_Recording, "hasData"]));
 
     def(buf, mk(Buffer));
     def(recWaiter, mk(OnceTrigger));
@@ -22,7 +22,7 @@ public class RecBuf{
 
     in
       => frm(P_Clock).c
-      => restartDiv.whenNot(out, "recording").c
+      => restartDiv.whenNot(out, P_Recording).c
       => restartBuf.c;
 
 
@@ -32,7 +32,7 @@ public class RecBuf{
       => frm(recv(P_Clock)).c
       => mk(PulseDiv, quantization)
           .hook(recBlocker.fromTo(recv(P_Gate), P_Reset))
-          .when(out, "recording").c
+          .when(out, P_Recording).c
       => counter.c
     ;
 
@@ -45,13 +45,13 @@ public class RecBuf{
     // Trigger rec waiter from input when not recording
     in
       => frm(P_Set).c
-      => recWaiter.whenNot(out, "recording").c;
+      => recWaiter.whenNot(out, P_Recording).c;
 
     // Trigger rec toggle from Clock, every recStopDiv division
     // when not recording
     in
       => frm(P_Clock).c
-      => recStopDiv.when(out, "recording").c
+      => recStopDiv.when(out, P_Recording).c
       => recWaiter.c;
 
     // Trigger rec toggle from waiter
@@ -88,7 +88,7 @@ public class RecBuf{
 
     recBlocker
       => frm(recv(P_Gate)).c
-      => out.to("recording").c
+      => out.to(P_Recording).c
     ;
 
 
@@ -96,7 +96,7 @@ public class RecBuf{
     buf => out.listen(P_Trigger).c;
 
     samp => now;
-    out.doHandle("recording", null);
+    out.doHandle( P_Recording, null);
     out.doHandle("hasData",null);
 
     return mk(Wrapper, in, out);
