@@ -1,6 +1,5 @@
 
 include(macros.m4)
-include(song_macros.m4)
 
 
 class Shared{

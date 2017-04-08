@@ -156,7 +156,7 @@ public class ModuckP extends Moduck{
     return ret;
   }
 
-  fun Conditional iff(ModuckP m, string tag){
+  fun static Conditional _iff(ModuckP m, string tag){
     return Conditional.make(m, tag);
   }
 
