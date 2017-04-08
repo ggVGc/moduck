@@ -151,46 +151,47 @@ fun ModuckP recBufUI(ModuckP recBuf){
 }
 
 
-def(recbu, mk(RecBuf));
-def(ui, recBufUI(recbu));
-
-launchpad => frm("note0").to(ui, "clearAllSwitch").c;
-launchpad => frm("note16").to(ui, P_Trigger).c;
-launchpad => frm("note1").to(recbu, P_Clear).c;
+MidiOut circuitDeviceOut;
+<<<"Opening circuit out">>>;
+circuitDeviceOut.open(MIDI_OUT_CIRCUIT);
+def(circuit, mk(NoteOut, circuitDeviceOut, 0, false));
 
 
-Runner.masterClock => recbu.to(P_Clock).c;
+ModuckP bufs[];
+ModuckP uis[];
 
-recbu => mk(Printer, "Out").c;
-
-/* oxygen => mk(Printer, "oxygen").c; */
-oxygen => frm("note").to(recbu, P_Set).c;
+for(0=>int i;i<4;++i){
+  def(buf, mk(RecBuf));
+  def(ui, recBufUI(buf));
+  uis << ui;
+  bufs << buf;
+  launchpad => frm("note0").to(ui, "clearAllSwitch").c;
+  launchpad => frm("note"+(16+i)).to(ui, P_Trigger).c;
+  Runner.masterClock => buf.to(P_Clock).c;
+  oxygen => frm("note").to(buf, P_Set).c;
+  buf => circuit.c;
+}
 
 /// INDICATORS
 
 MidiOut launchpadDeviceOut;
 launchpadDeviceOut.open(MIDI_OUT_LAUNCHPAD);
 
-recbu
-  => frm("hasData").c
-  => mk(TrigValue, 0).c
-  => mk(NoteOut, launchpadDeviceOut, 0, false).c
-;
-
-
-
-recbu
-  => frm("recording").c
-  => mk(TrigValue, 16).c
-  => mk(NoteOut, launchpadDeviceOut, 0, false).c
-;
-
-MidiOut circuitDeviceOut;
-<<<"Opening circuit out">>>;
-circuitDeviceOut.open(MIDI_OUT_CIRCUIT);
-def(circuit, mk(NoteOut, circuitDeviceOut, 0, false));
-
-recbu => circuit.c;
+/* 
+ recbu
+   => frm("hasData").c
+   => mk(TrigValue, 0).c
+   => mk(NoteOut, launchpadDeviceOut, 0, false).c
+ ;
+ 
+ 
+ 
+ recbu
+   => frm("recording").c
+   => mk(TrigValue, 16).c
+   => mk(NoteOut, launchpadDeviceOut, 0, false).c
+ ;
+ */
 
 
 
