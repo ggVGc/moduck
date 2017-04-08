@@ -157,8 +157,8 @@ circuitDeviceOut.open(MIDI_OUT_CIRCUIT);
 def(circuit, mk(NoteOut, circuitDeviceOut, 0, false));
 
 
-ModuckP bufs[];
-ModuckP uis[];
+ModuckP bufs[0];
+ModuckP uis[0];
 
 for(0=>int i;i<4;++i){
   def(buf, mk(RecBuf));
