@@ -72,6 +72,14 @@ class Connector{
     return this;
   }
 
+  fun ModuckP when(Moduck m, string tag){
+    return c(ModuckP.make(Repeater.make()).when(m, tag).asModuck());
+  } 
+
+  fun ModuckP whenNot(Moduck m, string tag){
+    return c(ModuckP.make(Repeater.make()).whenNot(m, tag).asModuck());
+  } 
+
   fun static Connector make(Moduck m, string fromTags[], string dstTags[]){
     Connector ret;
     ChainData.make(fromTags, m, dstTags) @=> ret.data;
@@ -175,14 +183,16 @@ public class ModuckP extends Moduck{
     return ModuckP.make(Patch.propagate(this, tag));
   }
 
-  fun ModuckP ifNot(Moduck m, string tag){
-    return ModuckP.make(Blocker.make()).hook(
+  fun ModuckP whenNot(Moduck m, string tag){
+    ModuckP.make(Blocker.make()) @=> ModuckP blk;
+    blk.doHandle(P_Gate, IntRef.yes());
+    return blk.hook(
       (m => ModuckP.make(Inverter.make()).from(tag).c).to(P_Gate)
     )
     => this.c;
   }
 
-  fun ModuckP iff(Moduck m, string tag){
+  fun ModuckP when(Moduck m, string tag){
     return ModuckP.make(Blocker.make()).hook(
       (m => ModuckP.make(Repeater.make()).from(tag).c).to(P_Gate)
     )

@@ -23,7 +23,7 @@ class RecBuf{
 
     in
       => frm(P_Clock).c
-      => restartDiv.ifNot(out, "recording").c
+      => restartDiv.whenNot(out, "recording").c
       => restartBuf.c;
 
     counter => mk(Printer, "count").from("count").c;
@@ -34,7 +34,7 @@ class RecBuf{
       => frm(recv(P_Clock)).c
       => mk(PulseDiv, Bar)
           .hook(recBlocker.fromTo(recv(P_Gate), P_Reset))
-          .iff(out, "recording").c
+          .when(out, "recording").c
       => counter.c
     ;
 
@@ -47,13 +47,13 @@ class RecBuf{
     // Trigger rec waiter from input when not recording
     in
       => frm(P_Set).c
-      => recWaiter.ifNot(out, "recording").c;
+      => recWaiter.whenNot(out, "recording").c;
 
     // Trigger rec toggle from Clock, every recStopDiv division
     // when not recording
     in
       => frm(P_Clock).c
-      => recStopDiv.iff(out, "recording").c
+      => recStopDiv.when(out, "recording").c
       => recWaiter.c;
 
     // Trigger rec toggle from waiter
@@ -81,7 +81,7 @@ class RecBuf{
       .b(mk(Printer, "Begin Rec"))
       .b(recStopDiv.to(P_Reset))
       .b(counter.to(P_Reset))
-      .b(restartBuf.ifNot(out, "hasData"))
+      .b(restartBuf.whenNot(out, "hasData"))
       .b(recBlocker.to(P_Gate))
     ;
 
@@ -117,17 +117,44 @@ class RecBuf{
 def(launchpad, mk(MidInp, MIDI_IN_LAUNCHPAD, 0))
 def(oxygen, mk(MidInp, MIDI_IN_OXYGEN, 0));
 
-def(recbu, mk(RecBuf));
 
 /* recbu => frm("hasData").to(mk(Printer, "hasData")).c; */
 
 
 launchpad => mk(Printer, "did").from("cc104").c;
 
+fun ModuckP recBufUI(ModuckP recBuf){
+  def(in, mk(Repeater, [
+    P_Trigger
+    ,"clearAllSwitch"
+  ]));
+  def(out, mk(Repeater));
 
-launchpad => frm("note0").to(recbu, P_ClearAll).c;
+  in => mk(Printer, "clearAllSwitch").from("clearAllSwitch").c;
+
+  (in => frm(P_Trigger).c)
+    .b(recBuf.to(P_ClearAll).when(in, "clearAllSwitch"))
+    .b(recBuf.to("toggleRec").whenNot(in, "clearAllSwitch"))
+  ;
+
+  /* 
+   (in => frm(P_Trigger).c)
+     .iff(out, "clearAllSwitch", buf.to(P_ClearAll))
+     .els(buf, "toggleRec")
+   ;
+   */
+
+
+  return mk(Wrapper, in, out);
+}
+
+
+def(recbu, mk(RecBuf));
+def(ui, recBufUI(recbu));
+
+launchpad => frm("note0").to(ui, "clearAllSwitch").c;
+launchpad => frm("note16").to(ui, P_Trigger).c;
 launchpad => frm("note1").to(recbu, P_Clear).c;
-launchpad => frm("note16").to(recbu, "toggleRec").c;
 
 
 Runner.masterClock => recbu.to(P_Clock).c;
