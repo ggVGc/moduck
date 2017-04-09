@@ -8,7 +8,6 @@ public class RecBuf{
       ,P_Set
       ,P_ClearAll
       ,P_Clear
-      ,toggl(P_Rec)
       ,toggl(P_Play)
     ]));
 
@@ -29,6 +28,7 @@ public class RecBuf{
     def(playBlocker, mk(Blocker));
     def(playToggler, mk(Toggler, false));
     def(clock, in => frm(P_Clock).c);
+    def(toggleRec, mk(Repeater));
 
     def(restartBuf, mk(Value, 0) => buf.to(P_GoTo).c);
 
@@ -36,10 +36,19 @@ public class RecBuf{
 
     in
       => frm(toggl(P_Play)).c
-      => mk(Repeater).when(out, "hasData").c
-      => iff(out, P_Recording)
-          .then(in.to(toggl(P_Rec)))
-          .els(playToggler.to(P_Toggle)).c;
+      => iff(out, "hasData")
+          .then(
+            iff(out, P_Recording)
+              .then(
+                toggleRec
+              )
+              .els(
+                playToggler.to(P_Toggle)
+              )
+          )
+          .els(
+            toggleRec
+          ).c;
 
 
     playToggler
@@ -74,7 +83,7 @@ public class RecBuf{
     ;
 
     // Queue a rec toggle
-    (in => frm(toggl(P_Rec)).c)
+    toggleRec
       .b(recWaiter.to(P_Set))
       .b(playToggler.to(P_Toggle).whenNot(out, P_Playing));
 

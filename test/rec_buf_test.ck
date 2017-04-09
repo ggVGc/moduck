@@ -11,7 +11,6 @@ fun ModuckP recBufUI(ModuckP recBuf){
   def(in, mk(Repeater, [
     P_Trigger
     ,P_ClearAll
-    ,P_Rec
   ]));
   def(out, mk(Repeater));
 
@@ -19,11 +18,10 @@ fun ModuckP recBufUI(ModuckP recBuf){
     => frm(P_Trigger).c
       => iff(in, P_ClearAll).then(
           recBuf.to(P_ClearAll))
-      .els(iff(in, P_Rec).then(
-        recBuf.to(toggl(P_Rec)))
       .els(
-        recBuf.to(toggl(P_Play))
-      )).c;
+          recBuf.to(toggl(P_Play)
+        )
+    ).c;
 
   return mk(Wrapper, in, out);
 }
@@ -78,7 +76,6 @@ for(0=>int i;i<8;++i){
 
   launchpad
     .b(frm("cc104").to(mk(Bigger, 0) => ui.to(P_ClearAll).c))
-    .b(frm("cc105").to(mk(Bigger, 0) => ui.to(P_Rec).c))
     .b(frm("note"+i).to(ui, P_Trigger));
 
   oxygen => frm("note").to(buf, P_Set).c;
