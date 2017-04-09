@@ -1,10 +1,11 @@
 include(song_macros.m4)
 include(_all_instruments.m4)
 include(funcs.m4)
+include(parts/rec_buf_ui.ck)
 
 define(SEQ_COUNT, 1);
 define(OUT_DEVICE_COUNT, 4);
-define(ROW_COUNT, 2);
+define(ROW_COUNT, 5);
 
 
 Runner.setPlaying(1);
@@ -48,7 +49,6 @@ def(keysIn, mk(Repeater));
 ModuckP outs[0];
 ModuckP bufs[0];
 def(inRouter, mk(Router, 0));
-def(clearGate, mk(Repeater));
 
 keysIn => inRouter.c;
 
@@ -109,28 +109,18 @@ for(0=>int outInd;outInd<outs.size();++outInd){
 
 oxygen => keysIn.from("note").c;
 
-launchpad
-  => frm("cc104").c => mk(Bigger, 0).c
-  => clearGate.c;
-
 setupOutputSelection();
-
 
 
 for(0=>int rowId;rowId<ROW_COUNT;++rowId){
   makeOutsUIRow(rowId);
 
+  def(ui, recBufUI(bufs[rowId]));
   launchpad
-    => frm("note"+(16*rowId)).c
-    => iff(clearGate, P_Trigger).then(
-          bufs[rowId].to(P_ClearAll))
-      .els(
-          bufs[rowId].to(toggl(P_Play)
-        )
-    ).c;
+    .b(frm("cc104").to(mk(Bigger, 0) => ui.to(P_ClearAll).c))
+    .b(frm("note"+(rowId*16)).to(ui, P_Trigger));
 
-  /* bufs[rowId] */
-  /*   => frm(P_Recording) */
+  ui => lpOut.to("note"+(16*rowId)).c;
 }
 
 
