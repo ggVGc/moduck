@@ -134,9 +134,9 @@ public class MUtil{
     passThrough(src, tags) @=> ModuckP ret;
     for(0=>int tagInd;tagInd<tags.size();++tagInd){
       tags[tagInd] @=> string tag;
-      ModuckP.make(Toggler.make(initiallyOn)) @=> ModuckP toggl;
-      ret => toggl.fromTo(recv(tag), P_Toggle).c;
-      toggl => src.to(tag).c;
+      ModuckP.make(Toggler.make(initiallyOn)) @=> ModuckP tog;
+      ret => tog.fromTo(recv(tag), P_Toggle).c;
+      tog => src.to(tag).c;
     }
     return ret;
   }

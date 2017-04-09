@@ -10,6 +10,7 @@ define(P_Gate, "gate")
 define(P_Clear, "clear")
 define(P_ClearAll, "clear_all")
 define(P_Play, "play")
+define(P_Playing, "playing")
 define(P_Rec, "rec")
 define(P_Recording, "recording")
 define(P_Toggle, "toggle")
@@ -19,8 +20,10 @@ define(P_Active, "active")
 define(P_Default, "")
 
 define(pulseRecvPrefix, "received_")
+define(pulseTogglePrefix, "toggle_")
 
 define(recv, (pulseRecvPrefix+$1))
+define(toggl, (pulseTogglePrefix+$1))
 
 fun int isRecvPulse(string str){
   pulseRecvPrefix.length() => int prefLen;

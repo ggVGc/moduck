@@ -112,6 +112,8 @@ class Conditional{
   string condTag;
   ModuckP @ thenM;
   Connector @ thenCon;
+  Moduck @ parent;
+
 
   fun Conditional then(ModuckP m){
     m @=> thenM;
@@ -122,37 +124,36 @@ class Conditional{
     return this;
   }
 
-  fun void _setThen(Moduck in, ModuckP out){
+  fun void _setThen(ModuckP out){
     if(thenCon != null){
-      (in => thenCon.when(condM.asModuck(), condTag).c).asModuck() => out.c;
+      (parent => thenCon.when(condM.asModuck(), condTag).c).asModuck() => out.c;
     }else{
-      (in => thenM.when(condM.asModuck(), condTag).c).asModuck() => out.c;
+      (parent => thenM.when(condM.asModuck(), condTag).c).asModuck() => out.c;
     }
   }
 
 
   fun ModuckP els(ModuckP elseM){
-    Repeater.make() @=> Moduck in;
     ModuckP.make(Repeater.make()) @=> ModuckP out;
-    _setThen(in, out);
-    (in => elseM.whenNot(condM.asModuck(), condTag).c).asModuck() => out.c;
-    return ModuckP.make(Wrapper.make(in, out.asModuck()));
+    _setThen(out);
+    (parent => elseM.whenNot(condM.asModuck(), condTag).c).asModuck() => out.c;
+    return ModuckP.make(Wrapper.make(parent, out.asModuck()));
   }
 
 
   fun ModuckP els(Connector elseCon){
-    Repeater.make() @=> Moduck in;
     ModuckP.make(Repeater.make()) @=> ModuckP out;
-    _setThen(in, out);
-    (in => elseCon.whenNot(condM.asModuck(), condTag).c).asModuck() => out.c;
-    return ModuckP.make(Wrapper.make(in, out.asModuck()));
+    _setThen(out);
+    (parent => elseCon.whenNot(condM.asModuck(), condTag).c).asModuck() => out.c;
+    return ModuckP.make(Wrapper.make(parent, out.asModuck()));
   }
 
 
-  fun static Conditional make(ModuckP cond, string tag){
+  fun static Conditional make(Moduck parent, ModuckP cond, string tag){
     Conditional ret;
     cond @=> ret.condM;
     tag => ret.condTag;
+    parent @=> ret.parent;
     return ret;
   }
 }
@@ -166,8 +167,8 @@ public class ModuckP extends Moduck{
     return ret;
   }
 
-  fun static Conditional _iff(ModuckP m, string tag){
-    return Conditional.make(m, tag);
+  fun Conditional _iff(ModuckP m, string tag){
+    return Conditional.make(this, m, tag);
   }
 
   fun ModuckP c(Moduck other){

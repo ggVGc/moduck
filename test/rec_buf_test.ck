@@ -2,22 +2,28 @@ include(song_macros.m4)
 include(macros.m4)
 include(constants.m4)
 
-def(launchpad, mk(MidInp, MIDI_IN_LAUNCHPAD, 0))
+Runner.setPlaying(1);
+
+def(launchpad, mk(MidInp, MIDI_IN_LAUNCHPAD, 0));
 def(oxygen, mk(MidInp, MIDI_IN_OXYGEN, 0));
 
 fun ModuckP recBufUI(ModuckP recBuf){
   def(in, mk(Repeater, [
     P_Trigger
     ,P_ClearAll
+    ,P_Rec
   ]));
   def(out, mk(Repeater));
 
   in
     => frm(P_Trigger).c
-    => iff(in, P_ClearAll)
-      .then(recBuf.to(P_ClearAll))
-      .els(recBuf.to("toggleRec")).c
-  ;
+    => iff(in, P_ClearAll).then(
+        recBuf.to(P_ClearAll))
+      .els(iff(in, P_Rec).then(
+        recBuf.to(toggl(P_Rec)))
+      .els(
+        recBuf.to(toggl(P_Play))
+      )).c;
 
   return mk(Wrapper, in, out);
 }
@@ -52,6 +58,11 @@ fun ModuckP green2(){
   return mk(TrigValue, 108);
 }
 
+
+fun ModuckP orange(){
+  return mk(TrigValue, 47);
+}
+
 fun ModuckP yellow(){
   return mk(TrigValue, 127);
 }
@@ -62,27 +73,27 @@ for(0=>int i;i<8;++i){
   def(ui, recBufUI(buf));
   uis << ui;
   bufs << buf;
-  launchpad => frm("note0").to(ui, P_ClearAll).c;
-  launchpad => frm("note"+(16+i)).to(ui, P_Trigger).c;
+
   Runner.masterClock => buf.to(P_Clock).c;
+
+  launchpad
+    .b(frm("cc104").to(mk(Bigger, 0) => ui.to(P_ClearAll).c))
+    .b(frm("cc105").to(mk(Bigger, 0) => ui.to(P_Rec).c))
+    .b(frm("note"+i).to(ui, P_Trigger));
+
   oxygen => frm("note").to(buf, P_Set).c;
+
   buf => circuit.to("note").c;
 
-  def(prio, mk(Prio));
-  prio => lpOut.to("note"+(16+i)).c; 
-
-
-  def(trigCol,
-    iff(buf, P_Recording).then(red2()).els(green2())
-  );
-
-
+  // Indicators
+  def(trigOut, mk(Prio) => lpOut.to("note"+i).c);
+  def(trigCol, iff(buf, P_Recording).then(red2()).els(green2()));
   buf
-    .b("hasData", green() => prio.to(0).c)
-    .b(P_Recording, red() => prio.to(1).c)
-    .b(P_Trigger, trigCol => prio.to(2).c)
+    .b("hasData", orange() => trigOut.to(0).c)
+    .b(P_Playing, green() => trigOut.to(1).c)
+    .b(P_Recording, red() => trigOut.to(2).c)
+    .b(P_Trigger, trigCol => trigOut.to(3).c)
   ;
 }
 
-Runner.setPlaying(1);
 Util.runForever();

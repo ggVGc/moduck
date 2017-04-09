@@ -3,8 +3,21 @@ include(song_macros.m4)
 
 public class RecBuf{
   maker(Moduck, int quantization){
-    def(in, mk(Repeater, [P_Clock, P_Set, P_ClearAll, P_Clear, "toggleRec", "overdubToggle"]));
-    def(out, mk(Repeater, [P_Trigger, P_Recording, "hasData"]));
+    def(in, mk(Repeater, [
+      P_Clock
+      ,P_Set
+      ,P_ClearAll
+      ,P_Clear
+      ,toggl(P_Rec)
+      ,toggl(P_Play)
+    ]));
+
+    def(out, mk(Repeater, [
+      P_Trigger
+      ,P_Recording
+      ,P_Playing
+      ,"hasData"
+    ]));
 
     def(buf, mk(Buffer));
     def(recWaiter, mk(OnceTrigger));
@@ -13,20 +26,39 @@ public class RecBuf{
     def(recStopDiv, mk(PulseDiv, quantization));
     def(counter, mk(Counter));
     def(restartDiv, mk(PulseDiv, quantization));
+    def(playBlocker, mk(Blocker));
+    def(playToggler, mk(Toggler, false));
+    def(clock, in => frm(P_Clock).c);
+
+    def(restartBuf, mk(Value, 0) => buf.to(P_GoTo).c);
+
+    playBlocker => out.fromTo(recv(P_Gate), P_Playing).c;
+
+    in
+      => frm(toggl(P_Play)).c
+      => iff(out, P_Recording)
+          .then(in.to(toggl(P_Rec)))
+          .els(playToggler.to(P_Toggle)).c;
+
+
+    playToggler
+      .b(playBlocker.to(P_Gate))
+      .b(frm(recv(P_Toggle)).to(restartBuf))
+      .b(frm(recv(P_Toggle)).to(restartDiv, P_Reset))
+    ;
 
     def(onBeginRec, recToggler => MBUtil.onlyHigh().c)
     def(onEndRec, recToggler => MBUtil.onlyLow().c => mk(Inverter).c);
 
-    def(restartBuf, mk(Value, 0)
-        => buf.to(P_GoTo).c);
 
-    in
-      => frm(P_Clock).c
+
+    clock
       => restartDiv.whenNot(out, P_Recording).c
       => restartBuf.c;
 
 
-    in => buf.listen([P_Clock, P_Clear, P_ClearAll]).c;
+    in => buf.listen([P_Clear, P_ClearAll]).c;
+    clock => buf.to(P_Clock).c;
 
     buf 
       => frm(recv(P_Clock)).c
@@ -37,10 +69,15 @@ public class RecBuf{
     ;
 
     // Queue a rec toggle
-    in
-      => frm("toggleRec").c
-      => recWaiter.to(P_Set).c;
+    (in => frm(toggl(P_Rec)).c)
+      .b(recWaiter.to(P_Set))
+      .b(playToggler.to(P_Toggle).whenNot(out, P_Playing));
 
+
+    out
+      => frm(P_Playing).c
+      => MBUtil.onlyLow().c
+      => out.to(P_Trigger).c;
 
     // Trigger rec waiter from input when not recording
     in
@@ -49,8 +86,7 @@ public class RecBuf{
 
     // Trigger rec toggle from Clock, every recStopDiv division
     // when not recording
-    in
-      => frm(P_Clock).c
+    clock
       => recStopDiv.when(out, P_Recording).c
       => recWaiter.c;
 
@@ -83,7 +119,7 @@ public class RecBuf{
     in
       => frm(P_Set).c
       => mk(Delay, samp).c // Since we enable recording on Set, we need to delay a bit
-      => recBlocker.c
+      => recBlocker.c      // Otherwise we lose the first note
       => buf.to(P_Set).c;
 
     recBlocker
@@ -91,9 +127,10 @@ public class RecBuf{
       => out.to(P_Recording).c
     ;
 
-
     buf => out.listen("hasData").c;
-    buf => out.listen(P_Trigger).c;
+    buf
+      => frm(P_Trigger).to(playBlocker).c
+      => out.c;
 
     samp => now;
     out.doHandle( P_Recording, null);
