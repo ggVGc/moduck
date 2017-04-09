@@ -36,6 +36,7 @@ public class RecBuf{
 
     in
       => frm(toggl(P_Play)).c
+      => mk(Repeater).when(out, "hasData").c
       => iff(out, P_Recording)
           .then(in.to(toggl(P_Rec)))
           .els(playToggler.to(P_Toggle)).c;
@@ -59,6 +60,10 @@ public class RecBuf{
 
     in => buf.listen([P_Clear, P_ClearAll]).c;
     clock => buf.to(P_Clock).c;
+
+    in
+      => frm(P_ClearAll).c
+      => playToggler.to(P_Toggle).when(out, P_Playing).c;
 
     buf 
       => frm(recv(P_Clock)).c
