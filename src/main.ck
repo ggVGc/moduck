@@ -35,5 +35,6 @@ Machine.add("complex_moducks/rec_buf.ck");
 Machine.add("scales.ck");
 Machine.add("moduck_util.ck");
 Machine.add("runner.ck");
+Machine.add("launchpad.ck");
 samp => now;
 Machine.add("_cur_song");

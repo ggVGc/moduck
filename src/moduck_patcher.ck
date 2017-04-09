@@ -161,6 +161,10 @@ class Conditional{
 
 public class ModuckP extends Moduck{
 
+  fun static ToConnector _from(int tag){
+    return _from(""+tag);
+  }
+
   fun static ToConnector _from(string tag){
     ToConnector ret;
     tag @=> ret.srcTag;
