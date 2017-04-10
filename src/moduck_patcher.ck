@@ -208,6 +208,15 @@ public class ModuckP extends Moduck{
     return this;
   }
 
+  fun ModuckP set(IntRef v){
+    return set(P_Default, v);
+  }
+
+  fun ModuckP set(int v){
+    return set(P_Default, v);
+  }
+
+
   fun ModuckP multi(Connector targets[]){
     ChainData datas[targets.size()];
     for(0=>int i; i<targets.size();i++){

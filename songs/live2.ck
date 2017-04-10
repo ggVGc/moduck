@@ -5,7 +5,8 @@ include(parts/rec_buf_ui.ck)
 
 /* define(SEQ_COUNT, 1); */
 define(OUT_DEVICE_COUNT, 4);
-define(ROW_COUNT, 8);
+define(ROW_COUNT, 7);
+define(INPUT_TYPES, 3);
 
 
 Runner.setPlaying(1);
@@ -49,35 +50,50 @@ fun ModuckP makeTogglingOuts(int outCount){
 def(keysIn, mk(Repeater));
 ModuckP outs[0];
 ModuckP bufs[0];
-ModuckP holdToggles[];
-def(inRouter, mk(Router, 0));
+def(setInpType, mk(Repeater));
 
-keysIn => inRouter.c;
+def(inputLaneRouter, mk(Router, 0));
+
+def(noteHoldToggle, mk(Toggler, false));
+def(inputNoteHold, mk(SampleHold, 0::samp).set("forever", true));
+
+keysIn => MBUtil.onlyHigh().c => inputNoteHold.to(P_Set).c;
+keysIn
+  => iff(noteHoldToggle, P_Trigger)
+    .then(inputNoteHold => inputLaneRouter.c)
+    .els(inputLaneRouter).c;
+
 
 for(0=>int i;i<ROW_COUNT;++i){
   10::ms => now; // Keep JACK happy
   def(b, mk(RecBuf, Bar));
   def(bufOut, mk(Repeater));
-  def(noteHolder, mk(Value, null));
+  def(pitchLocker, mk(Value, null));
   def(holdTog, mk(Toggler));
 
   Runner.masterClock => b.to(P_Clock).c;
 
-  inRouter => frm(i).to(b, P_Set).c;
+  def(inpTypeRouter, mk(Router, 0));
+
+  noteHoldToggle => MBUtil.onlyLow().c => inpTypeRouter.c;
+
+  setInpType => inpTypeRouter.to("index").c;
+
+  inputLaneRouter => frm(i).to(inpTypeRouter).c;
+
+  inpTypeRouter
+    .b(frm(0).to(b, P_Set))
+    .b(frm(1).to(pitchLocker, P_Set)).c;
 
   b
-    => iff(noteHolder, recv(P_Set))
-      .then(noteHolder)
+    => iff(pitchLocker, recv(P_Set))
+      .then(pitchLocker)
       .els(mk(Repeater)).c
     => bufOut.c;
 
   b
     => MBUtil.onlyLow().c
     => bufOut.c;
-
-
-  /* samp => now; */
-  /* noteHolder.doHandle(P_Set, IntRef.make(70)); */
 
   def(out, makeTogglingOuts(OUT_DEVICE_COUNT).hook(bufOut.listen(P_Trigger)));
 
@@ -128,12 +144,26 @@ for(0=>int outInd;outInd<outs.size();++outInd){
   ;
 }
 
+
 // MAPPINGS
 
 oxygen => keysIn.from("note").c;
 
-setupOutputSelection();
 
+for(0=>int i;i<INPUT_TYPES;++i){
+  launchpad => frm("cc"+(111-i)).to(mk(Value, i) => setInpType.c).c;
+
+  setInpType
+    => mk(Processor, Eq.make(i)).c
+    => LP.orange().c
+    => lpOut.to("cc"+(111-i)).c;
+}
+
+launchpad => frm("note"+(16*7)).to(noteHoldToggle, P_Toggle).c;
+noteHoldToggle => LP.orange().c =>lpOut.to("note"+(16*7)).c;
+
+
+setupOutputSelection();
 
 for(0=>int rowId;rowId<ROW_COUNT;++rowId){
   makeOutsUIRow(rowId);
@@ -154,14 +184,14 @@ fun void setupOutputSelection(){
     launchpad
       => mk(Bigger,0).from("note"+ind).c
       => mk(TrigValue,outInd).c
-      => inRouter.to("index").c
+      => inputLaneRouter.to("index").c
     ;
 
-    inRouter
+    inputLaneRouter
       => MBUtil.onlyHigh().from(recv("index")).c
       => mk(Processor, Eq.make(outInd)).c
       => mk(TrigValue, outInd).c
-      => LP.green2().c
+      => LP.red().c
       => lpOut.to("note"+ind).c;
   }
 }
@@ -176,7 +206,7 @@ fun void makeOutsUIRow(int rowId){
 
     outs[rowId]
       => frm("outActive"+outputId).c
-      => LP.green2().c
+      => LP.red().c
       => lpOut.to("note"+(rowId*16+4+outputId)).c;
   }
 }
@@ -185,16 +215,18 @@ fun void makeOutsUIRow(int rowId){
 
 // UI SETUP
 
-inRouter.doHandle("index", IntRef.make(0));
 
 
 // Send launchpad reset message
 MidiMsg msg;
 176 => msg.data1;
 launchpadDeviceOut.send(msg);
+
+samp =>  now;
+inputLaneRouter.set("index", 0);
+setInpType.set(0);
+
 Util.runForever();
-
-
 
 
 

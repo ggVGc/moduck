@@ -134,6 +134,20 @@ public class Moduck extends ModuckBase {
     return nonRecvs[0];
   }
 
+
+  fun int doHandle(int v){
+    return doHandle(P_Default, IntRef.make(v));
+  }
+
+  fun int doHandle(IntRef v){
+    return doHandle(P_Default, v);
+  }
+
+
+  fun int doHandle(string tag, int v){
+    return doHandle(tag, IntRef.make(v));
+  }
+
   fun int doHandle(string tag, IntRef v){
     if(tag == P_Default){
       findDefaultInputTag() @=> tag;
