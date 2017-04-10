@@ -82,7 +82,7 @@ for(0=>int i;i<ROW_COUNT;++i){
   def(notesOut, mk(Repeater));
   def(pitchLocker, mk(Value, null));
   def(holdTog, mk(Toggler));
-  def(inpTypeRouter, mk(Router, 0));
+  def(inpTypeRouter, mk(Router, 0, false));
   def(pitchShifter, mk(Offset, 0));
   def(pitchLockBuf, mk(RecBuf, QUANTIZATION));
   def(notesProxy, mk(Repeater));
@@ -208,14 +208,16 @@ for(0=>int rowId;rowId<ROW_COUNT;++rowId){
   def(ui, bufUIs[rowId]);
   launchpad
     .b(frm("cc104").to(mk(Bigger, 0) => ui.to(P_ClearAll).c))
-    .b(frm("note"+(rowId*16)).to(ui, P_Trigger));
+    .b(frm("note"+(rowId*16)).to(ui, P_Trigger))
+    .b(frm("note"+(rowId*16)).to(mk(Value, 0) => setInpType.c));
 
   ui => lpOut.to("note"+(16*rowId)).c;
 
   def(offsetUI, offsetBufUIs[rowId]);
   launchpad
     .b(frm("cc104").to(mk(Bigger, 0) => offsetUI.to(P_ClearAll).c))
-    .b(frm("note"+(rowId*16+1)).to(offsetUI, P_Trigger));
+    .b(frm("note"+(rowId*16+1)).to(offsetUI, P_Trigger))
+    .b(frm("note"+(rowId*16+1)).to(mk(Value, 1) => setInpType.c));
 
   offsetUI => lpOut.to("note"+(16*rowId+1)).c;
 }

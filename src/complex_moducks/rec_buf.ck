@@ -65,10 +65,9 @@ public class RecBuf{
 
 
 
-    (clock => restartDiv.whenNot(out, P_Recording).c)
-      .b(restartBuf)
-      .b(mk(Delay, samp) => buf.to(P_Clock).c) // TODO: Temporary latency compensation hack
-      .b(mk(Delay, samp*2) => buf.to(P_Clock).c);
+    clock
+      => restartDiv.whenNot(out, P_Recording).c
+      => restartBuf.c;
 
 
     in => buf.listen([P_Clear, P_ClearAll]).c;
