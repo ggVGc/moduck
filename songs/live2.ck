@@ -1,7 +1,17 @@
+
+
 include(song_macros.m4)
 include(_all_instruments.m4)
 include(funcs.m4)
 include(parts/rec_buf_ui.ck)
+
+/* 
+ TODO:
+   * Trigger correct input type based on starting buf record.
+ 
+ */
+
+
 
 /* define(SEQ_COUNT, 1); */
 define(OUT_DEVICE_COUNT, 4);
@@ -69,18 +79,20 @@ keysIn
 for(0=>int i;i<ROW_COUNT;++i){
   10::ms => now; // Keep JACK happy
   def(buf, mk(RecBuf, QUANTIZATION));
-  def(bufOut, mk(Repeater));
+  def(notesOut, mk(Repeater));
   def(pitchLocker, mk(Value, null));
   def(holdTog, mk(Toggler));
   def(inpTypeRouter, mk(Router, 0));
   def(pitchShifter, mk(Offset, 0));
   def(pitchLockBuf, mk(RecBuf, QUANTIZATION));
+  def(notesProxy, mk(Repeater));
 
   P(Runner.masterClock)
     .b(buf.to(P_Clock))
     .b(pitchLockBuf.to(P_Clock));
 
   noteHoldToggle => MBUtil.onlyLow().c => inpTypeRouter.c;
+  noteHoldToggle => MBUtil.onlyLow().c => inputLaneRouter.c;
 
   setInpType => inpTypeRouter.to("index").c;
 
@@ -100,22 +112,26 @@ for(0=>int i;i<ROW_COUNT;++i){
    */
   inpTypeRouter
     .b(frm(0).to(buf, P_Set))
+    .b(frm(0).to(MBUtil.onlyHigh() => notesProxy.c))
+    .b(frm(0).to(MBUtil.onlyLow() => notesProxy.whenNot(buf, P_Trigger).c))
     .b(frm(1).to(pitchLocker, P_Set))
     .b(frm(1).to(pitchLockBuf, P_Set))
     .b(frm(2).to(mk(Offset, -60) => pitchShifter.to("offset").c));
 
-  buf
+  buf => notesProxy.c;
+
+  notesProxy
     => iff(pitchLocker, recv(P_Set))
       .then(pitchLocker)
       .els(mk(Repeater)).c
     => pitchShifter.c
-    => bufOut.c;
+    => notesOut.c;
 
-  buf
+  notesProxy
     => MBUtil.onlyLow().c
-    => bufOut.c;
+    => notesOut.c;
 
-  def(out, makeTogglingOuts(OUT_DEVICE_COUNT).hook(bufOut.listen(P_Trigger)));
+  def(out, makeTogglingOuts(OUT_DEVICE_COUNT).hook(notesOut.listen(P_Trigger)));
 
   bufUIs << recBufUI(buf);
   offsetBufUIs << recBufUI(pitchLockBuf);
