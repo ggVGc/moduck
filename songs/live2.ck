@@ -7,6 +7,7 @@ include(parts/rec_buf_ui.ck)
 define(OUT_DEVICE_COUNT, 4);
 define(ROW_COUNT, 7);
 define(INPUT_TYPES, 3);
+define(QUANTIZATION, Bar)
 
 
 Runner.setPlaying(1);
@@ -49,7 +50,8 @@ fun ModuckP makeTogglingOuts(int outCount){
 
 def(keysIn, mk(Repeater));
 ModuckP outs[0];
-ModuckP bufs[0];
+ModuckP bufUIs[0];
+ModuckP offsetBufUIs[0];
 def(setInpType, mk(Repeater));
 
 def(inputLaneRouter, mk(Router, 0));
@@ -66,14 +68,17 @@ keysIn
 
 for(0=>int i;i<ROW_COUNT;++i){
   10::ms => now; // Keep JACK happy
-  def(buf, mk(RecBuf, Bar));
+  def(buf, mk(RecBuf, QUANTIZATION));
   def(bufOut, mk(Repeater));
   def(pitchLocker, mk(Value, null));
   def(holdTog, mk(Toggler));
-
-  Runner.masterClock => buf.to(P_Clock).c;
-
   def(inpTypeRouter, mk(Router, 0));
+  def(pitchShifter, mk(Offset, 0));
+  def(pitchLockBuf, mk(RecBuf, QUANTIZATION));
+
+  P(Runner.masterClock)
+    .b(buf.to(P_Clock))
+    .b(pitchLockBuf.to(P_Clock));
 
   noteHoldToggle => MBUtil.onlyLow().c => inpTypeRouter.c;
 
@@ -81,11 +86,22 @@ for(0=>int i;i<ROW_COUNT;++i){
 
   inputLaneRouter => frm(i).to(inpTypeRouter).c;
 
-  def(pitchShifter, mk(Offset, 0));
+  pitchLockBuf => pitchLocker.to(P_Set).c;
+  /* 
+   pitchLockBuf
+     => frm(recv(toggl(P_Rec))).c
+     => MBUtil.onlyHigh().c
+     => mk(Value, 1).c => inpTypeRouter.c;
 
+   buf
+     => frm(recv(toggl(P_Rec))).c
+     => MBUtil.onlyHigh().c
+     => mk(Value, 0).c => inpTypeRouter.c;
+   */
   inpTypeRouter
     .b(frm(0).to(buf, P_Set))
     .b(frm(1).to(pitchLocker, P_Set))
+    .b(frm(1).to(pitchLockBuf, P_Set))
     .b(frm(2).to(mk(Offset, -60) => pitchShifter.to("offset").c));
 
   buf
@@ -101,7 +117,8 @@ for(0=>int i;i<ROW_COUNT;++i){
 
   def(out, makeTogglingOuts(OUT_DEVICE_COUNT).hook(bufOut.listen(P_Trigger)));
 
-  bufs << buf;
+  bufUIs << recBufUI(buf);
+  offsetBufUIs << recBufUI(pitchLockBuf);
   outs << out;
 }
 
@@ -172,12 +189,19 @@ setupOutputSelection();
 for(0=>int rowId;rowId<ROW_COUNT;++rowId){
   makeOutsUIRow(rowId);
 
-  def(ui, recBufUI(bufs[rowId]));
+  def(ui, bufUIs[rowId]);
   launchpad
     .b(frm("cc104").to(mk(Bigger, 0) => ui.to(P_ClearAll).c))
     .b(frm("note"+(rowId*16)).to(ui, P_Trigger));
 
   ui => lpOut.to("note"+(16*rowId)).c;
+
+  def(offsetUI, offsetBufUIs[rowId]);
+  launchpad
+    .b(frm("cc104").to(mk(Bigger, 0) => offsetUI.to(P_ClearAll).c))
+    .b(frm("note"+(rowId*16+1)).to(offsetUI, P_Trigger));
+
+  offsetUI => lpOut.to("note"+(16*rowId+1)).c;
 }
 
 

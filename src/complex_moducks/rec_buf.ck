@@ -29,6 +29,9 @@ public class RecBuf{
     def(playToggler, mk(Toggler, false));
     def(clock, in => frm(P_Clock).c);
     def(toggleRec, mk(Repeater));
+    def(lastSetVal, mk(Value, null));
+
+    in => frm(P_Set).c => lastSetVal.to(P_Set).c;
 
     def(restartBuf, mk(Value, 0) => buf.to(P_GoTo).c);
 
@@ -95,10 +98,9 @@ public class RecBuf{
       => out.to(P_Trigger).c;
 
     // Trigger rec waiter from input when not recording
-    (in => frm(P_Set).c)
-      .b(recWaiter.whenNot(out, P_Recording))
-      .b(restartBuf.whenNot(out, P_Recording))
-      .b(MBUtil.onlyHigh() => buf.to(P_Set).whenNot(out, P_Recording).c);
+    in
+      => frm(P_Set).c
+      => recWaiter.whenNot(out, P_Recording).c;
 
     // Trigger rec toggle from Clock, every recStopDiv division
     // when not recording
@@ -124,9 +126,11 @@ public class RecBuf{
     onBeginRec
       .b(recStopDiv.to(P_Reset))
       .b(counter.to(P_Reset))
-      .b(restartBuf.whenNot(out, "hasData"))
       .b(recBlocker.to(P_Gate))
-    ;
+      .b(mk(Repeater).whenNot(out, "hasData")
+          .b(restartBuf)
+          .b(lastSetVal => buf.to(P_Set).c)
+      );
 
     recToggler
       => recBlocker.to(P_Gate).c
