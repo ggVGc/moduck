@@ -66,12 +66,12 @@ keysIn
 
 for(0=>int i;i<ROW_COUNT;++i){
   10::ms => now; // Keep JACK happy
-  def(b, mk(RecBuf, Bar));
+  def(buf, mk(RecBuf, Bar));
   def(bufOut, mk(Repeater));
   def(pitchLocker, mk(Value, null));
   def(holdTog, mk(Toggler));
 
-  Runner.masterClock => b.to(P_Clock).c;
+  Runner.masterClock => buf.to(P_Clock).c;
 
   def(inpTypeRouter, mk(Router, 0));
 
@@ -81,23 +81,27 @@ for(0=>int i;i<ROW_COUNT;++i){
 
   inputLaneRouter => frm(i).to(inpTypeRouter).c;
 
-  inpTypeRouter
-    .b(frm(0).to(b, P_Set))
-    .b(frm(1).to(pitchLocker, P_Set)).c;
+  def(pitchShifter, mk(Offset, 0));
 
-  b
+  inpTypeRouter
+    .b(frm(0).to(buf, P_Set))
+    .b(frm(1).to(pitchLocker, P_Set))
+    .b(frm(2).to(mk(Offset, -60) => pitchShifter.to("offset").c));
+
+  buf
     => iff(pitchLocker, recv(P_Set))
       .then(pitchLocker)
       .els(mk(Repeater)).c
+    => pitchShifter.c
     => bufOut.c;
 
-  b
+  buf
     => MBUtil.onlyLow().c
     => bufOut.c;
 
   def(out, makeTogglingOuts(OUT_DEVICE_COUNT).hook(bufOut.listen(P_Trigger)));
 
-  bufs << b;
+  bufs << buf;
   outs << out;
 }
 

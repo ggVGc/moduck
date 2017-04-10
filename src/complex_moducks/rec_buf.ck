@@ -62,9 +62,10 @@ public class RecBuf{
 
 
 
-    clock
-      => restartDiv.whenNot(out, P_Recording).c
-      => restartBuf.c;
+    (clock => restartDiv.whenNot(out, P_Recording).c)
+      .b(restartBuf)
+      .b(mk(Delay, samp) => buf.to(P_Clock).c) // TODO: Temporary latency compensation hack
+      .b(mk(Delay, samp*2) => buf.to(P_Clock).c);
 
 
     in => buf.listen([P_Clear, P_ClearAll]).c;
@@ -94,9 +95,10 @@ public class RecBuf{
       => out.to(P_Trigger).c;
 
     // Trigger rec waiter from input when not recording
-    in
-      => frm(P_Set).c
-      => recWaiter.whenNot(out, P_Recording).c;
+    (in => frm(P_Set).c)
+      .b(recWaiter.whenNot(out, P_Recording))
+      .b(restartBuf.whenNot(out, P_Recording))
+      .b(MBUtil.onlyHigh() => buf.to(P_Set).whenNot(out, P_Recording).c);
 
     // Trigger rec toggle from Clock, every recStopDiv division
     // when not recording
@@ -132,7 +134,7 @@ public class RecBuf{
 
     in
       => frm(P_Set).c
-      => mk(Delay, samp).c // Since we enable recording on Set, we need to delay a bit
+      /* => mk(Delay, samp).c // Since we enable recording on Set, we need to delay a bit */
       => recBlocker.c      // Otherwise we lose the first note
       => buf.to(P_Set).c;
 
