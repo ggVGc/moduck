@@ -74,7 +74,7 @@ public class NoteOut extends Moduck{
     NoteOut ret;
     OUT(P_Gate);
     IN(NoteHandler, (device, channel));
-    for(0=>int i;i<127;++i){
+    for(0=>int i;i<128;++i){
       ret.addIn("note"+i, GateHandler.make(device, channel, i, false));
       ret.addIn("cc"+i, GateHandler.make(device, channel, i, true));
     }

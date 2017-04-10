@@ -3,15 +3,15 @@ include(_all_instruments.m4)
 include(funcs.m4)
 include(parts/rec_buf_ui.ck)
 
-define(SEQ_COUNT, 1);
+/* define(SEQ_COUNT, 1); */
 define(OUT_DEVICE_COUNT, 4);
-define(ROW_COUNT, 5);
+define(ROW_COUNT, 8);
 
 
 Runner.setPlaying(1);
 
 
-fun ModuckP makeTogglingOuts(ModuckP source, int outCount){
+fun ModuckP makeTogglingOuts(int outCount){
   [P_Trigger] @=> string rootTags[];
   string outTags[0];
   for(0=>int i;i<outCount;++i){
@@ -35,7 +35,8 @@ fun ModuckP makeTogglingOuts(ModuckP source, int outCount){
       .b(blocker.to(P_Gate))
       .b(out.to("outActive"+i))
     ;
-    source
+    root
+      => frm(P_Trigger).c
       => blocker.c
       => out.to(i).c
     ;
@@ -48,17 +49,39 @@ fun ModuckP makeTogglingOuts(ModuckP source, int outCount){
 def(keysIn, mk(Repeater));
 ModuckP outs[0];
 ModuckP bufs[0];
+ModuckP holdToggles[];
 def(inRouter, mk(Router, 0));
 
 keysIn => inRouter.c;
 
 for(0=>int i;i<ROW_COUNT;++i){
-  /* MUtil.gatesToToggles(makeRecBufs(SEQ_COUNT), Util.numberedStrings("", Util.range(0,SEQ_COUNT-1)), false) @=> ModuckP b; */
+  10::ms => now; // Keep JACK happy
   def(b, mk(RecBuf, Bar));
+  def(bufOut, mk(Repeater));
+  def(noteHolder, mk(Value, null));
+  def(holdTog, mk(Toggler));
+
   Runner.masterClock => b.to(P_Clock).c;
-  bufs << b;
+
   inRouter => frm(i).to(b, P_Set).c;
-  def(out, makeTogglingOuts(b, OUT_DEVICE_COUNT));
+
+  b
+    => iff(noteHolder, recv(P_Set))
+      .then(noteHolder)
+      .els(mk(Repeater)).c
+    => bufOut.c;
+
+  b
+    => MBUtil.onlyLow().c
+    => bufOut.c;
+
+
+  /* samp => now; */
+  /* noteHolder.doHandle(P_Set, IntRef.make(70)); */
+
+  def(out, makeTogglingOuts(OUT_DEVICE_COUNT).hook(bufOut.listen(P_Trigger)));
+
+  bufs << b;
   outs << out;
 }
 
