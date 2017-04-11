@@ -118,7 +118,11 @@ for(0=>int i;i<ROW_COUNT;++i){
     .b(frm(1).to(pitchLockBuf, P_Set))
     .b(frm(2).to(mk(Offset, -60) => pitchShifter.to("offset").c));
 
-  buf => notesProxy.c;
+  buf
+    => iff(pitchLocker, recv(P_Set))
+      .then(pitchLocker)
+      .els(mk(Repeater)).c
+    => notesOut.c;
 
   notesProxy
     => iff(pitchLocker, recv(P_Set))
@@ -196,8 +200,18 @@ for(0=>int i;i<INPUT_TYPES;++i){
     => lpOut.to("cc"+(111-i)).c;
 }
 
-launchpad => frm("note"+(16*7)).to(noteHoldToggle, P_Toggle).c;
-noteHoldToggle => LP.orange().c =>lpOut.to("note"+(16*7)).c;
+launchpad => frm("note"+(16*7+8)).to(noteHoldToggle, P_Toggle).c;
+noteHoldToggle => LP.orange().c =>lpOut.to("note"+(16*7+8)).c;
+
+
+launchpad => frm("note"+(16*7+0)).c => mk(TrigValue, 60).c => keysIn.c;
+launchpad => frm("note"+(16*7+1)).c => mk(TrigValue, 61).c => keysIn.c;
+launchpad => frm("note"+(16*7+2)).c => mk(TrigValue, 63).c => keysIn.c;
+launchpad => frm("note"+(16*7+3)).c => mk(TrigValue, 65).c => keysIn.c;
+launchpad => frm("note"+(16*7+4)).c => mk(TrigValue, 67).c => keysIn.c;
+launchpad => frm("note"+(16*7+5)).c => mk(TrigValue, 68).c => keysIn.c;
+launchpad => frm("note"+(16*7+6)).c => mk(TrigValue, 70).c => keysIn.c;
+launchpad => frm("note"+(16*7+7)).c => mk(TrigValue, 72).c => keysIn.c;
 
 
 setupOutputSelection();

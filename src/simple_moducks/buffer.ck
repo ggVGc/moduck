@@ -2,8 +2,6 @@
 include(macros.m4)
 
 
-define(LATENCY_COMPENSATION, 1);
-
 class BufEntry{
   dur timeStamp;
   IntRef val;
@@ -122,13 +120,7 @@ genHandler(SetHandler, P_Set,
     v @=> e.val;
 
     now - shared.startTime => e.timeStamp;
-    shared.accum => int x;
-    if(x <LATENCY_COMPENSATION){
-      0 => x;
-    }else{
-      x-LATENCY_COMPENSATION => x;
-    }
-    x => e.index;
+    shared.accum => e.index;
     parent.send("hasData", IntRef.yes());
   },
   Shared shared;

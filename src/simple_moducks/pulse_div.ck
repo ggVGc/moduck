@@ -3,7 +3,7 @@ include(macros.m4)
 genHandler(ResetHandler, P_Reset,
   HANDLE{
     if(null != v){
-      0 => accum.f;
+      parent.getVal("offset") => accum.f;
       0 => highest.i;
       0 => lastScaling.f;
     }
@@ -60,7 +60,7 @@ public class PulseDiv extends Moduck{
     IN(ResetHandler,(accum, highest, lastScaling));
 
     ret.addVal("divisor", divisor);
-    /* ret.addVal("offset", startOffset); */
+    ret.addVal("offset", 0);
     ret.addVal("scaling", 100); // percentage
 
     ret.doHandle(P_Reset, IntRef.make(0));

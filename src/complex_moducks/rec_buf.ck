@@ -1,6 +1,8 @@
 include(macros.m4)
 include(song_macros.m4)
 
+define(LATENCY_COMPENSATION, 4)
+
 public class RecBuf{
   maker(Moduck, int quantization){
     def(in, mk(Repeater, [
@@ -22,14 +24,17 @@ public class RecBuf{
     def(recWaiter, mk(OnceTrigger));
     def(recBlocker, mk(Blocker));
     def(recToggler, mk(Toggler, false));
-    def(recStopDiv, mk(PulseDiv, quantization));
+    def(recStopDiv, mk(PulseDiv, quantization).set("offset", LATENCY_COMPENSATION));
     def(counter, mk(Counter));
-    def(restartDiv, mk(PulseDiv, quantization));
+    def(restartTimer, mk(PulseDiv, quantization));
     def(playBlocker, mk(Blocker));
     def(playToggler, mk(Toggler, false));
     def(clock, in => frm(P_Clock).c);
     def(toggleRec, mk(Repeater));
     def(lastSetVal, mk(Value, null));
+
+    /* restartDiv => mk(Printer, "restartDiv out").c; */
+
 
     in => frm(P_Set).c => lastSetVal.to(P_Set).c;
 
@@ -57,7 +62,7 @@ public class RecBuf{
     playToggler
       .b(playBlocker.to(P_Gate))
       .b(frm(recv(P_Toggle)).to(restartBuf))
-      .b(frm(recv(P_Toggle)).to(restartDiv, P_Reset))
+      .b(frm(recv(P_Toggle)).to(restartTimer, P_Reset))
     ;
 
     def(onBeginRec, recToggler => MBUtil.onlyHigh().c)
@@ -66,7 +71,7 @@ public class RecBuf{
 
 
     clock
-      => restartDiv.whenNot(out, P_Recording).c
+      => restartTimer.whenNot(out, P_Recording).c
       => restartBuf.c;
 
 
@@ -113,16 +118,18 @@ public class RecBuf{
     def(divisorVal, mk(Value, 0));
     counter
       => mk(Bigger, 0).from("count").c
-      => mk(Add, -1).c
+      /* => mk(Add, -1).c */
       => mk(Mul, quantization).c
       => divisorVal.to(P_Set).c;
 
     onEndRec
-      .b(divisorVal => restartDiv.to("divisor").c)
-      .b(mk(Delay, samp) => restartDiv.to(P_Reset).c)
+      .b( mk(Printer, "End rec"))
+      .b(divisorVal => restartTimer.to("divisor").c)
+      .b(mk(Delay, samp) => restartTimer.to(P_Reset).c)
     ;
     
     onBeginRec
+      .b( mk(Printer, "Begin rec"))
       .b(recStopDiv.to(P_Reset))
       .b(counter.to(P_Reset))
       .b(recBlocker.to(P_Gate))
@@ -137,8 +144,7 @@ public class RecBuf{
 
     in
       => frm(P_Set).c
-      /* => mk(Delay, samp).c // Since we enable recording on Set, we need to delay a bit */
-      => recBlocker.c      // Otherwise we lose the first note
+      => recBlocker.c
       => buf.to(P_Set).c;
 
     recBlocker
