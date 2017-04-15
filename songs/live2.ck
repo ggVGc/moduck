@@ -97,20 +97,22 @@ for(0=>int i;i<ROW_COUNT;++i){
 
   inputLaneRouter => frm(i).to(inpTypeRouter).c;
 
-  pitchLockBuf => pitchLocker.to(P_Set).c;
 
   // Receives input from keyboard and recorded buffer
   def(notesProxy, mk(Prio));
+  def(pitchLockProxy, mk(Prio));
 
   inpTypeRouter
     .b(frm(0).to(buf, P_Set))
     .b(frm(0).to(notesProxy, 1))
-    .b(frm(1).to(pitchLocker, P_Set))
     .b(frm(1).to(pitchLockBuf, P_Set))
+    .b(frm(1).to(pitchLockProxy, 1))
     .b(frm(2).to(mk(Offset, -60) => pitchShifter.to("offset").c));
 
   buf => notesProxy.to(0).c;
 
+  pitchLockBuf => pitchLockProxy.to(0).c;
+  pitchLockProxy => pitchLocker.to(P_Set).c;
 
   notesProxy
     => iff(pitchLocker, recv(P_Set))
