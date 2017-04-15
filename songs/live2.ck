@@ -104,7 +104,7 @@ for(0=>int i;i<ROW_COUNT;++i){
 
   inpTypeRouter
     .b(frm(0).to(buf, P_Set))
-    .b(frm(0).to(notesProxy, ""+1))
+    .b(frm(0).to(notesProxy, 1))
     .b(frm(1).to(pitchLocker, P_Set))
     .b(frm(1).to(pitchLockBuf, P_Set))
     .b(frm(2).to(mk(Offset, -60) => pitchShifter.to("offset").c));

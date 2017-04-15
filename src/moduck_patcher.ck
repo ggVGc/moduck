@@ -98,6 +98,9 @@ class ToConnector{
   fun Connector to(ModuckP targetModuck, string dstTag){
     return targetModuck.fromTo(srcTag, dstTag);
   }
+  fun Connector to(ModuckP targetModuck, int dstTag){
+    return to(targetModuck, ""+dstTag);
+  }
   fun Connector to(ModuckP targetModuck){
     return to(targetModuck, P_Default);
   }
@@ -173,6 +176,10 @@ public class ModuckP extends Moduck{
 
   fun Conditional _iff(ModuckP m, string tag){
     return Conditional.make(this, m, tag);
+  }
+
+  fun Conditional _iff(ModuckP m, int tag){
+    return _iff(m, ""+tag);
   }
 
   fun ModuckP c(Moduck other){
