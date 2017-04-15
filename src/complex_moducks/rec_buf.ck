@@ -33,9 +33,6 @@ public class RecBuf{
     def(toggleRec, mk(Repeater));
     def(lastSetVal, mk(Value, null));
 
-    /* restartDiv => mk(Printer, "restartDiv out").c; */
-
-
     in => frm(P_Set).c => lastSetVal.to(P_Set).c;
 
     def(restartBuf, mk(Value, 0) => buf.to(P_GoTo).c);
@@ -62,18 +59,14 @@ public class RecBuf{
     playToggler
       .b(playBlocker.to(P_Gate))
       .b(frm(recv(P_Toggle)).to(restartBuf))
-      .b(frm(recv(P_Toggle)).to(restartTimer, P_Reset))
-    ;
+      .b(frm(recv(P_Toggle)).to(restartTimer, P_Reset));
 
     def(onBeginRec, recToggler => MBUtil.onlyHigh().c)
     def(onEndRec, recToggler => MBUtil.onlyLow().c => mk(Inverter).c);
 
-
-
     clock
       => restartTimer.whenNot(out, P_Recording).c
       => restartBuf.c;
-
 
     in => buf.listen([P_Clear, P_ClearAll]).c;
     clock => buf.to(P_Clock).c;
@@ -87,8 +80,7 @@ public class RecBuf{
       => mk(PulseDiv, quantization)
           .hook(recBlocker.fromTo(recv(P_Gate), P_Reset))
           .when(out, P_Recording).c
-      => counter.c
-    ;
+      => counter.c;
 
     // Queue a rec toggle
     toggleRec
@@ -118,15 +110,13 @@ public class RecBuf{
     def(divisorVal, mk(Value, 0));
     counter
       => mk(Bigger, 0).from("count").c
-      /* => mk(Add, -1).c */
       => mk(Mul, quantization).c
       => divisorVal.to(P_Set).c;
 
     onEndRec
       .b( mk(Printer, "End rec"))
       .b(divisorVal => restartTimer.to("divisor").c)
-      .b(mk(Delay, samp) => restartTimer.to(P_Reset).c)
-    ;
+      .b(mk(Delay, samp) => restartTimer.to(P_Reset).c);
     
     onBeginRec
       .b( mk(Printer, "Begin rec"))
@@ -138,9 +128,7 @@ public class RecBuf{
           .b(lastSetVal => buf.to(P_Set).c)
       );
 
-    recToggler
-      => recBlocker.to(P_Gate).c
-    ;
+    recToggler => recBlocker.to(P_Gate).c;
 
     in
       => frm(P_Set).c
@@ -149,8 +137,7 @@ public class RecBuf{
 
     recBlocker
       => frm(recv(P_Gate)).c
-      => out.to(P_Recording).c
-    ;
+      => out.to(P_Recording).c;
 
     buf => out.listen("hasData").c;
     buf
