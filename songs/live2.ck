@@ -118,22 +118,34 @@ for(0=>int i;i<ROW_COUNT;++i){
     .b(frm(1).to(pitchLockBuf, P_Set))
     .b(frm(2).to(mk(Offset, -60) => pitchShifter.to("offset").c));
 
-  buf
-    => iff(pitchLocker, recv(P_Set))
-      .then(pitchLocker)
-      .els(mk(Repeater)).c
-    => notesOut.c;
+  def(outPrio, mk(Prio));
+
+  buf => notesProxy.c;
+    /* 
+     => iff(pitchLocker, recv(P_Set))
+       .then(pitchLocker)
+       .els(mk(Repeater)).c
+     => pitchShifter.c
+     => outPrio.to(1).c;
+     */
 
   notesProxy
     => iff(pitchLocker, recv(P_Set))
       .then(pitchLocker)
       .els(mk(Repeater)).c
     => pitchShifter.c
+    => outPrio.to(0).c;
+
+  pitchLocker
+    => frm(recv(P_Set)).c
+    => MBUtil.onlyLow().c
     => notesOut.c;
 
   notesProxy
     => MBUtil.onlyLow().c
-    => notesOut.c;
+    => outPrio.to(0).c;
+
+  outPrio => notesOut.c;
 
   def(out, makeTogglingOuts(OUT_DEVICE_COUNT).hook(notesOut.listen(P_Trigger)));
 
@@ -222,16 +234,16 @@ for(0=>int rowId;rowId<ROW_COUNT;++rowId){
   def(ui, bufUIs[rowId]);
   launchpad
     .b(frm("cc104").to(mk(Bigger, 0) => ui.to(P_ClearAll).c))
-    .b(frm("note"+(rowId*16)).to(ui, P_Trigger))
-    .b(frm("note"+(rowId*16)).to(mk(Value, 0) => setInpType.c));
+    .b(frm("note"+(rowId*16)).to(ui, P_Trigger));
+    /* .b(frm("note"+(rowId*16)).to((mk(Value, 0) => setInpType.c).whenNot(ui, recv(P_ClearAll)))); */
 
   ui => lpOut.to("note"+(16*rowId)).c;
 
   def(offsetUI, offsetBufUIs[rowId]);
   launchpad
     .b(frm("cc104").to(mk(Bigger, 0) => offsetUI.to(P_ClearAll).c))
-    .b(frm("note"+(rowId*16+1)).to(offsetUI, P_Trigger))
-    .b(frm("note"+(rowId*16+1)).to(mk(Value, 1) => setInpType.c));
+    .b(frm("note"+(rowId*16+1)).to(offsetUI, P_Trigger));
+    /* .b(frm("note"+(rowId*16+1)).to((mk(Value, 1) => setInpType.c).whenNot(offsetUI, recv(P_ClearAll)))); */
 
   offsetUI => lpOut.to("note"+(16*rowId+1)).c;
 }
