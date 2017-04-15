@@ -25,7 +25,7 @@ fun ModuckP recBufUI(ModuckP recBuf){
     .b(P_Playing, LP.orange() => trigOut.to(1).c)
     .b(P_Recording, LP.red() => trigOut.to(2).c)
     .b(P_Trigger, trigCol => trigOut.to(3).c)
-  ;
+    .b(P_Looped, LP.green() => mk(SampleHold, 150::ms).to(P_Set).to(P_Trigger).c => trigOut.to(4).c);
 
   return mk(Wrapper, in, out);
 }

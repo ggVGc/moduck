@@ -17,6 +17,7 @@ public class RecBuf{
       P_Trigger
       ,P_Recording
       ,P_Playing
+      ,P_Looped
       ,"hasData"
     ]));
 
@@ -32,10 +33,13 @@ public class RecBuf{
     def(clock, in => frm(P_Clock).c);
     def(toggleRec, mk(Repeater));
     def(lastSetVal, mk(Value, null));
+    def(restartBuf, mk(Value, 0) => buf.to(P_GoTo).c);
+
+    restartBuf
+      => frm(recv(P_Trigger)).c
+      => out.to(P_Looped).when(out, "hasData").c;
 
     in => frm(P_Set).c => lastSetVal.to(P_Set).c;
-
-    def(restartBuf, mk(Value, 0) => buf.to(P_GoTo).c);
 
     playBlocker => out.fromTo(recv(P_Gate), P_Playing).c;
 
