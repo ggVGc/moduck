@@ -77,7 +77,7 @@ keysIn
 
 
 for(0=>int i;i<ROW_COUNT;++i){
-  10::ms => now; // Keep JACK happy
+  10::ms => now; // Keep JACK happy, prevents getting killed because of buffer underrun
   def(buf, mk(RecBuf, QUANTIZATION));
   def(notesOut, mk(Repeater));
   def(pitchLocker, mk(Value, null));
@@ -85,7 +85,6 @@ for(0=>int i;i<ROW_COUNT;++i){
   def(inpTypeRouter, mk(Router, 0, false));
   def(pitchShifter, mk(Offset, 0));
   def(pitchLockBuf, mk(RecBuf, QUANTIZATION));
-  def(notesProxy, mk(Repeater));
 
   P(Runner.masterClock)
     .b(buf.to(P_Clock))
@@ -100,31 +99,32 @@ for(0=>int i;i<ROW_COUNT;++i){
 
   pitchLockBuf => pitchLocker.to(P_Set).c;
 
+  // Receives input from keyboard and recorded buffer
+  def(notesProxy, mk(Prio));
+
   inpTypeRouter
     .b(frm(0).to(buf, P_Set))
-    .b(frm(0).to(MBUtil.onlyHigh() => notesProxy.c))
-    .b(frm(0).to(MBUtil.onlyLow() => notesProxy.whenNot(buf, P_Trigger).c))
+    .b(frm(0).to(notesProxy, ""+1))
     .b(frm(1).to(pitchLocker, P_Set))
     .b(frm(1).to(pitchLockBuf, P_Set))
     .b(frm(2).to(mk(Offset, -60) => pitchShifter.to("offset").c));
 
-  def(outPrio, mk(Prio));
+  buf => notesProxy.to(0).c;
 
-  buf => notesProxy.c;
 
   notesProxy
     => iff(pitchLocker, recv(P_Set))
       .then(pitchLocker)
       .els(mk(Repeater)).c
     => pitchShifter.c
-    => outPrio.to(0).c;
+    => notesOut.c;
 
 
   notesProxy
     => MBUtil.onlyLow().c
-    => outPrio.to(0).c;
+    => notesOut.c;
 
-  outPrio => notesOut.c;
+  notesProxy => notesOut.c;
 
   def(out, makeTogglingOuts(OUT_DEVICE_COUNT).hook(notesOut.listen(P_Trigger)));
 
