@@ -10,9 +10,8 @@ fun ModuckP recBufUI(ModuckP recBuf){
       => iff(in, P_ClearAll).then(
           recBuf.to(P_ClearAll))
       .els(
-          recBuf.to(toggl(P_Play)
-        )
-    ).c;
+          recBuf.to(P_Toggle)
+      ).c;
 
 
   def(out, mk(Repeater));

@@ -10,7 +10,7 @@ public class RecBuf{
       ,P_Set
       ,P_ClearAll
       ,P_Clear
-      ,toggl(P_Play)
+      ,P_Toggle
     ]));
 
     def(out, mk(Repeater, [
@@ -44,20 +44,10 @@ public class RecBuf{
     playBlocker => out.fromTo(recv(P_Gate), P_Playing).c;
 
     in
-      => frm(toggl(P_Play)).c
+      => frm(P_Toggle).c
       => iff(out, "hasData")
-          .then(
-            iff(out, P_Recording)
-              .then(
-                toggleRec
-              )
-              .els(
-                playToggler.to(P_Toggle)
-              )
-          )
-          .els(
-            toggleRec
-          ).c;
+          .then( toggleRec.when(out, P_Recording) )
+          .els( toggleRec ).c;
 
 
     playToggler
@@ -75,9 +65,9 @@ public class RecBuf{
     in => buf.listen([P_Clear, P_ClearAll]).c;
     clock => buf.to(P_Clock).c;
 
-    in
-      => frm(P_ClearAll).c
-      => playToggler.to(P_Toggle).when(out, P_Playing).c;
+    (in => frm(P_ClearAll).c)
+      .b(playToggler.to(P_Toggle).when(out, P_Playing))
+      .b( recWaiter.to(P_Clear) );
 
     buf 
       => frm(recv(P_Clock)).c
@@ -143,10 +133,12 @@ public class RecBuf{
       => frm(recv(P_Gate)).c
       => out.to(P_Recording).c;
 
+
     buf => out.listen("hasData").c;
     buf
       => frm(P_Trigger).to(playBlocker).c
       => out.c;
+
 
     samp => now;
     out.doHandle( P_Recording, null);
