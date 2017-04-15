@@ -99,17 +99,7 @@ for(0=>int i;i<ROW_COUNT;++i){
   inputLaneRouter => frm(i).to(inpTypeRouter).c;
 
   pitchLockBuf => pitchLocker.to(P_Set).c;
-  /* 
-   pitchLockBuf
-     => frm(recv(toggl(P_Rec))).c
-     => MBUtil.onlyHigh().c
-     => mk(Value, 1).c => inpTypeRouter.c;
 
-   buf
-     => frm(recv(toggl(P_Rec))).c
-     => MBUtil.onlyHigh().c
-     => mk(Value, 0).c => inpTypeRouter.c;
-   */
   inpTypeRouter
     .b(frm(0).to(buf, P_Set))
     .b(frm(0).to(MBUtil.onlyHigh() => notesProxy.c))
