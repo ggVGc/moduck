@@ -121,13 +121,6 @@ for(0=>int i;i<ROW_COUNT;++i){
   def(outPrio, mk(Prio));
 
   buf => notesProxy.c;
-    /* 
-     => iff(pitchLocker, recv(P_Set))
-       .then(pitchLocker)
-       .els(mk(Repeater)).c
-     => pitchShifter.c
-     => outPrio.to(1).c;
-     */
 
   notesProxy
     => iff(pitchLocker, recv(P_Set))
