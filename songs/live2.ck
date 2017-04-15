@@ -136,10 +136,14 @@ for(0=>int i;i<ROW_COUNT;++i){
     => pitchShifter.c
     => outPrio.to(0).c;
 
-  pitchLocker
-    => frm(recv(P_Set)).c
-    => MBUtil.onlyLow().c
-    => notesOut.c;
+  // Commented out to fix "#73 Releasing pitch override input while playing sequence cancels note."
+  // Not sure why this was here in the first place. Probably remove later
+  /* 
+   pitchLocker
+     => frm(recv(P_Set)).c
+     => MBUtil.onlyLow().c
+     => notesOut.c;
+   */
 
   notesProxy
     => MBUtil.onlyLow().c
