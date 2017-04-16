@@ -122,10 +122,6 @@ for(0=>int i;i<ROW_COUNT;++i){
     => notesOut.c;
 
 
-  notesProxy
-    => MBUtil.onlyLow().c
-    => notesOut.c;
-
   def(out, makeTogglingOuts(OUT_DEVICE_COUNT).hook(notesOut.listen(P_Trigger)));
 
   bufUIs << recBufUI(buf);
