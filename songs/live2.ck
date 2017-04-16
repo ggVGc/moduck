@@ -153,23 +153,35 @@ def(keyboard, mk(MidInp, MIDI_IN_K49, 0));
 MidiOut launchpadDeviceOut;
 <<<"Opening launchpad out">>>;
 launchpadDeviceOut.open(MIDI_OUT_LAUNCHPAD);
-MidiOut circuitDeviceOut;
-<<<"Opening circuit out">>>;
-circuitDeviceOut.open(MIDI_OUT_CIRCUIT);
+/* 
+ MidiOut circuitDeviceOut;
+ <<<"Opening circuit out">>>;
+ circuitDeviceOut.open(MIDI_OUT_CIRCUIT);
+ */
 
 def(lpOut, mk(NoteOut, launchpadDeviceOut, 0));
 
 
-def(circuit1, mk(NoteOut, circuitDeviceOut, 0));
-def(circuit2, mk(NoteOut, circuitDeviceOut, 1));
+/* 
+ def(circuit1, mk(NoteOut, circuitDeviceOut, 0));
+ def(circuit2, mk(NoteOut, circuitDeviceOut, 1));
+ */
 
 // OUTPUTS
 
+fun MidiOut openOut(int port){
+  MidiOut dev;
+  dev.open(port);
+  50::ms => now;
+  return dev;
+}
 
 for(0=>int outInd;outInd<outs.size();++outInd){
   outs[outInd]
-    .b(frm(0).to(circuit1))
-    .b(frm(1).to(circuit2))
+    .b(frm(0).to(mk(NoteOut, openOut(MIDI_OUT_MICROBRUTE), 0)))
+    .b(frm(1).to(mk(NoteOut, openOut(MIDI_OUT_MS_20), 0)))
+    .b(frm(2).to(mk(NoteOut, openOut(MIDI_OUT_USB_MIDI), 0)))
+    .b(frm(3).to(mk(NoteOut, openOut(MIDI_OUT_SYS1_1), 0)))
   ;
 }
 
