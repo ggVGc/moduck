@@ -126,8 +126,6 @@ for(0=>int i;i<ROW_COUNT;++i){
     => MBUtil.onlyLow().c
     => notesOut.c;
 
-  notesProxy => notesOut.c;
-
   def(out, makeTogglingOuts(OUT_DEVICE_COUNT).hook(notesOut.listen(P_Trigger)));
 
   bufUIs << recBufUI(buf);
@@ -152,8 +150,9 @@ Runner.masterClock
 
 <<<"Opening launchpad in">>>;
 def(launchpad, mk(MidInp, MIDI_IN_LAUNCHPAD, 0))
-<<<"Opening oxygen in">>>;
-def(oxygen, mk(MidInp, MIDI_IN_OXYGEN, 0));
+<<<"Opening keyboard in">>>;
+/* def(keyboard, mk(MidInp, MIDI_IN_OXYGEN, 0)); */
+def(keyboard, mk(MidInp, MIDI_IN_K49, 0));
 
 MidiOut launchpadDeviceOut;
 <<<"Opening launchpad out">>>;
@@ -181,7 +180,7 @@ for(0=>int outInd;outInd<outs.size();++outInd){
 
 // MAPPINGS
 
-oxygen => keysIn.from("note").c;
+keyboard => keysIn.from("note").c;
 
 
 for(0=>int i;i<INPUT_TYPES;++i){

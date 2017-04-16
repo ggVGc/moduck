@@ -52,6 +52,7 @@ deviceHints = [
   ,["nanoKONTROL", "NANO_KTRL"]
   ,["circuit", "circuit"]
   ,["oxygen", "oxygen"]
+  ,["K49", "K49"]
 ]
 
 
