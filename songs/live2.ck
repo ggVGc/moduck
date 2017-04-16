@@ -176,12 +176,17 @@ fun MidiOut openOut(int port){
   return dev;
 }
 
+openOut(MIDI_OUT_MICROBRUTE) @=> MidiOut brute;
+openOut(MIDI_OUT_MS_20) @=>  MidiOut ms20;
+openOut(MIDI_OUT_USB_MIDI) @=> MidiOut nocoast;
+openOut(MIDI_OUT_SYS1) @=> MidiOut sys1;
+
 for(0=>int outInd;outInd<outs.size();++outInd){
   outs[outInd]
-    .b(frm(0).to(mk(NoteOut, openOut(MIDI_OUT_MICROBRUTE), 0)))
-    .b(frm(1).to(mk(NoteOut, openOut(MIDI_OUT_MS_20), 0)))
-    .b(frm(2).to(mk(NoteOut, openOut(MIDI_OUT_USB_MIDI), 0)))
-    .b(frm(3).to(mk(NoteOut, openOut(MIDI_OUT_SYS1_1), 0)))
+    .b(frm(0).to(mk(NoteOut, brute, 0)))
+    .b(frm(1).to(mk(NoteOut, ms20, 0)))
+    .b(frm(2).to(mk(NoteOut, nocoast, 0)))
+    .b(frm(3).to(mk(NoteOut, sys1, 0)))
   ;
 }
 
