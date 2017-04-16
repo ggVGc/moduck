@@ -83,7 +83,7 @@ for(0=>int i;i<ROW_COUNT;++i){
   def(pitchLocker, mk(Value, null));
   def(holdTog, mk(Toggler));
   def(inpTypeRouter, mk(Router, 0, false));
-  def(pitchShifter, mk(Offset, 0));
+  def(octaveShifter, mk(Offset, 0));
   def(pitchLockBuf, mk(RecBuf, QUANTIZATION));
 
   P(Runner.masterClock)
@@ -107,7 +107,7 @@ for(0=>int i;i<ROW_COUNT;++i){
     .b(frm(0).to(notesProxy, 1))
     .b(frm(1).to(pitchLockBuf, P_Set))
     .b(frm(1).to(pitchLockProxy, 1))
-    .b(frm(2).to(mk(Offset, -60) => pitchShifter.to("offset").c));
+    .b(frm(2).to(mk(Offset, -60) => mk(Mul, 12).c => octaveShifter.to("offset").c));
 
   buf => notesProxy.to(0).c;
 
@@ -118,7 +118,7 @@ for(0=>int i;i<ROW_COUNT;++i){
     => iff(pitchLocker, recv(P_Set))
       .then(pitchLocker)
       .els(mk(Repeater)).c
-    => pitchShifter.c
+    => octaveShifter.c
     => notesOut.c;
 
 
