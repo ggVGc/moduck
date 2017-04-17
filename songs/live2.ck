@@ -67,6 +67,8 @@ class Row{
   def(notesIn, mk(Repeater));
   def(inpTypeSetter, mk(Repeater));
   def(playbackRate, mk(Repeater));
+  def(nudgeForward, mk(Repeater));
+  def(nudgeBack, mk(Repeater));
 }
 
 
@@ -83,8 +85,27 @@ fun Row makeRow(ModuckP noteHoldToggle){
 
   def(bufClock, mk(PulseDiv, 2));
 
-  ret.playbackRate => bufClock.to("scaling").c;
-  ret.playbackRate => mk(Printer, "playback rate").c;
+  def(backNudgeVal, mk(TrigValue, 90));
+  def(forwardNudgeVal, mk(TrigValue, 110));
+
+  def(scalingProxy, mk(Prio));
+
+  ret.playbackRate
+    .b(scalingProxy.to(0))
+    .b(mk(Add, 15) => forwardNudgeVal.to(P_Set).c)
+    .b(mk(Add, -15) => backNudgeVal.to(P_Set).c) ;
+
+  bufClock => frm("scaling").c => mk(Printer, "playback rate").c;
+
+  ret.nudgeForward
+    => forwardNudgeVal.c
+    => scalingProxy.to(1).c;
+
+  ret.nudgeBack
+    => backNudgeVal.c
+    => scalingProxy.to(1).c;
+
+  scalingProxy => bufClock.to("scaling").c;
 
   P(Runner.masterClock)
     .b(mk(PulseGen, 2, Runner.timePerTick()/2) => bufClock.c)
@@ -92,6 +113,20 @@ fun Row makeRow(ModuckP noteHoldToggle){
 
 
   bufClock => buf.to(P_Clock).c;
+    /* 
+     => iff(ret.nudgeBack, P_Default)
+         .then(
+             mk(PulseDiv, 2).set("scaling", 60)
+         ).els(
+           iff(ret.nudgeForward, P_Default)
+           .then(
+             mk(PulseGen, 2, Runner.timePerTick()/2)
+           ).els(
+             mk(Repeater)
+           )
+         ).c
+     => buf.to(P_Clock).c;
+     */
 
   noteHoldToggle => MBUtil.onlyLow().c => inpTypeRouter.c;
 
@@ -245,6 +280,8 @@ for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
     .b(mk(RangeMapper, 0, 55, 0, 99) => row.playbackRate.c)
     .b(mk(RangeMapper, 56, 73, 100, 100) => row.playbackRate.c)
     .b(mk(RangeMapper, 74, 127, 101, 200) => row.playbackRate.c);
+  nanoK => frm("cc"+(23+rowId)).c => row.nudgeForward.c;
+  nanoK => frm("cc"+(33+rowId)).c => row.nudgeBack.c;
 }
 
 
