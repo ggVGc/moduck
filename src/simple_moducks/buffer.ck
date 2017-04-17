@@ -116,6 +116,7 @@ genHandler(SetHandler, P_Set,
       shared.entries.size()-1 => ind;
     }
     BufEntry e;
+    true => e.triggered;
     e @=> shared.entries[ind];
     v @=> e.val;
 

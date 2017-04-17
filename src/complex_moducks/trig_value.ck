@@ -12,7 +12,6 @@ public class TrigValue extends Moduck{
     in => val.listen([P_Trigger, P_Set]).c;
     in => MBUtil.onlyLow().c => out.c;
     samp =>  now;
-    out => mk(Printer, "diddles").c;
     return Wrapper.make(in, out);
   }
 
