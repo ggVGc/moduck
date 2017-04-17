@@ -66,6 +66,7 @@ class Row{
   ModuckP offsetBufUI;
   def(notesIn, mk(Repeater));
   def(inpTypeSetter, mk(Repeater));
+  def(playbackRate, mk(Repeater));
 }
 
 
@@ -80,10 +81,13 @@ fun Row makeRow(ModuckP noteHoldToggle){
   def(octaveShifter, mk(Offset, 0));
   def(pitchLockBuf, mk(RecBuf, QUANTIZATION));
 
-  def(bufClock, mk(Repeater));
+  def(bufClock, mk(PulseDiv, 2));
+
+  ret.playbackRate => bufClock.to("scaling").c;
+  ret.playbackRate => mk(Printer, "playback rate").c;
 
   P(Runner.masterClock)
-    .b(bufClock)
+    .b(mk(PulseGen, 2, Runner.timePerTick()/2) => bufClock.c)
     .b(pitchLockBuf.to(P_Clock));
 
 
@@ -186,6 +190,11 @@ def(launchpad, mk(MidInp, MIDI_IN_LAUNCHPAD, 0))
 /* def(keyboard, mk(MidInp, MIDI_IN_OXYGEN, 0)); */
 def(keyboard, mk(MidInp, MIDI_IN_K49, 0));
 
+def(nanoK, mk(MidInp, MIDI_IN_NANO_KTRL, 0));
+
+nanoK => mk(Printer, "nano").from("cc").c;
+
+
 MidiOut launchpadDeviceOut;
 <<<"Opening launchpad out">>>;
 launchpadDeviceOut.open(MIDI_OUT_LAUNCHPAD);
@@ -219,7 +228,8 @@ openOut(MIDI_OUT_SYS1) @=> MidiOut sys1;
 openOut(MIDI_OUT_CIRCUIT) @=> MidiOut circuit;
 
 for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
-  rowCol.rows[rowId].outs
+  rowCol.rows[rowId] @=> Row row;
+  row.outs
     .b(frm(0).to(mk(NoteOut, circuit, 0)))
     .b(frm(1).to(mk(NoteOut, circuit, 1)))
     /* .b(frm(0).to(mk(NoteOut, brute, 0))) */
@@ -229,6 +239,12 @@ for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
      .b(frm(3).to(mk(NoteOut, sys1, 0)))
      */
   ;
+
+  nanoK => frm("cc"+(14+rowId)).c => mk(Printer, "XXX").c;
+  (nanoK => frm("cc"+(14+rowId)).c)
+    .b(mk(RangeMapper, 0, 55, 0, 99) => row.playbackRate.c)
+    .b(mk(RangeMapper, 56, 73, 100, 100) => row.playbackRate.c)
+    .b(mk(RangeMapper, 74, 127, 101, 200) => row.playbackRate.c);
 }
 
 
