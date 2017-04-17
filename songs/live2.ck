@@ -58,26 +58,20 @@ fun ModuckP makeTogglingOuts(int outCount){
 }
 
 
-def(keysIn, mk(Repeater));
-ModuckP outs[0];
-ModuckP bufUIs[0];
-ModuckP offsetBufUIs[0];
-def(setInpType, mk(Repeater));
-
-def(inputLaneRouter, mk(Router, 0));
-
-def(noteHoldToggle, mk(Toggler, false));
-def(inputNoteHold, mk(SampleHold, 0::samp).set("forever", true));
-
-keysIn => MBUtil.onlyHigh().c => inputNoteHold.to(P_Set).c;
-keysIn
-  => iff(noteHoldToggle, P_Trigger)
-    .then(inputNoteHold => inputLaneRouter.c)
-    .els(inputLaneRouter).c;
 
 
-for(0=>int i;i<ROW_COUNT;++i){
-  10::ms => now; // Keep JACK happy, prevents getting killed because of buffer underrun
+class Row{
+  ModuckP outs;
+  ModuckP bufUI;
+  ModuckP offsetBufUI;
+  def(notesIn, mk(Repeater));
+  def(inpTypeSetter, mk(Repeater));
+}
+
+
+fun Row makeRow(ModuckP noteHoldToggle){
+  Row ret;
+
   def(buf, mk(RecBuf, QUANTIZATION));
   def(notesOut, mk(Repeater));
   def(pitchLocker, mk(TrigValue, null));
@@ -86,16 +80,20 @@ for(0=>int i;i<ROW_COUNT;++i){
   def(octaveShifter, mk(Offset, 0));
   def(pitchLockBuf, mk(RecBuf, QUANTIZATION));
 
+  def(bufClock, mk(Repeater));
+
   P(Runner.masterClock)
-    .b(buf.to(P_Clock))
+    .b(bufClock)
     .b(pitchLockBuf.to(P_Clock));
 
+
+  bufClock => buf.to(P_Clock).c;
+
   noteHoldToggle => MBUtil.onlyLow().c => inpTypeRouter.c;
-  noteHoldToggle => MBUtil.onlyLow().c => inputLaneRouter.c;
 
-  setInpType => inpTypeRouter.to("index").c;
+  ret.inpTypeSetter => inpTypeRouter.to("index").c;
 
-  inputLaneRouter => frm(i).to(inpTypeRouter).c;
+  ret.notesIn => inpTypeRouter.c;
 
 
   // Receives input from keyboard and recorded buffer
@@ -122,13 +120,51 @@ for(0=>int i;i<ROW_COUNT;++i){
     => notesOut.c;
 
 
-  def(out, makeTogglingOuts(OUT_DEVICE_COUNT).hook(notesOut.listen(P_Trigger)));
+  makeTogglingOuts(OUT_DEVICE_COUNT).hook(notesOut.listen(P_Trigger)) @=> ret.outs;
+  recBufUI(buf) @=> ret.bufUI;
+  recBufUI(pitchLockBuf) @=> ret.offsetBufUI;
 
-  bufUIs << recBufUI(buf);
-  offsetBufUIs << recBufUI(pitchLockBuf);
-  outs << out;
+  return ret;
 }
 
+class RowCollection{
+  Row rows[0];
+  def(inpTypeSetter, mk(Repeater));
+  def(rowIndexSelector, mk(Repeater));
+  def(keysIn, mk(Repeater));
+  def(noteHoldToggle, mk(Toggler, false));
+}
+
+
+fun RowCollection setupRows(){
+  RowCollection ret;
+
+  def(inputLaneRouter, mk(Router, 0));
+  ret.rowIndexSelector => inputLaneRouter.to("index").c;
+
+  def(inputNoteHold, mk(SampleHold, 0::samp).set("forever", true));
+
+
+  ret.noteHoldToggle => MBUtil.onlyLow().c => inputLaneRouter.c;
+
+  ret.keysIn => MBUtil.onlyHigh().c => inputNoteHold.to(P_Set).c;
+  ret.keysIn
+    => iff(ret.noteHoldToggle, P_Trigger)
+    .then(inputNoteHold => inputLaneRouter.c)
+    .els(inputLaneRouter).c;
+
+  for(0=>int i;i<ROW_COUNT;++i){
+    10::ms => now; // Keep JACK happy, prevents getting killed because of buffer underrun
+    makeRow(ret.noteHoldToggle) @=> Row row;
+    ret.inpTypeSetter => row.inpTypeSetter.c;
+    inputLaneRouter => frm(i).to(row.notesIn).c;
+    ret.rows << row;
+  }
+  return ret;
+}
+
+
+setupRows() @=> RowCollection rowCol;
 
 
 def(metronome, mk(Repeater));
@@ -182,8 +218,8 @@ openOut(MIDI_OUT_USB_MIDI) @=> MidiOut nocoast;
 openOut(MIDI_OUT_SYS1) @=> MidiOut sys1;
 openOut(MIDI_OUT_CIRCUIT) @=> MidiOut circuit;
 
-for(0=>int outInd;outInd<outs.size();++outInd){
-  outs[outInd]
+for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
+  rowCol.rows[rowId].outs
     .b(frm(0).to(mk(NoteOut, circuit, 0)))
     .b(frm(1).to(mk(NoteOut, circuit, 1)))
     /* .b(frm(0).to(mk(NoteOut, brute, 0))) */
@@ -198,30 +234,30 @@ for(0=>int outInd;outInd<outs.size();++outInd){
 
 // MAPPINGS
 
-keyboard => keysIn.from("note").c;
+keyboard => frm("note").c => rowCol.keysIn.c;
 
 
 for(0=>int i;i<INPUT_TYPES;++i){
-  launchpad => frm("cc"+(111-i)).to(mk(Value, i) => setInpType.c).c;
+  launchpad => frm("cc"+(111-i)).to(mk(Value, i) => rowCol.inpTypeSetter.c).c;
 
-  setInpType
+  rowCol.inpTypeSetter
     => mk(Processor, Eq.make(i)).c
     => LP.orange().c
     => lpOut.to("cc"+(111-i)).c;
 }
 
-launchpad => frm("note"+(16*7+8)).to(noteHoldToggle, P_Toggle).c;
-noteHoldToggle => LP.orange().c =>lpOut.to("note"+(16*7+8)).c;
+launchpad => frm("note"+(16*7+8)).to(rowCol.noteHoldToggle, P_Toggle).c;
+rowCol.noteHoldToggle => LP.orange().c =>lpOut.to("note"+(16*7+8)).c;
 
 
-launchpad => frm("note"+(16*7+0)).c => mk(TrigValue, 60).c => keysIn.c;
-launchpad => frm("note"+(16*7+1)).c => mk(TrigValue, 61).c => keysIn.c;
-launchpad => frm("note"+(16*7+2)).c => mk(TrigValue, 63).c => keysIn.c;
-launchpad => frm("note"+(16*7+3)).c => mk(TrigValue, 65).c => keysIn.c;
-launchpad => frm("note"+(16*7+4)).c => mk(TrigValue, 67).c => keysIn.c;
-launchpad => frm("note"+(16*7+5)).c => mk(TrigValue, 68).c => keysIn.c;
-launchpad => frm("note"+(16*7+6)).c => mk(TrigValue, 70).c => keysIn.c;
-launchpad => frm("note"+(16*7+7)).c => mk(TrigValue, 72).c => keysIn.c;
+launchpad => frm("note"+(16*7+0)).c => mk(TrigValue, 60).c => rowCol.keysIn.c;
+launchpad => frm("note"+(16*7+1)).c => mk(TrigValue, 61).c => rowCol.keysIn.c;
+launchpad => frm("note"+(16*7+2)).c => mk(TrigValue, 63).c => rowCol.keysIn.c;
+launchpad => frm("note"+(16*7+3)).c => mk(TrigValue, 65).c => rowCol.keysIn.c;
+launchpad => frm("note"+(16*7+4)).c => mk(TrigValue, 67).c => rowCol.keysIn.c;
+launchpad => frm("note"+(16*7+5)).c => mk(TrigValue, 68).c => rowCol.keysIn.c;
+launchpad => frm("note"+(16*7+6)).c => mk(TrigValue, 70).c => rowCol.keysIn.c;
+launchpad => frm("note"+(16*7+7)).c => mk(TrigValue, 72).c => rowCol.keysIn.c;
 
 
 setupOutputSelection();
@@ -229,38 +265,38 @@ setupOutputSelection();
 for(0=>int rowId;rowId<ROW_COUNT;++rowId){
   makeOutsUIRow(rowId);
 
-  def(ui, bufUIs[rowId]);
+  def(ui, rowCol.rows[rowId].bufUI);
   launchpad
     .b(frm("cc104").to(mk(Bigger, 0) => ui.to(P_ClearAll).c))
     .b(frm("note"+(rowId*16)).to(ui, P_Trigger));
-    /* .b(frm("note"+(rowId*16)).to((mk(Value, 0) => setInpType.c).whenNot(ui, recv(P_ClearAll)))); */
+    /* .b(frm("note"+(rowId*16)).to((mk(Value, 0) => rowCol.inpTypeSetter.c).whenNot(ui, recv(P_ClearAll)))); */
 
   ui => lpOut.to("note"+(16*rowId)).c;
 
-  def(offsetUI, offsetBufUIs[rowId]);
+  def(offsetUI, rowCol.rows[rowId].offsetBufUI);
   launchpad
     .b(frm("cc104").to(mk(Bigger, 0) => offsetUI.to(P_ClearAll).c))
     .b(frm("note"+(rowId*16+1)).to(offsetUI, P_Trigger));
-    /* .b(frm("note"+(rowId*16+1)).to((mk(Value, 1) => setInpType.c).whenNot(offsetUI, recv(P_ClearAll)))); */
+    /* .b(frm("note"+(rowId*16+1)).to((mk(Value, 1) => rowCol.inpTypeSetter.c).whenNot(offsetUI, recv(P_ClearAll)))); */
 
   offsetUI => lpOut.to("note"+(16*rowId+1)).c;
 }
 
 
 fun void setupOutputSelection(){
-  for(0=>int outInd;outInd<outs.size();++outInd){
+  for(0=>int rowInd;rowInd<rowCol.rows.size();++rowInd){
     // Select outputs with side buttons
-    8+outInd*16 => int ind;
+    8+rowInd*16 => int ind;
     launchpad
       => mk(Bigger,0).from("note"+ind).c
-      => mk(TrigValue,outInd).c
-      => inputLaneRouter.to("index").c
+      => mk(TrigValue,rowInd).c
+      => rowCol.rowIndexSelector.c
     ;
 
-    inputLaneRouter
-      => MBUtil.onlyHigh().from(recv("index")).c
-      => mk(Processor, Eq.make(outInd)).c
-      => mk(TrigValue, outInd).c
+    rowCol.rowIndexSelector
+      => MBUtil.onlyHigh().c
+      => mk(Processor, Eq.make(rowInd)).c
+      => mk(TrigValue, rowInd).c
       => LP.red().c
       => lpOut.to("note"+ind).c;
   }
@@ -270,11 +306,12 @@ fun void setupOutputSelection(){
 
 fun void makeOutsUIRow(int rowId){
   for(0=>int outputId;outputId<OUT_DEVICE_COUNT;++outputId){
+    def(outs, rowCol.rows[rowId].outs);
     launchpad
       => frm("note"+(rowId*16+4+outputId)).c
-      => outs[rowId].to("toggleOut"+outputId).c;
+      => outs.to("toggleOut"+outputId).c;
 
-    outs[rowId]
+    outs
       => frm("outActive"+outputId).c
       => LP.red().c
       => lpOut.to("note"+(rowId*16+4+outputId)).c;
@@ -293,8 +330,8 @@ MidiMsg msg;
 launchpadDeviceOut.send(msg);
 
 samp =>  now;
-inputLaneRouter.set("index", 0);
-setInpType.set(0);
+rowCol.rowIndexSelector.set(0);
+rowCol.inpTypeSetter.set(0);
 
 Util.runForever();
 
