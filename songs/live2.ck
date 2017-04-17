@@ -240,7 +240,7 @@ for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
      */
   ;
 
-  nanoK => frm("cc"+(14+rowId)).c => mk(Printer, "XXX").c;
+  // Make it easier to go to center by splitting into 3 intervals
   (nanoK => frm("cc"+(14+rowId)).c)
     .b(mk(RangeMapper, 0, 55, 0, 99) => row.playbackRate.c)
     .b(mk(RangeMapper, 56, 73, 100, 100) => row.playbackRate.c)
