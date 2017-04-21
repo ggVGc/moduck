@@ -1,6 +1,7 @@
 
 
 include(song_macros.m4)
+include(time_macros.m4)
 include(_all_instruments.m4)
 include(funcs.m4)
 include(parts/rec_buf_ui.ck)
@@ -72,7 +73,7 @@ class Row{
 }
 
 
-fun Row makeRow(ModuckP noteHoldToggle){
+fun Row makeRow(ModuckP clockIn, ModuckP noteHoldToggle){
   Row ret;
 
   def(buf, mk(RecBuf, QUANTIZATION));
@@ -107,7 +108,7 @@ fun Row makeRow(ModuckP noteHoldToggle){
 
   scalingProxy => bufClock.to("scaling").c;
 
-  P(Runner.masterClock)
+  clockIn
     .b(mk(PulseGen, 2, Runner.timePerTick()/2) => bufClock.c)
     .b(pitchLockBuf.to(P_Clock));
 
@@ -175,7 +176,7 @@ class RowCollection{
 }
 
 
-fun RowCollection setupRows(){
+fun RowCollection setupRows(ModuckP clockIn){
   RowCollection ret;
 
   def(inputLaneRouter, mk(Router, 0));
@@ -194,7 +195,7 @@ fun RowCollection setupRows(){
 
   for(0=>int i;i<ROW_COUNT;++i){
     10::ms => now; // Keep JACK happy, prevents getting killed because of buffer underrun
-    makeRow(ret.noteHoldToggle) @=> Row row;
+    makeRow(clockIn, ret.noteHoldToggle) @=> Row row;
     ret.inpTypeSetter => row.inpTypeSetter.c;
     inputLaneRouter => frm(i).to(row.notesIn).c;
     ret.rows << row;
@@ -203,18 +204,16 @@ fun RowCollection setupRows(){
 }
 
 
-setupRows() @=> RowCollection rowCol;
+def(clock, mk(Repeater));
 
+setupRows(clock) @=> RowCollection rowCol;
 
 def(metronome, mk(Repeater));
-Runner.masterClock
+clock
   => mk(PulseDiv, B).c
   => mk(SampleHold, 100::ms).c
   => metronome.c
 ;
-
-
-
 
 
 // DEVICES
@@ -224,28 +223,54 @@ def(launchpad, mk(MidInp, MIDI_IN_LAUNCHPAD, 0))
 <<<"Opening keyboard in">>>;
 /* def(keyboard, mk(MidInp, MIDI_IN_OXYGEN, 0)); */
 def(keyboard, mk(MidInp, MIDI_IN_K49, 0));
+def(circuitIn, mk(MidInp, MIDI_IN_CIRCUIT, 9));
+def(bcr, mk(MidInp, MIDI_IN_BCR, 8));
+
+bcr => frm("cc40").c => mk(Printer, "bcr").c;
+
+/* 
+ circuitIn => frm("cc").c => mk(Printer, "Circuit cc").c;
+ circuitIn => frm("note").c => mk(Printer, "Circuit note").c;
+ circuitIn => mk(Printer, "Circuit").c;
+ */
+
+/* def(clockGen, mk(PulseGen, Runner.ticksPerBeat/4, Runner.timePerTick())); */
+
+/* def(deltCont, mk(DeltaCounter)); */
+
+/* deltCont => mk(Printer, "delta").c; */
+
+/* 
+ (deltCont => mk(Bigger, Util.toSamples(500::ms)).c)
+   .b(deltCont.to(P_Reset))
+   .b(clockGen.to(P_Reset));
+ */
+
+/* 
+ circuitIn
+   => frm("note65").c
+   => deltCont.c
+   => mk(Div, Runner.ticksPerBeat/4).c
+   => clockGen.to("delta").c;
+ */
+
+
+
+/* 
+ circuitIn => frm("note65").c
+   => clockGen.c
+   => clock.c;
+ */
+
+Runner.masterClock => clock.c;
+
 
 def(nanoK, mk(MidInp, MIDI_IN_NANO_KTRL, 0));
 
 nanoK => mk(Printer, "nano").from("cc").c;
 
-
-MidiOut launchpadDeviceOut;
-<<<"Opening launchpad out">>>;
-launchpadDeviceOut.open(MIDI_OUT_LAUNCHPAD);
-/* 
- MidiOut circuitDeviceOut;
- <<<"Opening circuit out">>>;
- circuitDeviceOut.open(MIDI_OUT_CIRCUIT);
- */
-
+openOut(MIDI_OUT_LAUNCHPAD) @=> MidiOut launchpadDeviceOut;
 def(lpOut, mk(NoteOut, launchpadDeviceOut, 0));
-
-
-/* 
- def(circuit1, mk(NoteOut, circuitDeviceOut, 0));
- def(circuit2, mk(NoteOut, circuitDeviceOut, 1));
- */
 
 // OUTPUTS
 
@@ -265,9 +290,12 @@ openOut(MIDI_OUT_CIRCUIT) @=> MidiOut circuit;
 for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
   rowCol.rows[rowId] @=> Row row;
   row.outs
-    .b(frm(0).to(mk(NoteOut, circuit, 0)))
-    .b(frm(1).to(mk(NoteOut, circuit, 1)))
-    /* .b(frm(0).to(mk(NoteOut, brute, 0))) */
+    .b(frm(0).to(mk(NoteOut,circuit,0)))
+    .b(frm(1).to(mk(NoteOut,circuit,1)))
+    .b(frm(2).to(mk(NoteOut,circuit,9)))
+    /*.b(frm(2).to(mk(NoteOut,circuit,10)))*/
+    /*.b(frm(3).to(mk(NoteOut,circuit,12)))*/
+    /*.b(frm(0).to(mk(NoteOut,brute,0)))
     /* 
      .b(frm(1).to(mk(NoteOut, ms20, 0)))
      .b(frm(2).to(mk(NoteOut, nocoast, 0)))

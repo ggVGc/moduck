@@ -53,6 +53,7 @@ deviceHints = [
   ,["circuit", "circuit"]
   ,["oxygen", "oxygen"]
   ,["K49", "K49"]
+  ,["BCR2000", "bcr"]
 ]
 
 

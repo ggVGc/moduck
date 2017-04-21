@@ -78,7 +78,7 @@ public class NoteOut extends Moduck{
       ret.addIn("note"+i, GateHandler.make(device, channel, i, false));
       ret.addIn("cc"+i, GateHandler.make(device, channel, i, true));
     }
-    ret.addVal("velocity", 110);
+    ret.addVal("velocity", 127);
     return ret;
   }
 
