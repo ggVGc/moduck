@@ -12,7 +12,6 @@ class BufEntry{
 
 
 class Shared{
-  Buffer buf;
   BufEntry entries[0];
   false => int clearing;
   time startTime; // gets reset on loop
@@ -154,7 +153,6 @@ public class Buffer extends Moduck{
   maker0(Buffer){
     Buffer ret;
     Shared shared;
-    ret @=> shared.buf;
     OUT(P_Trigger);
     OUT("hasData");
     IN(ClockHandler,(shared));
