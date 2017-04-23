@@ -16,7 +16,7 @@ include(parts/rec_buf_ui.ck)
 
 /* define(SEQ_COUNT, 1); */
 define(OUT_DEVICE_COUNT, 4);
-define(ROW_COUNT, 7);
+define(ROW_COUNT, 4);
 define(INPUT_TYPES, 3);
 define(QUANTIZATION, Bar)
 
@@ -221,12 +221,38 @@ clock
 <<<"Opening launchpad in">>>;
 def(launchpad, mk(MidInp, MIDI_IN_LAUNCHPAD, 0))
 <<<"Opening keyboard in">>>;
-/* def(keyboard, mk(MidInp, MIDI_IN_OXYGEN, 0)); */
-def(keyboard, mk(MidInp, MIDI_IN_K49, 0));
-def(circuitIn, mk(MidInp, MIDI_IN_CIRCUIT, 9));
-def(bcr, mk(MidInp, MIDI_IN_BCR, 8));
+/* def(keyboard, mk(MidInp, MIDI_IN_CIRCUIT, 0)); */
+def(keyboard, mk(Repeater));
+mk(MidInp, MIDI_IN_CIRCUIT, 0) => frm("note").c => keyboard.c;
+mk(MidInp, MIDI_IN_CIRCUIT, 1) => frm("note").c => keyboard.c;
+def(nanoK, mk(MidInp, MIDI_IN_NANO_KTRL, 0));
 
-bcr => frm("cc40").c => mk(Printer, "bcr").c;
+
+function void setupLaunchpadKeyboard(){
+  def(out, mk(Repeater));
+  8-ROW_COUNT => int maxInd;
+  ROW_COUNT => int offsetRowInd;
+  for(0=>int rowInd;rowInd<maxInd;++rowInd){
+    for(0=>int i;i<8;++i){
+      launchpad
+        => frm("note"+((offsetRowInd + (maxInd-rowInd-1))*16+i)).c
+        => mk(TrigValue, (rowInd*8+i + 42)).c
+        => keyboard.c;
+    }
+  }
+}
+
+setupLaunchpadKeyboard();
+
+
+/* def(keyboard, mk(MidInp, MIDI_IN_OXYGEN, 0)); */
+/* def(keyboard, mk(MidInp, MIDI_IN_K49, 0)); */
+/* def(circuitIn, mk(MidInp, MIDI_IN_CIRCUIT, 9)); */
+
+/* 
+ def(bcr, mk(MidInp, MIDI_IN_BCR, 8));
+ bcr => frm("cc40").c => mk(Printer, "bcr").c;
+ */
 
 /* 
  circuitIn => frm("cc").c => mk(Printer, "Circuit cc").c;
@@ -265,7 +291,6 @@ bcr => frm("cc40").c => mk(Printer, "bcr").c;
 Runner.masterClock => clock.c;
 
 
-def(nanoK, mk(MidInp, MIDI_IN_NANO_KTRL, 0));
 
 nanoK => mk(Printer, "nano").from("cc").c;
 
@@ -315,7 +340,7 @@ for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
 
 // MAPPINGS
 
-keyboard => frm("note").c => rowCol.keysIn.c;
+keyboard => rowCol.keysIn.c;
 
 
 for(0=>int i;i<INPUT_TYPES;++i){
