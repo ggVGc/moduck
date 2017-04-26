@@ -81,7 +81,8 @@ fun Row makeRow(ModuckP clockIn, ModuckP noteHoldToggle){
   def(pitchLocker, mk(TrigValue, null));
   def(holdTog, mk(Toggler));
   def(inpTypeRouter, mk(Router, 0, false));
-  def(octaveShifter, mk(Offset, 0));
+  /* def(octaveShifter, mk(Offset, 0)); */
+  def(pitchShifter, mk(Offset, 0));
   def(pitchLockBuf, mk(RecBuf, QUANTIZATION));
 
   def(bufClock, mk(PulseDiv, 2));
@@ -145,7 +146,8 @@ fun Row makeRow(ModuckP clockIn, ModuckP noteHoldToggle){
     .b(frm(0).to(notesProxy, 1))
     .b(frm(1).to(pitchLockBuf, P_Set))
     .b(frm(1).to(pitchLockProxy, 1))
-    .b(frm(2).to(mk(Offset, -60) => mk(Mul, 12).c => octaveShifter.to("offset").c));
+    /* .b(frm(2).to(mk(Offset, -60) => mk(Mul, 12).c => octaveShifter.to("offset").c)); */
+    .b(frm(2).to( mk(Offset, -14) => pitchShifter.to("offset").c));
 
   buf => notesProxy.to(0).c;
 
@@ -156,7 +158,8 @@ fun Row makeRow(ModuckP clockIn, ModuckP noteHoldToggle){
     => iff(pitchLocker, recv(P_Set))
       .then(pitchLocker)
       .els(mk(Repeater)).c
-    => octaveShifter.c
+    /* => octaveShifter.c */
+    => pitchShifter.c
     => notesOut.c;
 
 
@@ -176,7 +179,7 @@ class RowCollection{
 }
 
 
-fun RowCollection setupRows(ModuckP clockIn){
+fun RowCollection makeRowCollection(ModuckP clockIn){
   RowCollection ret;
 
   def(inputLaneRouter, mk(Router, 0));
@@ -206,48 +209,191 @@ fun RowCollection setupRows(ModuckP clockIn){
 
 def(clock, mk(Repeater));
 
-setupRows(clock) @=> RowCollection rowCol;
-
-def(metronome, mk(Repeater));
-clock
-  => mk(PulseDiv, B).c
-  => mk(SampleHold, 100::ms).c
-  => metronome.c
-;
-
+makeRowCollection(clock) @=> RowCollection rowCol;
 
 // DEVICES
+
+
+Runner.masterClock => clock.c;
 
 <<<"Opening launchpad in">>>;
 def(launchpad, mk(MidInp, MIDI_IN_LAUNCHPAD, 0))
 <<<"Opening keyboard in">>>;
 /* def(keyboard, mk(MidInp, MIDI_IN_CIRCUIT, 0)); */
-def(keyboard, mk(Repeater));
-mk(MidInp, MIDI_IN_CIRCUIT, 0) => frm("note").c => keyboard.c;
-mk(MidInp, MIDI_IN_CIRCUIT, 1) => frm("note").c => keyboard.c;
 def(nanoK, mk(MidInp, MIDI_IN_NANO_KTRL, 0));
-
-
-function void setupLaunchpadKeyboard(){
-  def(out, mk(Repeater));
-  8-ROW_COUNT => int maxInd;
-  ROW_COUNT => int offsetRowInd;
-  for(0=>int rowInd;rowInd<maxInd;++rowInd){
-    for(0=>int i;i<8;++i){
-      launchpad
-        => frm("note"+((offsetRowInd + (maxInd-rowInd-1))*16+i)).c
-        => mk(TrigValue, (rowInd*8+i + 42)).c
-        => keyboard.c;
-    }
-  }
-}
-
-setupLaunchpadKeyboard();
-
-
 /* def(keyboard, mk(MidInp, MIDI_IN_OXYGEN, 0)); */
 /* def(keyboard, mk(MidInp, MIDI_IN_K49, 0)); */
 /* def(circuitIn, mk(MidInp, MIDI_IN_CIRCUIT, 9)); */
+
+
+nanoK => mk(Printer, "nano").from("cc").c;
+
+openOut(MIDI_OUT_LAUNCHPAD) @=> MidiOut launchpadDeviceOut;
+def(lpOut, mk(NoteOut, launchpadDeviceOut, 0));
+
+// OUTPUTS
+
+fun MidiOut openOut(int port){
+  MidiOut dev;
+  dev.open(port);
+  50::ms => now;
+  return dev;
+}
+
+openOut(MIDI_OUT_MICROBRUTE) @=> MidiOut brute;
+openOut(MIDI_OUT_MS_20) @=>  MidiOut ms20;
+openOut(MIDI_OUT_USB_MIDI) @=> MidiOut nocoast;
+openOut(MIDI_OUT_SYS1) @=> MidiOut sys1;
+openOut(MIDI_OUT_CIRCUIT) @=> MidiOut circuit;
+
+
+// MAPPINGS
+
+launchpad => frm("note"+(16*7+8)).to(rowCol.noteHoldToggle, P_Toggle).c;
+rowCol.noteHoldToggle => LP.orange().c =>lpOut.to("note"+(16*7+8)).c;
+
+setupOutputSelection();
+launchpadKeyboard(launchpad, rowCol.rows.size(), 8, Scales.MinorNatural.size()) => rowCol.keysIn.c;
+
+
+for(0=>int i;i<INPUT_TYPES;++i){
+  launchpad => frm("cc"+(111-i)).to(mk(Value, i) => rowCol.inpTypeSetter.c).c;
+
+  rowCol.inpTypeSetter
+    => mk(Processor, Eq.make(i)).c
+    => LP.orange().c
+    => lpOut.to("cc"+(111-i)).c;
+}
+
+
+for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
+  rowCol.rows[rowId] @=> Row row;
+  setupRowOutputs(row);
+  setupSpeedControls(row, rowId);
+  makeOutsUIRow(rowId);
+  setuBufferUIs(rowId);
+}
+
+
+function void setuBufferUIs(int rowId){
+  def(ui, rowCol.rows[rowId].bufUI);
+  launchpad
+    .b(frm("cc104").to(mk(Bigger, 0) => ui.to(P_ClearAll).c))
+    .b(frm("note"+(rowId*16)).to(ui, P_Trigger));
+
+  ui => lpOut.to("note"+(16*rowId)).c;
+
+  def(offsetUI, rowCol.rows[rowId].offsetBufUI);
+  launchpad
+    .b(frm("cc104").to(mk(Bigger, 0) => offsetUI.to(P_ClearAll).c))
+    .b(frm("note"+(rowId*16+1)).to(offsetUI, P_Trigger));
+
+  offsetUI => lpOut.to("note"+(16*rowId+1)).c;
+}
+
+
+function void setupSpeedControls(Row row, int rowId){
+  // Make it easier to go to center by splitting into 3 intervals
+  (nanoK => frm("cc"+(14+rowId)).c)
+    .b(mk(RangeMapper, 0, 55, 0, 99) => row.playbackRate.c)
+    .b(mk(RangeMapper, 56, 73, 100, 100) => row.playbackRate.c)
+    .b(mk(RangeMapper, 74, 127, 101, 200) => row.playbackRate.c);
+  nanoK => frm("cc"+(23+rowId)).c => row.nudgeForward.c;
+  nanoK => frm("cc"+(33+rowId)).c => row.nudgeBack.c;
+}
+
+
+function ModuckP outPitchQuant(){
+    return mk(Repeater)
+      => mk(Mapper, Scales.MinorNatural, 12).c
+      => octaves(3).c;
+}
+
+function void setupRowOutputs(Row row){
+  row.outs
+    .b(frm(0).to(outPitchQuant() => mk(NoteOut,circuit,0).c))
+    .b(frm(1).to(outPitchQuant() => mk(NoteOut,circuit,1).c))
+    .b(frm(0).to( mk(Printer, "OUT 0")))
+    .b(frm(1).to( mk(Printer, "OUT 1")))
+    /* .b(frm(2).to(mk(NoteOut,circuit,9))) */
+    /*.b(frm(2).to(mk(NoteOut,circuit,10)))*/
+    /*.b(frm(3).to(mk(NoteOut,circuit,12)))*/
+    /*.b(frm(0).to(mk(NoteOut,brute,0)))
+    /* 
+     .b(frm(1).to(mk(NoteOut, ms20, 0)))
+     .b(frm(2).to(mk(NoteOut, nocoast, 0)))
+     .b(frm(3).to(mk(NoteOut, sys1, 0)))
+     */
+  ;
+}
+
+
+
+
+function void setupOutputSelection(){
+  for(0=>int rowInd;rowInd<rowCol.rows.size();++rowInd){
+    // Select outputs with side buttons
+    8+rowInd*16 => int ind;
+    launchpad
+      => mk(Bigger,0).from("note"+ind).c
+      => mk(TrigValue,rowInd).c
+      => rowCol.rowIndexSelector.c
+    ;
+
+    rowCol.rowIndexSelector
+      => MBUtil.onlyHigh().c
+      => mk(Processor, Eq.make(rowInd)).c
+      => mk(TrigValue, rowInd).c
+      => LP.red().c
+      => lpOut.to("note"+ind).c;
+  }
+}
+
+
+
+function void makeOutsUIRow(int rowId){
+  for(0=>int outputId;outputId<OUT_DEVICE_COUNT;++outputId){
+    def(outs, rowCol.rows[rowId].outs);
+    launchpad
+      => frm("note"+(rowId*16+4+outputId)).c
+      => outs.to("toggleOut"+outputId).c;
+
+    outs
+      => frm("outActive"+outputId).c
+      => LP.red().c
+      => lpOut.to("note"+(rowId*16+4+outputId)).c;
+  }
+}
+
+
+function ModuckP launchpadKeyboard(ModuckP launchpadInstance, int startRow, int endRow, int width){
+  def(out, mk(Repeater));
+  endRow-startRow => int maxInd;
+  for(0=>int rowInd;rowInd<maxInd;++rowInd){
+    for(0=>int i;i<width;++i){
+      launchpadInstance
+        => frm("note"+((startRow + (maxInd-rowInd-1))*16+i)).c
+        => mk(TrigValue, (rowInd*width+i)).c
+        => out.c;
+    }
+  }
+  return out;
+}
+
+
+
+// Send launchpad reset message
+MidiMsg msg;
+176 => msg.data1;
+launchpadDeviceOut.send(msg);
+
+samp =>  now;
+rowCol.rowIndexSelector.set(0);
+rowCol.inpTypeSetter.set(0);
+
+Util.runForever();
+
+
 
 /* 
  def(bcr, mk(MidInp, MIDI_IN_BCR, 8));
@@ -288,249 +434,3 @@ setupLaunchpadKeyboard();
    => clock.c;
  */
 
-Runner.masterClock => clock.c;
-
-
-
-nanoK => mk(Printer, "nano").from("cc").c;
-
-openOut(MIDI_OUT_LAUNCHPAD) @=> MidiOut launchpadDeviceOut;
-def(lpOut, mk(NoteOut, launchpadDeviceOut, 0));
-
-// OUTPUTS
-
-fun MidiOut openOut(int port){
-  MidiOut dev;
-  dev.open(port);
-  50::ms => now;
-  return dev;
-}
-
-openOut(MIDI_OUT_MICROBRUTE) @=> MidiOut brute;
-openOut(MIDI_OUT_MS_20) @=>  MidiOut ms20;
-openOut(MIDI_OUT_USB_MIDI) @=> MidiOut nocoast;
-openOut(MIDI_OUT_SYS1) @=> MidiOut sys1;
-openOut(MIDI_OUT_CIRCUIT) @=> MidiOut circuit;
-
-for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
-  rowCol.rows[rowId] @=> Row row;
-  row.outs
-    .b(frm(0).to(mk(NoteOut,circuit,0)))
-    .b(frm(1).to(mk(NoteOut,circuit,1)))
-    .b(frm(2).to(mk(NoteOut,circuit,9)))
-    /*.b(frm(2).to(mk(NoteOut,circuit,10)))*/
-    /*.b(frm(3).to(mk(NoteOut,circuit,12)))*/
-    /*.b(frm(0).to(mk(NoteOut,brute,0)))
-    /* 
-     .b(frm(1).to(mk(NoteOut, ms20, 0)))
-     .b(frm(2).to(mk(NoteOut, nocoast, 0)))
-     .b(frm(3).to(mk(NoteOut, sys1, 0)))
-     */
-  ;
-
-  // Make it easier to go to center by splitting into 3 intervals
-  (nanoK => frm("cc"+(14+rowId)).c)
-    .b(mk(RangeMapper, 0, 55, 0, 99) => row.playbackRate.c)
-    .b(mk(RangeMapper, 56, 73, 100, 100) => row.playbackRate.c)
-    .b(mk(RangeMapper, 74, 127, 101, 200) => row.playbackRate.c);
-  nanoK => frm("cc"+(23+rowId)).c => row.nudgeForward.c;
-  nanoK => frm("cc"+(33+rowId)).c => row.nudgeBack.c;
-}
-
-
-// MAPPINGS
-
-keyboard => rowCol.keysIn.c;
-
-
-for(0=>int i;i<INPUT_TYPES;++i){
-  launchpad => frm("cc"+(111-i)).to(mk(Value, i) => rowCol.inpTypeSetter.c).c;
-
-  rowCol.inpTypeSetter
-    => mk(Processor, Eq.make(i)).c
-    => LP.orange().c
-    => lpOut.to("cc"+(111-i)).c;
-}
-
-launchpad => frm("note"+(16*7+8)).to(rowCol.noteHoldToggle, P_Toggle).c;
-rowCol.noteHoldToggle => LP.orange().c =>lpOut.to("note"+(16*7+8)).c;
-
-
-launchpad => frm("note"+(16*7+0)).c => mk(TrigValue, 60).c => rowCol.keysIn.c;
-launchpad => frm("note"+(16*7+1)).c => mk(TrigValue, 61).c => rowCol.keysIn.c;
-launchpad => frm("note"+(16*7+2)).c => mk(TrigValue, 63).c => rowCol.keysIn.c;
-launchpad => frm("note"+(16*7+3)).c => mk(TrigValue, 65).c => rowCol.keysIn.c;
-launchpad => frm("note"+(16*7+4)).c => mk(TrigValue, 67).c => rowCol.keysIn.c;
-launchpad => frm("note"+(16*7+5)).c => mk(TrigValue, 68).c => rowCol.keysIn.c;
-launchpad => frm("note"+(16*7+6)).c => mk(TrigValue, 70).c => rowCol.keysIn.c;
-launchpad => frm("note"+(16*7+7)).c => mk(TrigValue, 72).c => rowCol.keysIn.c;
-
-
-setupOutputSelection();
-
-for(0=>int rowId;rowId<ROW_COUNT;++rowId){
-  makeOutsUIRow(rowId);
-
-  def(ui, rowCol.rows[rowId].bufUI);
-  launchpad
-    .b(frm("cc104").to(mk(Bigger, 0) => ui.to(P_ClearAll).c))
-    .b(frm("note"+(rowId*16)).to(ui, P_Trigger));
-    /* .b(frm("note"+(rowId*16)).to((mk(Value, 0) => rowCol.inpTypeSetter.c).whenNot(ui, recv(P_ClearAll)))); */
-
-  ui => lpOut.to("note"+(16*rowId)).c;
-
-  def(offsetUI, rowCol.rows[rowId].offsetBufUI);
-  launchpad
-    .b(frm("cc104").to(mk(Bigger, 0) => offsetUI.to(P_ClearAll).c))
-    .b(frm("note"+(rowId*16+1)).to(offsetUI, P_Trigger));
-    /* .b(frm("note"+(rowId*16+1)).to((mk(Value, 1) => rowCol.inpTypeSetter.c).whenNot(offsetUI, recv(P_ClearAll)))); */
-
-  offsetUI => lpOut.to("note"+(16*rowId+1)).c;
-}
-
-
-fun void setupOutputSelection(){
-  for(0=>int rowInd;rowInd<rowCol.rows.size();++rowInd){
-    // Select outputs with side buttons
-    8+rowInd*16 => int ind;
-    launchpad
-      => mk(Bigger,0).from("note"+ind).c
-      => mk(TrigValue,rowInd).c
-      => rowCol.rowIndexSelector.c
-    ;
-
-    rowCol.rowIndexSelector
-      => MBUtil.onlyHigh().c
-      => mk(Processor, Eq.make(rowInd)).c
-      => mk(TrigValue, rowInd).c
-      => LP.red().c
-      => lpOut.to("note"+ind).c;
-  }
-}
-
-
-
-fun void makeOutsUIRow(int rowId){
-  for(0=>int outputId;outputId<OUT_DEVICE_COUNT;++outputId){
-    def(outs, rowCol.rows[rowId].outs);
-    launchpad
-      => frm("note"+(rowId*16+4+outputId)).c
-      => outs.to("toggleOut"+outputId).c;
-
-    outs
-      => frm("outActive"+outputId).c
-      => LP.red().c
-      => lpOut.to("note"+(rowId*16+4+outputId)).c;
-  }
-}
-
-
-
-// UI SETUP
-
-
-
-// Send launchpad reset message
-MidiMsg msg;
-176 => msg.data1;
-launchpadDeviceOut.send(msg);
-
-samp =>  now;
-rowCol.rowIndexSelector.set(0);
-rowCol.inpTypeSetter.set(0);
-
-Util.runForever();
-
-
-
-
-
-/* nanoktrl => mk(Printer, "nanoktrl note").from("note").c; */
-/* nanoktrl => mk(Printer, "nanoktrl cc").from("cc").c; */
-/* launchpad => mk(Printer, "lp note").from("note").c; */
-/* launchpad => mk(Printer, "lp cc").from("cc").c; */
-/* oxygen => mk(Printer, "oxygen cc").from("cc").c; */
-/* oxygen => mk(Printer, "oxygen note").from("note").c; */
-
-
-/* 
- fun void setupActiveBufsIndicators(){
-   for(0=>int rowInd;rowInd<ROW_COUNT;++rowInd){
-     for(0=>int bufId;bufId<SEQ_COUNT;++bufId){
-       bufs[rowInd]
-         => mk(TrigValue, rowInd*16+bufId).from("active_"+bufId).c
-         => mk(NoteOut, launchpadDeviceOut, 0).c;
-     }
-   }
- }
- */
-
-/* 
- metronome
-   => mk(TrigValue, 7*16).c
-   => mk(NoteOut, launchpadDeviceOut, 0, false).c
- ;
- */
-
-
-/* 
- fun ModuckP makeRecBufs(int count){
-   def(recBlocker, mk(Blocker));
-   def(rit, ritmo(false
-     ,[P_GoTo, P_Set]
-     ,[ mk(Buffer)
-       ,mk(Buffer)
-       ,mk(Buffer)
-       ,mk(Buffer)
-   ]));
- 
- 
-   def(root, mk(Repeater, Util.concatStrings(
-       [rit.getSourceTags(), [P_GoTo, P_Gate, "rec", "length"]])));
- 
-   root
-     .b(recBlocker
-       .fromTo("rec", P_Gate)
-       .fromTo(P_Gate, P_Trigger)
-     ).b(rit
-       .listen(P_GoTo)
-       .listen(rit.getSourceTags())
-     );
-   recBlocker => rit.to("active_"+P_Set).c;
- 
-   def(restarter, mk(Repeater));
- 
-   restarter
-     => mk(TrigValue, 0).c
-     => rit.to(P_GoTo).c
-   ;
- 
-   root
-     => frm(P_Clock).c
-     => (mk(PulseDiv, Bar).hook(root.fromTo("length", "divisor")) ).c
-     => restarter.c
-   ;
- 
-   [P_Trigger] @=> string outTags[];
-   for(0=>int i;i<count;++i){
-     outTags << "active_"+i;
-   }
- 
-   def(out, mk(Repeater, outTags));
- 
-   root => frm(P_Gate).to(out, P_Trigger).c;
-   rit => out.c;
- 
-   for(0=>int i;i<count;++i){
-     // Send out any low signals,
-     // to prevent hanging notes when disabling buffers
-     rit
-       => frm(recv(""+i)).c
-       => MBUtil.onlyLow().c
-       => out.c;
-     rit => out.listen("active_"+i).c;
-   }
- 
-   return mk(Wrapper, root, out);
- }
- */
