@@ -81,7 +81,6 @@ fun Row makeRow(ModuckP clockIn, ModuckP noteHoldToggle){
   def(pitchLocker, mk(TrigValue, null));
   def(holdTog, mk(Toggler));
   def(inpTypeRouter, mk(Router, 0, false));
-  /* def(octaveShifter, mk(Offset, 0)); */
   def(pitchShifter, mk(Offset, 0));
   def(pitchLockBuf, mk(RecBuf, QUANTIZATION));
 
@@ -113,22 +112,7 @@ fun Row makeRow(ModuckP clockIn, ModuckP noteHoldToggle){
     .b(mk(PulseGen, 2, Runner.timePerTick()/2) => bufClock.c)
     .b(pitchLockBuf.to(P_Clock));
 
-
   bufClock => buf.to(P_Clock).c;
-    /* 
-     => iff(ret.nudgeBack, P_Default)
-         .then(
-             mk(PulseDiv, 2).set("scaling", 60)
-         ).els(
-           iff(ret.nudgeForward, P_Default)
-           .then(
-             mk(PulseGen, 2, Runner.timePerTick()/2)
-           ).els(
-             mk(Repeater)
-           )
-         ).c
-     => buf.to(P_Clock).c;
-     */
 
   noteHoldToggle => MBUtil.onlyLow().c => inpTypeRouter.c;
 
@@ -146,7 +130,6 @@ fun Row makeRow(ModuckP clockIn, ModuckP noteHoldToggle){
     .b(frm(0).to(notesProxy, 1))
     .b(frm(1).to(pitchLockBuf, P_Set))
     .b(frm(1).to(pitchLockProxy, 1))
-    /* .b(frm(2).to(mk(Offset, -60) => mk(Mul, 12).c => octaveShifter.to("offset").c)); */
     .b(frm(2).to( mk(Offset, -14) => pitchShifter.to("offset").c));
 
   buf => notesProxy.to(0).c;
@@ -158,7 +141,6 @@ fun Row makeRow(ModuckP clockIn, ModuckP noteHoldToggle){
     => iff(pitchLocker, recv(P_Set))
       .then(pitchLocker)
       .els(mk(Repeater)).c
-    /* => octaveShifter.c */
     => pitchShifter.c
     => notesOut.c;
 
