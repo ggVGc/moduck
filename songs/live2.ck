@@ -139,8 +139,8 @@ fun Row makeRow(ModuckP clockIn, ModuckP noteHoldToggle){
 
   notesProxy
     => iff(pitchLocker, recv(P_Set))
-      .then(pitchLocker)
-      .els(mk(Repeater)).c
+        .then(pitchLocker)
+        .els(mk(Repeater)).c
     => pitchShifter.c
     => notesOut.c;
 
@@ -167,7 +167,7 @@ fun RowCollection makeRowCollection(ModuckP clockIn){
   def(inputLaneRouter, mk(Router, 0));
   ret.rowIndexSelector => inputLaneRouter.to("index").c;
 
-  def(inputNoteHold, mk(SampleHold, 0::samp).set("forever", true));
+  def(inputNoteHold, mk(SampleHold));
 
 
   ret.noteHoldToggle => MBUtil.onlyLow().c => inputLaneRouter.c;
