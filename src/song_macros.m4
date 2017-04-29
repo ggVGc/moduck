@@ -2,6 +2,7 @@
 include(pulses.m4)
 include(midiPorts.m4)
 include(aliases.m4)
+include(macros.m4)
 
 
 define(B, Runner.ticksPerBeat)
@@ -28,7 +29,7 @@ define(SQ, Sequencer)
 define(def, ModuckP.make(
 
 $2
-) @=> ModuckP $1;)
+).setName("$1 - `FILIN'") @=> ModuckP $1;)
 
 define(defl,[
   `shift($@)'
