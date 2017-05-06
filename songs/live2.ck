@@ -72,17 +72,45 @@ class Row{
   def(nudgeBack, mk(Repeater));
 }
 
+class ThingAndBuffer{
+  ModuckP connector;
+  ModuckP bufUI;
+  ModuckP thing;
+  def(activity, mk(Repeater));
+
+  fun static ThingAndBuffer make(ModuckP thing, string targetTag, int bufQuantization){
+    ThingAndBuffer ret;
+    thing @=> ret.thing;
+    def(buf, mk(RecBuf, bufQuantization));
+    def(root, mk(Repeater, [P_Trigger, P_Clock]));
+    def(proxy, mk(Prio));
+
+    root => buf.listen(P_Clock).c;
+    buf => proxy.to(0).c;
+    (root => frm(P_Trigger).c)
+      .b(proxy.to(1))
+      .b(buf.to(P_Set));
+
+    proxy => thing.to(targetTag).c;
+    thing => frm(recv(targetTag)).c => ret.activity.c;
+
+    mk(Wrapper, root, thing) @=> ret.connector;
+    recBufUI(buf) @=> ret.bufUI;
+    return ret;
+  }
+}
+
 
 fun Row makeRow(ModuckP clockIn, ModuckP noteHoldToggle){
   Row ret;
 
-  def(buf, mk(RecBuf, QUANTIZATION));
-  def(notesOut, mk(Repeater));
-  def(pitchLocker, mk(TrigValue, null));
-  def(holdTog, mk(Toggler));
   def(inpTypeRouter, mk(Router, 0, false));
   def(pitchShifter, mk(Offset, 0));
-  def(pitchLockBuf, mk(RecBuf, QUANTIZATION));
+
+  ThingAndBuffer.make(mk(TrigValue, null), P_Set, QUANTIZATION)
+    @=> ThingAndBuffer pitchLock;
+  ThingAndBuffer.make(mk(Repeater), P_Trigger, QUANTIZATION)
+    @=> ThingAndBuffer notes;
 
   def(bufClock, mk(PulseDiv, 2));
 
@@ -110,9 +138,9 @@ fun Row makeRow(ModuckP clockIn, ModuckP noteHoldToggle){
 
   clockIn
     .b(mk(PulseGen, 2, Runner.timePerTick()/2) => bufClock.c)
-    .b(pitchLockBuf.to(P_Clock));
+    .b(pitchLock.connector.to(P_Clock));
 
-  bufClock => buf.to(P_Clock).c;
+  bufClock => notes.connector.to(P_Clock).c;
 
   noteHoldToggle => MBUtil.onlyLow().c => inpTypeRouter.c;
 
@@ -122,32 +150,27 @@ fun Row makeRow(ModuckP clockIn, ModuckP noteHoldToggle){
 
 
   // Receives input from keyboard and recorded buffer
-  def(notesProxy, mk(Prio));
-  def(pitchLockProxy, mk(Prio));
 
   inpTypeRouter
-    .b(frm(0).to(buf, P_Set))
-    .b(frm(0).to(notesProxy, 1))
-    .b(frm(1).to(pitchLockBuf, P_Set))
-    .b(frm(1).to(pitchLockProxy, 1))
+    .b(frm(0).to(notes.connector))
+    .b(frm(1).to(pitchLock.connector, P_Trigger))
     .b(frm(2).to( mk(Offset, -14) => pitchShifter.to("offset").c));
 
-  buf => notesProxy.to(0).c;
 
-  pitchLockBuf => pitchLockProxy.to(0).c;
-  pitchLockProxy => pitchLocker.to(P_Set).c;
 
-  notesProxy
-    => iff(pitchLocker, recv(P_Set))
-        .then(pitchLocker)
+  def(notesOut, mk(Repeater));
+
+  notes.connector
+    => iff(pitchLock.activity, P_Default)
+        .then(pitchLock.thing)
         .els(mk(Repeater)).c
     => pitchShifter.c
     => notesOut.c;
 
 
   makeTogglingOuts(OUT_DEVICE_COUNT).hook(notesOut.listen(P_Trigger)) @=> ret.outs;
-  recBufUI(buf) @=> ret.bufUI;
-  recBufUI(pitchLockBuf) @=> ret.offsetBufUI;
+  notes.bufUI @=> ret.bufUI;
+  pitchLock.bufUI @=> ret.offsetBufUI;
 
   return ret;
 }
