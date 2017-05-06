@@ -112,17 +112,14 @@ fun Row makeRow(ModuckP clockIn, ModuckP noteHoldToggle){
   ThingAndBuffer.make(mk(Repeater), P_Trigger, QUANTIZATION)
     @=> ThingAndBuffer notes;
 
-
   def(backNudgeVal, mk(TrigValue, 90));
   def(forwardNudgeVal, mk(TrigValue, 110));
-
   def(scalingProxy, mk(Prio));
 
   ret.playbackRate
     .b(scalingProxy.to(0))
     .b(mk(Add, 15) => forwardNudgeVal.to(P_Set).c)
     .b(mk(Add, -15) => backNudgeVal.to(P_Set).c) ;
-
 
   ret.nudgeForward
     => forwardNudgeVal.c
@@ -137,10 +134,12 @@ fun Row makeRow(ModuckP clockIn, ModuckP noteHoldToggle){
   scalingProxy => bufClock.to("scaling").c;
 
   clockIn
-    .b(mk(PulseGen, 2, Runner.timePerTick()/2) => bufClock.c)
-    .b(pitchLock.connector.to(P_Clock));
+    => mk(PulseGen, 2, Runner.timePerTick()/2).c
+    => bufClock.c;
 
-  bufClock => notes.connector.to(P_Clock).c;
+  bufClock
+    .b(notes.connector.to(P_Clock))
+    .b(pitchLock.connector.to(P_Clock));
 
   noteHoldToggle => MBUtil.onlyLow().c => inpTypeRouter.c;
 
