@@ -112,7 +112,6 @@ fun Row makeRow(ModuckP clockIn, ModuckP noteHoldToggle){
   ThingAndBuffer.make(mk(Repeater), P_Trigger, QUANTIZATION)
     @=> ThingAndBuffer notes;
 
-  def(bufClock, mk(PulseDiv, 2));
 
   def(backNudgeVal, mk(TrigValue, 90));
   def(forwardNudgeVal, mk(TrigValue, 110));
@@ -124,7 +123,6 @@ fun Row makeRow(ModuckP clockIn, ModuckP noteHoldToggle){
     .b(mk(Add, 15) => forwardNudgeVal.to(P_Set).c)
     .b(mk(Add, -15) => backNudgeVal.to(P_Set).c) ;
 
-  bufClock => frm("scaling").c => mk(Printer, "playback rate").c;
 
   ret.nudgeForward
     => forwardNudgeVal.c
@@ -133,6 +131,8 @@ fun Row makeRow(ModuckP clockIn, ModuckP noteHoldToggle){
   ret.nudgeBack
     => backNudgeVal.c
     => scalingProxy.to(1).c;
+
+  def(bufClock, mk(PulseDiv, 2));
 
   scalingProxy => bufClock.to("scaling").c;
 
@@ -148,27 +148,20 @@ fun Row makeRow(ModuckP clockIn, ModuckP noteHoldToggle){
 
   ret.notesIn => inpTypeRouter.c;
 
-
-  // Receives input from keyboard and recorded buffer
-
   inpTypeRouter
     .b(frm(0).to(notes.connector))
     .b(frm(1).to(pitchLock.connector, P_Trigger))
     .b(frm(2).to( mk(Offset, -14) => pitchShifter.to("offset").c));
 
-
-
-  def(notesOut, mk(Repeater));
+  makeTogglingOuts(OUT_DEVICE_COUNT) @=> ret.outs;
 
   notes.connector
     => iff(pitchLock.activity, P_Default)
         .then(pitchLock.thing)
         .els(mk(Repeater)).c
     => pitchShifter.c
-    => notesOut.c;
+    => ret.outs.c;
 
-
-  makeTogglingOuts(OUT_DEVICE_COUNT).hook(notesOut.listen(P_Trigger)) @=> ret.outs;
   notes.bufUI @=> ret.bufUI;
   pitchLock.bufUI @=> ret.offsetBufUI;
 
