@@ -109,7 +109,6 @@ fun Row makeRow(ModuckP clockIn){
     @=> ThingAndBuffer pitchShift;
 
   ret.input => frm("trig").c => mk(TrigValue, 0).c => notes.connector.c;
-  ret.input => frm("pitch").c => pitchLock.connector.c;
   ret.input => frm("pitchOffset").c => pitchShift.connector.c;
 
   ret.input => frm("trigpitch").c => mk(TrigValue, 0).c => notes.connector.c;
@@ -124,13 +123,29 @@ fun Row makeRow(ModuckP clockIn){
         )
       .els(pitchLock.connector).c;
 
+  def(tmpPitchOverride, mk(TrigValue, null));
+  ret.input => frm("pitch").c
+    => iff(pitchLock.buf, P_Playing) // This could all be avoided with a better RecBuf implementation
+      .then(iff(pitchLock.buf, "hasData")
+            .then( iff(pitchLock.buf, P_Recording)
+              .then(pitchLock.connector)
+              .els(tmpPitchOverride.to(P_Set))
+            )
+            .els(pitchLock.connector)
+        )
+      .els(pitchLock.connector).c;
+
+
+
   makeTogglingOuts(OUT_DEVICE_COUNT) @=> ret.outs;
 
   notes.connector => MBUtil.onlyLow().c => ret.outs.c;
   notes.connector
     => mk(Delay, samp).c // Basically a hack, but needed until I have a better RecBuf implementation
     => MBUtil.onlyHigh().c
-    => pitchLock.thing.c
+    => iff(tmpPitchOverride, recv(P_Set))
+      .then(tmpPitchOverride)
+      .els(pitchLock.thing).c
     => iff(pitchShift.activity)
         .then(pitchShift.thing)
         .els(mk(Repeater)).c
