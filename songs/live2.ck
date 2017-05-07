@@ -225,12 +225,6 @@ def(lpOut, mk(NoteOut, launchpadDeviceOut, 0));
 
 // OUTPUTS
 
-fun MidiOut openOut(int port){
-  MidiOut dev;
-  dev.open(port);
-  50::ms => now;
-  return dev;
-}
 
 openOut(MIDI_OUT_MICROBRUTE) @=> MidiOut brute;
 openOut(MIDI_OUT_MS_20) @=>  MidiOut ms20;

@@ -43,4 +43,9 @@ define(mkcc, `mk($@)'.cc)
 define(frm, ModuckP._from($1))
 define(iff, ModuckP.make(Repeater.make())._iff($@))
 
-
+fun MidiOut openOut(int port){
+  MidiOut dev;
+  dev.open(port);
+  50::ms => now;
+  return dev;
+}
