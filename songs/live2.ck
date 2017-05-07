@@ -265,17 +265,24 @@ launchpadKeyboard(launchpad, rowCount+2, rowCount+3, Scales.MinorNatural.size())
  }
  */
 
+def(trigAndPitchBufRouter, mk(Router, 0));
+launchpad
+  => frm("cc105").c
+  => trigAndPitchBufRouter.c;
+
+rowCol.rowIndexSelector
+  => trigAndPitchBufRouter.to("index").c;
 
 for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
   rowCol.rows[rowId] @=> Row row;
   setupRowOutputs(row);
   setupSpeedControls(row, rowId);
   makeOutsUIRow(rowId);
-  setuBufferUIs(rowId);
+  setuBufferUIs(trigAndPitchBufRouter, rowId);
 }
 
 
-function void setuBufferUIs(int rowId){
+function void setuBufferUIs(ModuckP trigPitchTriggerRouter, int rowId){
   def(bufUI, rowCol.rows[rowId].bufUI);
   launchpad
     .b(frm("cc104").to(mk(Bigger, 0) => bufUI.to(P_ClearAll).c))
@@ -298,6 +305,11 @@ function void setuBufferUIs(int rowId){
     .b(frm("note"+(rowId*16+2)).to(pitchShiftUI, P_Trigger));
 
   pitchShiftUI => lpOut.to("note"+(16*rowId+2)).c;
+
+
+  (trigPitchTriggerRouter => frm(rowId).c)
+    .b(bufUI)
+    .b(pitchLockUI);
 
 }
 
