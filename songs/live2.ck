@@ -114,15 +114,13 @@ fun Row makeRow(ModuckP clockIn){
 
   ret.input => frm("trigpitch").c => mk(TrigValue, 0).c => notes.connector.c;
   ret.input => frm("trigpitch").c
-    => iff(pitchLock.buf, P_Playing)
-      .then(
-          mk(Delay, samp)
-          => iff(pitchLock.buf, "hasData")
+    => iff(pitchLock.buf, P_Playing) // This could all be avoided with a better RecBuf implementation
+      .then(iff(pitchLock.buf, "hasData")
             .then( iff(pitchLock.buf, P_Recording)
               .then(pitchLock.connector)
               .els(mk(Blackhole))
             )
-            .els(pitchLock.connector).c
+            .els(pitchLock.connector)
         )
       .els(pitchLock.connector).c;
 
@@ -130,6 +128,7 @@ fun Row makeRow(ModuckP clockIn){
 
   notes.connector => MBUtil.onlyLow().c => ret.outs.c;
   notes.connector
+    => mk(Delay, samp).c // Basically a hack, but needed until I have a better RecBuf implementation
     => MBUtil.onlyHigh().c
     => pitchLock.thing.c
     => iff(pitchShift.activity)
