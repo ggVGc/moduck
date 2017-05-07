@@ -5,24 +5,14 @@ include(time_macros.m4)
 include(_all_instruments.m4)
 include(funcs.m4)
 include(parts/rec_buf_ui.ck)
+include(parts/multi_router.ck)
 
-/* 
- TODO:
-   * Trigger correct input type based on starting buf record.
- 
- */
-
-
-
-/* define(SEQ_COUNT, 1); */
 define(OUT_DEVICE_COUNT, 4);
 define(ROW_COUNT, 4);
 define(INPUT_TYPES, 3);
 define(QUANTIZATION, Bar)
 
-
 Runner.setPlaying(1);
-
 
 fun ModuckP makeTogglingOuts(int outCount){
   [P_Trigger] @=> string rootTags[];
@@ -63,32 +53,37 @@ class ThingAndBuffer{
   ModuckP connector;
   ModuckP bufUI;
   ModuckP thing;
+  ModuckP buf;
   def(activity, mk(Repeater));
 
   fun static ThingAndBuffer make(ModuckP thing, string targetTag, int bufQuantization){
+    return make(thing, targetTag, mk(Repeater), bufQuantization);
+  }
+
+  fun static ThingAndBuffer make(ModuckP thing, string targetTag, ModuckP insert, int bufQuantization){
     ThingAndBuffer ret;
     thing @=> ret.thing;
-    def(buf, mk(RecBuf, bufQuantization));
+    mk(RecBuf, bufQuantization) @=> ret.buf;
     def(root, mk(Repeater, [P_Trigger, P_Clock]));
     def(proxy, mk(Prio));
 
-    root => buf.listen(P_Clock).c;
-    buf => proxy.to(0).c;
+    root => ret.buf.listen(P_Clock).c;
+    ret.buf => proxy.to(0).c;
     (root => frm(P_Trigger).c)
       .b(proxy.to(1))
-      .b(buf.to(P_Set));
+      .b(ret.buf.to(P_Set));
 
-    proxy => thing.to(targetTag).c;
+    proxy => insert.c => thing.to(targetTag).c;
     thing => frm(recv(targetTag)).c => ret.activity.c;
 
     mk(Wrapper, root, thing) @=> ret.connector;
-    recBufUI(buf) @=> ret.bufUI;
+    recBufUI(ret.buf) @=> ret.bufUI;
     return ret;
   }
 }
 
 
-["trig", "pitch", "pitchOffset"] @=> string rowTags[];
+["trig", "trigpitch", "pitch", "pitchOffset"] @=> string rowTags[];
 
 
 class Row{
@@ -97,7 +92,6 @@ class Row{
   ModuckP pitchLockUI;
   ModuckP pitchShiftUI;
   def(input, mk(Repeater, rowTags));
-  /* def(inpTypeSetter, mk(Repeater)); */
   def(playbackRate, mk(Repeater));
   def(nudgeForward, mk(Repeater));
   def(nudgeBack, mk(Repeater));
@@ -107,25 +101,37 @@ class Row{
 fun Row makeRow(ModuckP clockIn){
   Row ret;
 
-  def(pitchShifter, mk(Offset, 0));
-
-  ThingAndBuffer.make(mk(TrigValue, null), P_Set, QUANTIZATION)
-    @=> ThingAndBuffer pitchLock;
   ThingAndBuffer.make(mk(Repeater), P_Trigger, QUANTIZATION)
     @=> ThingAndBuffer notes;
+  ThingAndBuffer.make(mk(Value, null), P_Set, MBUtil.onlyHigh(), QUANTIZATION)
+    @=> ThingAndBuffer pitchLock;
   ThingAndBuffer.make(mk(Offset, 0), "offset", QUANTIZATION)
     @=> ThingAndBuffer pitchShift;
 
-  ret.input => frm("trig").c => notes.connector.c;
+  ret.input => frm("trig").c => mk(TrigValue, 0).c => notes.connector.c;
   ret.input => frm("pitch").c => pitchLock.connector.c;
   ret.input => frm("pitchOffset").c => pitchShift.connector.c;
 
+  ret.input => frm("trigpitch").c => mk(TrigValue, 0).c => notes.connector.c;
+  ret.input => frm("trigpitch").c
+    => iff(pitchLock.buf, P_Playing)
+      .then(
+          mk(Delay, samp)
+          => iff(pitchLock.buf, "hasData")
+            .then( iff(pitchLock.buf, P_Recording)
+              .then(pitchLock.connector)
+              .els(mk(Blackhole))
+            )
+            .els(pitchLock.connector).c
+        )
+      .els(pitchLock.connector).c;
+
   makeTogglingOuts(OUT_DEVICE_COUNT) @=> ret.outs;
 
+  notes.connector => MBUtil.onlyLow().c => ret.outs.c;
   notes.connector
-    => iff(pitchLock.activity)
-        .then(pitchLock.thing)
-        .els(mk(Repeater)).c
+    => MBUtil.onlyHigh().c
+    => pitchLock.thing.c
     => iff(pitchShift.activity)
         .then(pitchShift.thing)
         .els(mk(Repeater)).c
@@ -171,28 +177,11 @@ fun Row makeRow(ModuckP clockIn){
 
 class RowCollection{
   Row rows[0];
-  /* def(inpTypeSetter, mk(Repeater)); */
   def(rowIndexSelector, mk(Repeater));
   def(keysIn, mk(Repeater, rowTags));
   /* def(noteHoldToggle, mk(Toggler, false)); */
 }
 
-fun ModuckP multiRouter(ModuckP src, string tags[], ModuckP dests[]){
-  def(indexChooser, mk(Repeater));
-  for(0=>int tagInd;tagInd<tags.size();++tagInd){
-    tags[tagInd] @=> string tag;
-    def(router, mk(Router, 0));
-
-    indexChooser =>  router.to("index").c;
-    src => frm(tag).c => router.c; 
-    for(0=>int dstInd;dstInd<dests.size();++dstInd){
-      dests[dstInd] @=> ModuckP dst;
-      router => frm(dstInd).c => dst.to(tag).c;
-    }
-
-  }
-  return indexChooser;
-}
 
 fun RowCollection makeRowCollection(ModuckP clockIn){
   RowCollection ret;
@@ -259,11 +248,10 @@ openOut(MIDI_OUT_CIRCUIT) @=> MidiOut circuit;
  */
 
 setupOutputSelection();
-/* launchpadKeyboard(launchpad, rowCol.rows.size(), 8, Scales.MinorNatural.size()) => rowCol.keysIn.to("trig").c; */
 
 rowCol.rows.size() => int rowCount;
-launchpadKeyboard(launchpad, rowCount, rowCount+1, Scales.MinorNatural.size()) => rowCol.keysIn.to("trig").c;
-launchpadKeyboard(launchpad, rowCount+1, rowCount+2, Scales.MinorNatural.size()) => rowCol.keysIn.to("pitch").c;
+launchpadKeyboard(launchpad, rowCount, rowCount+1, Scales.MinorNatural.size()) => mk(Offset, 2*7).c => rowCol.keysIn.to("trigpitch").c;
+launchpadKeyboard(launchpad, rowCount+1, rowCount+2, Scales.MinorNatural.size()) => mk(Offset, 3*7).c => rowCol.keysIn.to("pitch").c;
 launchpadKeyboard(launchpad, rowCount+2, rowCount+3, Scales.MinorNatural.size()) => rowCol.keysIn.to("pitchOffset").c;
 
 
