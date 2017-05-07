@@ -84,12 +84,12 @@ public class Runner extends RunnerBase{
     return true;
   }
 
-  fun static void setBpm(float bpm){
-    _masterClockGen.setVal("delta", Util.toSamples(Util.bpmToDur(bpm*ticksPerBeat)));
+  fun static void setBpm(int bpm){
+    bpm => _masterClockGen.bpm.i;
   }
 
   fun static dur timePerTick(){
-    return _masterClockGen.getVal("delta")::samp;
+    return Util.bpmToDur(_masterClockGen.bpm.i);
   }
   fun static int samplesPerTick(){
     return Util.toSamples(timePerTick());
@@ -103,9 +103,8 @@ public class Runner extends RunnerBase{
     return Util.toSamples(timePerBeat());
   }
 
-  fun static float getBpm(){
-    _masterClockGen.getVal("delta")::samp @=> dur d;
-    return minute/(d*ticksPerBeat);
+  fun static int getBpm(){
+    return _masterClockGen.bpm.i;
   }
 
   fun static int stop(){

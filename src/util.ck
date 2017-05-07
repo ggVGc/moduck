@@ -2,13 +2,13 @@
 
 
 public class Util{
-  fun static dur bpmToDur(float bpm){
+  fun static dur bpmToDur(int bpm){
     return minute / bpm;
   }
 
 
   fun static int toSamples(dur d){
-    return (d / samp) $ int;
+    return (d / samp )$ int;
   }
 
 

@@ -13,8 +13,8 @@ def(rit, ritmo(true, [
 
   ,fourFour(B+B2, 0)
   ,fourFour(B2+B4, 0)
-  ,fourFour((B*2)/3, 0)
-  ,fourFour(B/3, 0)
+  ,fourFour(B4+B8, 0)
+  ,fourFour(B8+B16, 0)
   /* ,fourFour(B8+B16, 0) */
   /* ,fourFour(B16+B32, 0) */
   /* ,fourFour(B7, 0) */
