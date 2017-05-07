@@ -265,13 +265,16 @@ launchpadKeyboard(launchpad, rowCount+2, rowCount+3, Scales.MinorNatural.size())
  }
  */
 
+
+
+// Use one button to start/stop both trig and pitch buffer
 def(trigAndPitchBufRouter, mk(Router, 0));
 launchpad
-  => frm("cc105").c
+  => frm("cc104").c
   => trigAndPitchBufRouter.c;
+// Match index of row
+rowCol.rowIndexSelector => trigAndPitchBufRouter.to("index").c;
 
-rowCol.rowIndexSelector
-  => trigAndPitchBufRouter.to("index").c;
 
 for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
   rowCol.rows[rowId] @=> Row row;
@@ -285,7 +288,7 @@ for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
 function void setuBufferUIs(ModuckP trigPitchTriggerRouter, int rowId){
   def(bufUI, rowCol.rows[rowId].bufUI);
   launchpad
-    .b(frm("cc104").to(mk(Bigger, 0) => bufUI.to(P_ClearAll).c))
+    .b(frm("cc105").to(mk(Bigger, 0) => bufUI.to(P_ClearAll).c))
     .b(frm("note"+(rowId*16)).to(bufUI, P_Trigger));
 
   bufUI => lpOut.to("note"+(16*rowId)).c;
@@ -293,7 +296,7 @@ function void setuBufferUIs(ModuckP trigPitchTriggerRouter, int rowId){
 
   def(pitchLockUI, rowCol.rows[rowId].pitchLockUI);
   launchpad
-    .b(frm("cc104").to(mk(Bigger, 0) => pitchLockUI.to(P_ClearAll).c))
+    .b(frm("cc105").to(mk(Bigger, 0) => pitchLockUI.to(P_ClearAll).c))
     .b(frm("note"+(rowId*16+1)).to(pitchLockUI, P_Trigger));
 
   pitchLockUI => lpOut.to("note"+(16*rowId+1)).c;
@@ -301,7 +304,7 @@ function void setuBufferUIs(ModuckP trigPitchTriggerRouter, int rowId){
 
   def(pitchShiftUI, rowCol.rows[rowId].pitchShiftUI);
   launchpad
-    .b(frm("cc104").to(mk(Bigger, 0) => pitchShiftUI.to(P_ClearAll).c))
+    .b(frm("cc105").to(mk(Bigger, 0) => pitchShiftUI.to(P_ClearAll).c))
     .b(frm("note"+(rowId*16+2)).to(pitchShiftUI, P_Trigger));
 
   pitchShiftUI => lpOut.to("note"+(16*rowId+2)).c;
