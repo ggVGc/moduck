@@ -41,6 +41,6 @@ define(mkc, `mk($@)'.c)
 define(mkcc, `mk($@)'.cc)
 
 define(frm, ModuckP._from($1))
-define(iff, ModuckP.make(Repeater.make())._iff($1, $2))
+define(iff, ModuckP.make(Repeater.make())._iff($@))
 
 
