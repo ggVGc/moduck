@@ -94,7 +94,8 @@ class ThingAndBuffer{
 class Row{
   ModuckP outs;
   ModuckP bufUI;
-  ModuckP offsetBufUI;
+  ModuckP pitchLockUI;
+  ModuckP pitchShiftUI;
   def(input, mk(Repeater, rowTags));
   /* def(inpTypeSetter, mk(Repeater)); */
   def(playbackRate, mk(Repeater));
@@ -112,10 +113,12 @@ fun Row makeRow(ModuckP clockIn){
     @=> ThingAndBuffer pitchLock;
   ThingAndBuffer.make(mk(Repeater), P_Trigger, QUANTIZATION)
     @=> ThingAndBuffer notes;
+  ThingAndBuffer.make(mk(Offset, 0), "offset", QUANTIZATION)
+    @=> ThingAndBuffer pitchShift;
 
   ret.input => frm("trig").c => notes.connector.c;
   ret.input => frm("pitch").c => pitchLock.connector.c;
-  ret.input => frm("pitchOffset").c => pitchShifter.to("offset").c;
+  ret.input => frm("pitchOffset").c => pitchShift.connector.c;
 
   makeTogglingOuts(OUT_DEVICE_COUNT) @=> ret.outs;
 
@@ -123,11 +126,14 @@ fun Row makeRow(ModuckP clockIn){
     => iff(pitchLock.activity)
         .then(pitchLock.thing)
         .els(mk(Repeater)).c
-    => pitchShifter.c
+    => iff(pitchShift.activity)
+        .then(pitchShift.thing)
+        .els(mk(Repeater)).c
     => ret.outs.c;
 
   notes.bufUI @=> ret.bufUI;
-  pitchLock.bufUI @=> ret.offsetBufUI;
+  pitchLock.bufUI @=> ret.pitchLockUI;
+  pitchShift.bufUI @=> ret.pitchShiftUI;
 
 
   def(backNudgeVal, mk(TrigValue, 90));
@@ -157,7 +163,8 @@ fun Row makeRow(ModuckP clockIn){
 
   bufClock
     .b(notes.connector.to(P_Clock))
-    .b(pitchLock.connector.to(P_Clock));
+    .b(pitchLock.connector.to(P_Clock))
+    .b(pitchShift.connector.to(P_Clock));
 
   return ret;
 }
@@ -282,19 +289,29 @@ for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
 
 
 function void setuBufferUIs(int rowId){
-  def(ui, rowCol.rows[rowId].bufUI);
+  def(bufUI, rowCol.rows[rowId].bufUI);
   launchpad
-    .b(frm("cc104").to(mk(Bigger, 0) => ui.to(P_ClearAll).c))
-    .b(frm("note"+(rowId*16)).to(ui, P_Trigger));
+    .b(frm("cc104").to(mk(Bigger, 0) => bufUI.to(P_ClearAll).c))
+    .b(frm("note"+(rowId*16)).to(bufUI, P_Trigger));
 
-  ui => lpOut.to("note"+(16*rowId)).c;
+  bufUI => lpOut.to("note"+(16*rowId)).c;
 
-  def(offsetUI, rowCol.rows[rowId].offsetBufUI);
+
+  def(pitchLockUI, rowCol.rows[rowId].pitchLockUI);
   launchpad
-    .b(frm("cc104").to(mk(Bigger, 0) => offsetUI.to(P_ClearAll).c))
-    .b(frm("note"+(rowId*16+1)).to(offsetUI, P_Trigger));
+    .b(frm("cc104").to(mk(Bigger, 0) => pitchLockUI.to(P_ClearAll).c))
+    .b(frm("note"+(rowId*16+1)).to(pitchLockUI, P_Trigger));
 
-  offsetUI => lpOut.to("note"+(16*rowId+1)).c;
+  pitchLockUI => lpOut.to("note"+(16*rowId+1)).c;
+
+
+  def(pitchShiftUI, rowCol.rows[rowId].pitchShiftUI);
+  launchpad
+    .b(frm("cc104").to(mk(Bigger, 0) => pitchShiftUI.to(P_ClearAll).c))
+    .b(frm("note"+(rowId*16+2)).to(pitchShiftUI, P_Trigger));
+
+  pitchShiftUI => lpOut.to("note"+(16*rowId+2)).c;
+
 }
 
 
