@@ -203,6 +203,15 @@ public class Util{
     return ret;
   }
 
+  fun string[] genStringNums(int start, int count){
+    return numberedStrings("", range(start,start+count));
+  }
+
+
+  fun string[] genStringNums(int count){
+    return genStringNums(0, count);
+  }
+
   fun static int equals(float a, float b){
     return b > a-0.0001 && b < a+0.0001;
   }

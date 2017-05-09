@@ -146,7 +146,9 @@ fun Row makeRow(ModuckP clockIn){
     @=> ThingAndBuffer beatRitmoSrc;
 
   
-  ret.input => frm("beatRitmo").c => beatRitmoSrc.connector.c;
+  ret.input => frm("beatRitmo").c
+    => mk(Printer, "diddles").c
+    => beatRitmoSrc.connector.c;
   beatRitmoSrc.thing => numToTag(beatRitmoThing, 10).c
     => mk(SampleHold, D16).c
     => notes.connector.c;
@@ -306,7 +308,19 @@ rowCol.rows.size() => int rowCount;
 launchpadKeyboard(launchpad, rowCount, rowCount+1, Scales.MinorNatural.size()) => mk(Offset, 7).c => rowCol.keysIn.to("trigpitch").c;
 launchpadKeyboard(launchpad, rowCount+1, rowCount+2, Scales.MinorNatural.size()) => mk(Offset, 3*7).c => rowCol.keysIn.to("pitch").c;
 launchpadKeyboard(launchpad, rowCount+2, rowCount+3, Scales.MinorNatural.size()) => rowCol.keysIn.to("pitchOffset").c;
-launchpadKeyboard(launchpad, rowCount+3, rowCount+4, Scales.MinorNatural.size()) => rowCol.keysIn.to("beatRitmo").c;
+
+fun void numberedConnect(ModuckP src, ModuckP dst, int count){
+  for(0=>int i;i<count;++i){
+    src
+      => frm(i).c
+      => mk(TrigValue, i).c
+      => dst.c;
+  }
+}
+
+numberedConnect(launchpadKeyboard(launchpad, rowCount+3, rowCount+4, Scales.MinorNatural.size())
+    ,mk(Repeater) => rowCol.keysIn.to("beatRitmo").c
+    ,Scales.MinorNatural.size());
 
 
 /* 
@@ -447,14 +461,18 @@ function void makeOutsUIRow(int rowId){
 
 
 function ModuckP launchpadKeyboard(ModuckP launchpadInstance, int startRow, int endRow, int width){
-  def(out, mk(Repeater));
   endRow-startRow => int maxInd;
+  def(out, mk(Repeater, Util.concatStrings([
+    ["note"]
+    ,Util.numberedStrings("", Util.range(0,width))
+  ])));
+
   for(0=>int rowInd;rowInd<maxInd;++rowInd){
     for(0=>int i;i<width;++i){
-      launchpadInstance
-        => frm("note"+((startRow + (maxInd-rowInd-1))*16+i)).c
-        => mk(TrigValue, (rowInd*width+i)).c
-        => out.c;
+      rowInd*width+i => int ind;
+      (launchpadInstance => frm("note"+((startRow + (maxInd-rowInd-1))*16+i)).c => mk(TrigValue, ind).c)
+        .b(out.to("note"))
+        .b(out.to(ind));
     }
   }
   return out;
