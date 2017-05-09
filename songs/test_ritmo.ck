@@ -53,6 +53,7 @@ for(16=>int i;i<21;++i){
 Runner.masterClock
   => rit.listen(P_Clock).c
   /* => mk(Printer, "tick").c */
+  => mk(Printer, "sadsad").c
   => mk(Value, 50).c
   => mk(SampleHold, 100::ms).fromTo(P_Default, P_Set).listen(P_Trigger).c
   /* => mk(Printer, "out").c */

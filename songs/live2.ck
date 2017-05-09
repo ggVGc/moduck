@@ -6,6 +6,7 @@ include(_all_instruments.m4)
 include(funcs.m4)
 include(parts/rec_buf_ui.ck)
 include(parts/multi_router.ck)
+include(parts/rhythms.ck)
 
 define(OUT_DEVICE_COUNT, 4);
 define(ROW_COUNT, 4);
@@ -83,7 +84,7 @@ class ThingAndBuffer{
 }
 
 
-["trig", "trigpitch", "pitch", "pitchOffset"] @=> string rowTags[];
+["trig", "trigpitch", "pitch", "pitchOffset", "beatRitmo"] @=> string rowTags[];
 
 
 class Row{
@@ -98,6 +99,17 @@ class Row{
 }
 
 
+fun ModuckP numToTag(ModuckP m, int maxNum){
+  def(root, mk(Repeater));
+  for(0=>int i;i<maxNum;++i){
+    root
+      => mk(Processor, Eq.make(i)).c
+      => m.to(i).c;
+  }
+
+  return mk(Wrapper, root, m);
+}
+
 fun Row makeRow(ModuckP clockIn){
   Row ret;
 
@@ -107,6 +119,38 @@ fun Row makeRow(ModuckP clockIn){
     @=> ThingAndBuffer pitchLock;
   ThingAndBuffer.make(mk(Offset, 0), "offset", QUANTIZATION)
     @=> ThingAndBuffer pitchShift;
+
+
+  def(beatRitmoThing, ritmo(true, [
+    fourFour(B*2)
+    ,fourFour(B)
+    ,fourFour(B2)
+    ,fourFour(B4)
+    ,fourFour(B8)
+    ,fourFour(B16)
+    ,fourFour(B32)
+
+    ,fourFour(B+B2)
+    ,fourFour(B2+B4)
+    ,fourFour(B4+B8)
+    ,fourFour(B8+B16)
+    /* ,fourFour(B8+B16, 0) */
+    /* ,fourFour(B16+B32, 0) */
+    /* ,fourFour(B7, 0) */
+    /* ,fourFour(B5, 0) */
+    /* ,fourFour(B3, 0) */
+  ]));
+
+
+  ThingAndBuffer.make(mk(Repeater), P_Trigger, QUANTIZATION)
+    @=> ThingAndBuffer beatRitmoSrc;
+
+  
+  ret.input => frm("beatRitmo").c => beatRitmoSrc.connector.c;
+  beatRitmoSrc.thing => numToTag(beatRitmoThing, 10).c
+    => mk(SampleHold, D16).c
+    => notes.connector.c;
+
 
   ret.input => frm("trig").c => mk(TrigValue, 0).c => notes.connector.c;
   ret.input => frm("pitchOffset").c => pitchShift.connector.c;
@@ -178,13 +222,14 @@ fun Row makeRow(ModuckP clockIn){
   scalingProxy => bufClock.to("scaling").c;
 
   clockIn
-    => mk(PulseGen, 2, Runner.timePerTick()/2).c
-    => bufClock.c;
+    .b(mk(PulseGen, 2, Runner.timePerTick()/2) => bufClock.c)
+    .b(beatRitmoThing.to(P_Clock));
 
   bufClock
     .b(notes.connector.to(P_Clock))
     .b(pitchLock.connector.to(P_Clock))
-    .b(pitchShift.connector.to(P_Clock));
+    .b(pitchShift.connector.to(P_Clock))
+    .b(beatRitmoSrc.connector.to(P_Clock));
 
   return ret;
 }
@@ -258,9 +303,10 @@ openOut(MIDI_OUT_CIRCUIT) @=> MidiOut circuit;
 setupOutputSelection();
 
 rowCol.rows.size() => int rowCount;
-launchpadKeyboard(launchpad, rowCount, rowCount+1, Scales.MinorNatural.size()) => mk(Offset, 2*7).c => rowCol.keysIn.to("trigpitch").c;
+launchpadKeyboard(launchpad, rowCount, rowCount+1, Scales.MinorNatural.size()) => mk(Offset, 7).c => rowCol.keysIn.to("trigpitch").c;
 launchpadKeyboard(launchpad, rowCount+1, rowCount+2, Scales.MinorNatural.size()) => mk(Offset, 3*7).c => rowCol.keysIn.to("pitch").c;
 launchpadKeyboard(launchpad, rowCount+2, rowCount+3, Scales.MinorNatural.size()) => rowCol.keysIn.to("pitchOffset").c;
+launchpadKeyboard(launchpad, rowCount+3, rowCount+4, Scales.MinorNatural.size()) => rowCol.keysIn.to("beatRitmo").c;
 
 
 /* 
@@ -347,8 +393,8 @@ function void setupRowOutputs(Row row){
   row.outs
     .b(frm(0).to(outPitchQuant() => mk(NoteOut,circuit,0).c))
     .b(frm(1).to(outPitchQuant() => mk(NoteOut,circuit,1).c))
-    .b(frm(0).to( mk(Printer, "OUT 0")))
-    .b(frm(1).to( mk(Printer, "OUT 1")))
+    /* .b(frm(0).to( mk(Printer, "OUT 0"))) */
+    /* .b(frm(1).to( mk(Printer, "OUT 1"))) */
     /* .b(frm(2).to(mk(NoteOut,circuit,9))) */
     /*.b(frm(2).to(mk(NoteOut,circuit,10)))*/
     /*.b(frm(3).to(mk(NoteOut,circuit,12)))*/
