@@ -7,7 +7,7 @@ class BufEntry{
   IntRef val;
   false => int triggered;
   0 => int index;
-
+  string tag;
 }
 
 
@@ -18,6 +18,7 @@ class Shared{
   now => time lastTime;
   int accum;
 }
+
 
 genHandler(ClockHandler, P_Clock,
   HANDLE{
@@ -39,6 +40,9 @@ genHandler(ClockHandler, P_Clock,
           }else{
             true => e.triggered;
             parent.send(P_Trigger, e.val);
+            if(e.tag != null){
+              parent.send(e.tag, e.val);
+            }
           }
         }
       }
@@ -101,8 +105,7 @@ genHandler(GoToHandler, P_GoTo,
 
 
 
-genHandler(SetHandler, P_Set,
-  HANDLE{
+function void set(IntRef v, ModuckBase parent, Shared shared, string tag){
     -1 => int ind;
     for(0=>int i;i<shared.entries.size();++i){
       if(shared.entries[i] == null){
@@ -118,10 +121,16 @@ genHandler(SetHandler, P_Set,
     true => e.triggered;
     e @=> shared.entries[ind];
     v @=> e.val;
+    tag => e.tag;
 
     now - shared.startTime => e.timeStamp;
     shared.accum => e.index;
     parent.send("hasData", IntRef.yes());
+}
+
+genHandler(SetHandler, P_Set,
+  HANDLE{
+    set(v, parent, shared, null);
   },
   Shared shared;
 )
@@ -149,12 +158,31 @@ genHandler(ClearHandler, P_Clear,
 )
 
 
+genTagHandler(TagSetHandler, 
+    HANDLE{
+      set(v, parent, shared, tag);
+    },
+  Shared shared;
+)
+
+
+
 public class Buffer extends Moduck{
-  maker0(Buffer){
+  fun static Buffer make(){
+    string tags[0];
+    return make(tags);
+  }
+
+  fun static Buffer make(string tags[]){
     Buffer ret;
     Shared shared;
     OUT(P_Trigger);
     OUT("hasData");
+    for(0=>int tagInd;tagInd<tags.size();++tagInd){
+      tags[tagInd] @=> string tag;
+      IN(TagSetHandler, (tag, shared));
+      OUT(tag);
+    }
     IN(ClockHandler,(shared));
     IN(SetHandler,(shared));
     IN(ClearAllHandler,(shared));
