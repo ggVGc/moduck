@@ -160,6 +160,11 @@ genHandler(ClearHandler, P_Clear,
 
 genTagHandler(TagSetHandler, 
     HANDLE{
+    if(v != null){
+        <<<"Set: "+tag+":"+v.i>>>;
+    }else{
+        <<<"Set: "+tag+":null">>>;
+    }
       set(v, parent, shared, tag);
     },
   Shared shared;

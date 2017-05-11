@@ -1,30 +1,73 @@
 include(macros.m4)
 include(song_macros.m4)
+include(funcs.m4)
 
 define(LATENCY_COMPENSATION, 4)
 
 public class RecBuf{
-  maker(Moduck, int quantization){
-    def(in, mk(Repeater, [
+  /* 
+   fun static Moduck make(int quantization){
+     string tags[0];
+     return make(quantization, tags);
+   }
+   */
+
+
+  /* fun static Moduck make(int quantization, string tags[]){ */
+  fun static Moduck make(int quantization){
+    def(in, mk(Repeater, Util.concatStrings([[
       P_Clock
       ,P_Set
       ,P_ClearAll
       ,P_Clear
       ,P_Toggle
-    ]));
+    ]])));
+    /* ], tags]))); */
 
-    def(out, mk(Repeater, [
+    def(out, mk(Repeater, Util.concatStrings([[
       P_Trigger
       ,P_Recording
       ,P_Playing
       ,P_Looped
       ,"hasData"
-    ]));
+    ]])));
+    /* ], tags]))); */
 
-    def(buf, mk(Buffer));
-    def(recWaiter, mk(OnceTrigger));
+
     def(recBlocker, mk(Blocker));
+    /* def(buf, mk(Buffer, tags)); */
+    def(buf, mk(Buffer));
+    def(restartBuf, mk(Value, 0) => buf.to(P_GoTo).c);
     def(recToggler, mk(Toggler, false));
+    def(onBeginRec, recToggler => MBUtil.onlyHigh().c)
+    def(recWaiter, mk(OnceTrigger));
+
+    /* Value.make(null) @=> SampleHold lastTagIndex; */
+    /* 
+     for(0=>int tagInd;tagInd<tags.size();++tagInd){
+       tags[tagInd] @=> string tag;
+       in => frm(tag).c => recBlocker.c => buf.to(tag).c;
+       
+       def(lastTagVal, mk(TrigValue, null));
+       in => frm(tag).c  => lastTagVal.to(P_Set).c;
+
+       (in => frm(tag).c)
+         .b( mk(Printer, "PRESSED"))
+         .b(mk(Value, tagInd) => P(lastTagIndex).to(P_Set).c)
+         .b(recWaiter.whenNot(out, P_Recording));
+
+       (onBeginRec
+         => mk(Repeater).whenNot(out, "hasData").c
+         )
+         .b(restartBuf)
+         .b(lastTagVal  => buf.to(tags[lastTagIndex.get().i]).c);
+
+       buf => frm(tag).c => out.to(tag).c;
+     }
+     */
+
+
+
     def(recStopDiv, mk(PulseDiv, quantization).set("offset", LATENCY_COMPENSATION));
     def(counter, mk(Counter));
     def(restartTimer, mk(PulseDiv, quantization));
@@ -32,14 +75,11 @@ public class RecBuf{
     def(playToggler, mk(Toggler, false));
     def(clock, in => frm(P_Clock).c);
     def(toggleRec, mk(Repeater));
-    def(lastSetVal, mk(Value, null));
-    def(restartBuf, mk(Value, 0) => buf.to(P_GoTo).c);
 
     restartBuf
       => frm(recv(P_Trigger)).c
       => out.to(P_Looped).when(out, "hasData").c;
 
-    in => frm(P_Set).c => lastSetVal.to(P_Set).c;
 
     playBlocker => out.fromTo(recv(P_Gate), P_Playing).c;
 
@@ -55,7 +95,6 @@ public class RecBuf{
       .b(frm(recv(P_Toggle)).to(restartBuf))
       .b(frm(recv(P_Toggle)).to(restartTimer, P_Reset));
 
-    def(onBeginRec, recToggler => MBUtil.onlyHigh().c)
     def(onEndRec, recToggler => MBUtil.onlyLow().c => mk(Inverter).c);
 
     clock
@@ -112,6 +151,9 @@ public class RecBuf{
       .b(divisorVal => restartTimer.to("divisor").c)
       .b(mk(Delay, samp) => restartTimer.to(P_Reset).c);
     
+    def(lastSetVal, mk(Value, null));
+    in => frm(P_Set).c => lastSetVal.to(P_Set).c;
+
     onBeginRec
       .b( mk(Printer, "Begin rec"))
       .b(recStopDiv.to(P_Reset))

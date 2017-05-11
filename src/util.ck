@@ -203,12 +203,12 @@ public class Util{
     return ret;
   }
 
-  fun string[] genStringNums(int start, int count){
+  fun static string[] genStringNums(int start, int count){
     return numberedStrings("", range(start,start+count));
   }
 
 
-  fun string[] genStringNums(int count){
+  fun static string[] genStringNums(int count){
     return genStringNums(0, count);
   }
 

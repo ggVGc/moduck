@@ -58,24 +58,64 @@ class ThingAndBuffer{
   def(activity, mk(Repeater));
 
   fun static ThingAndBuffer make(ModuckP thing, string targetTag, int bufQuantization){
+    /* string tags[0]; */
+    /* return make(thing, targetTag, mk(Repeater), bufQuantization, tags); */
     return make(thing, targetTag, mk(Repeater), bufQuantization);
   }
 
+
+  /* 
+   fun static ThingAndBuffer make(ModuckP thing, string targetTag, ModuckP insert, int bufQuantization){
+     string tags[0];
+     return make(thing, targetTag, insert, bufQuantization, tags);
+   }
+   */
+
+  fun static ModuckP routeTag(string bufToTag, ModuckP root, ModuckP buf){
+    def(proxy, mk(Prio));
+    buf => proxy.to(0).c;
+    root
+      .b(proxy.to(1))
+      .b(buf.to(bufToTag));
+
+    return proxy;
+  }
+
+
+  /* fun static ThingAndBuffer make(ModuckP thing, string targetTag, ModuckP insert, int bufQuantization, string recTags[]){ */
   fun static ThingAndBuffer make(ModuckP thing, string targetTag, ModuckP insert, int bufQuantization){
     ThingAndBuffer ret;
     thing @=> ret.thing;
+    /* mk(RecBuf, bufQuantization, recTags) @=> ret.buf; */
     mk(RecBuf, bufQuantization) @=> ret.buf;
-    def(root, mk(Repeater, [P_Trigger, P_Clock]));
-    def(proxy, mk(Prio));
+    def(root, mk(Repeater,
+          Util.concatStrings([
+            [P_Trigger, P_Clock]
+            /* ,recTags */
+      ])));
 
     root => ret.buf.listen(P_Clock).c;
-    ret.buf => proxy.to(0).c;
-    (root => frm(P_Trigger).c)
-      .b(proxy.to(1))
-      .b(ret.buf.to(P_Set));
 
-    proxy => insert.c => thing.to(targetTag).c;
-    thing => frm(recv(targetTag)).c => ret.activity.c;
+
+    /* 
+     for(0=>int tag;tag<recTags.size();++tag){
+       recTags[tag] @=> string tag;
+       routeTag(tag, root => frm(tag).c , ret.buf)
+         // => insert.c  // HACK: insert moduck isn't well defined, and has only one use case so far. And it's not used together with multiple rec tags
+                           // If needed, there needs to be one copy of the 'insert' for each tag. Alternatively an output router,
+                           // and set the index before sending the signal before routing through the 'insert' to the output.
+         => thing.to(tag).c;
+     }
+     */
+
+
+
+    if(targetTag != null){
+      routeTag(P_Set, root => frm(P_Trigger).c, ret.buf)
+        => insert.c
+        => thing.to(targetTag).c;
+      thing => frm(recv(targetTag)).c => ret.activity.c;
+    }
 
     mk(Wrapper, root, thing) @=> ret.connector;
     recBufUI(ret.buf) @=> ret.bufUI;
@@ -84,7 +124,13 @@ class ThingAndBuffer{
 }
 
 
-["trig", "trigpitch", "pitch", "pitchOffset", "beatRitmo"] @=> string rowTags[];
+
+Util.genStringNums(10) @=> string beatRitmoTags[];
+Util.concatStrings([
+    ["trig", "trigpitch", "pitch", "pitchOffset"]
+    ,Util.prefixStrings("beatRitmo", beatRitmoTags)
+])
+  @=> string rowTags[];
 
 
 class Row{
@@ -92,6 +138,7 @@ class Row{
   ModuckP bufUI;
   ModuckP pitchLockUI;
   ModuckP pitchShiftUI;
+  ModuckP beatRitmoUI;
   def(input, mk(Repeater, rowTags));
   def(playbackRate, mk(Repeater));
   def(nudgeForward, mk(Repeater));
@@ -110,18 +157,8 @@ fun ModuckP numToTag(ModuckP m, int maxNum){
   return mk(Wrapper, root, m);
 }
 
-fun Row makeRow(ModuckP clockIn){
-  Row ret;
-
-  ThingAndBuffer.make(mk(Repeater), P_Trigger, QUANTIZATION)
-    @=> ThingAndBuffer notes;
-  ThingAndBuffer.make(mk(Value, null), P_Set, MBUtil.onlyHigh(), QUANTIZATION)
-    @=> ThingAndBuffer pitchLock;
-  ThingAndBuffer.make(mk(Offset, 0), "offset", QUANTIZATION)
-    @=> ThingAndBuffer pitchShift;
-
-
-  def(beatRitmoThing, ritmo(true, [
+fun ModuckP makeBeatRitmo(){
+  return ritmo(true, [
     fourFour(B*2)
     ,fourFour(B)
     ,fourFour(B2)
@@ -139,17 +176,40 @@ fun Row makeRow(ModuckP clockIn){
     /* ,fourFour(B7, 0) */
     /* ,fourFour(B5, 0) */
     /* ,fourFour(B3, 0) */
-  ]));
+  ]);
+}
 
+fun Row makeRow(ModuckP clockIn){
+  Row ret;
 
   ThingAndBuffer.make(mk(Repeater), P_Trigger, QUANTIZATION)
+    @=> ThingAndBuffer notes;
+  ThingAndBuffer.make(mk(Value, null), P_Set, MBUtil.onlyHigh(), QUANTIZATION)
+    @=> ThingAndBuffer pitchLock;
+  ThingAndBuffer.make(mk(Offset, 0), "offset", QUANTIZATION)
+    @=> ThingAndBuffer pitchShift;
+
+
+
+
+  /* 
+   ThingAndBuffer.make(beatRitmoThing, null, mk(Repeater), QUANTIZATION, beatRitmoTags)
+     @=> ThingAndBuffer beatRitmoSrc;
+   */
+  ThingAndBuffer.make(makeBeatRitmo(), "0", QUANTIZATION)
     @=> ThingAndBuffer beatRitmoSrc;
 
-  
-  ret.input => frm("beatRitmo").c
-    => mk(Printer, "diddles").c
-    => beatRitmoSrc.connector.c;
-  beatRitmoSrc.thing => numToTag(beatRitmoThing, 10).c
+
+  /* 
+   for(0=>int tagInd;tagInd<beatRitmoTags.size();++tagInd){
+     beatRitmoTags[tagInd] @=> string tag;
+     ret.input
+       => frm("beatRitmo"+tagInd).c
+       => beatRitmoSrc.connector.to(tagInd).c;
+   }
+   */
+
+  beatRitmoSrc.thing
     => mk(SampleHold, D16).c
     => notes.connector.c;
 
@@ -200,6 +260,7 @@ fun Row makeRow(ModuckP clockIn){
   notes.bufUI @=> ret.bufUI;
   pitchLock.bufUI @=> ret.pitchLockUI;
   pitchShift.bufUI @=> ret.pitchShiftUI;
+  beatRitmoSrc.bufUI @=> ret.beatRitmoUI;
 
 
   def(backNudgeVal, mk(TrigValue, 90));
@@ -225,7 +286,7 @@ fun Row makeRow(ModuckP clockIn){
 
   clockIn
     .b(mk(PulseGen, 2, Runner.timePerTick()/2) => bufClock.c)
-    .b(beatRitmoThing.to(P_Clock));
+    .b(beatRitmoSrc.thing.to(P_Clock));
 
   bufClock
     .b(notes.connector.to(P_Clock))
@@ -309,19 +370,13 @@ launchpadKeyboard(launchpad, rowCount, rowCount+1, Scales.MinorNatural.size()) =
 launchpadKeyboard(launchpad, rowCount+1, rowCount+2, Scales.MinorNatural.size()) => mk(Offset, 3*7).c => rowCol.keysIn.to("pitch").c;
 launchpadKeyboard(launchpad, rowCount+2, rowCount+3, Scales.MinorNatural.size()) => rowCol.keysIn.to("pitchOffset").c;
 
-fun void numberedConnect(ModuckP src, ModuckP dst, int count){
-  for(0=>int i;i<count;++i){
-    src
-      => frm(i).c
-      => mk(TrigValue, i).c
-      => dst.c;
-  }
+launchpadKeyboard(launchpad, rowCount+3, rowCount+4, Scales.MinorNatural.size()) @=> ModuckP ritmoKeyboard;
+
+for(0=>int keyInd;keyInd<Scales.MinorNatural.size();++keyInd){
+  ritmoKeyboard
+    => frm(keyInd).c
+    => rowCol.keysIn.to("beatRitmo"+keyInd).c;
 }
-
-numberedConnect(launchpadKeyboard(launchpad, rowCount+3, rowCount+4, Scales.MinorNatural.size())
-    ,mk(Repeater) => rowCol.keysIn.to("beatRitmo").c
-    ,Scales.MinorNatural.size());
-
 
 /* 
  for(0=>int i;i<INPUT_TYPES;++i){
@@ -333,6 +388,15 @@ numberedConnect(launchpadKeyboard(launchpad, rowCount+3, rowCount+4, Scales.Mino
      => lpOut.to("cc"+(111-i)).c;
  }
  */
+
+fun void numberedConnect(ModuckP src, ModuckP dst, int count){
+  for(0=>int i;i<count;++i){
+    src
+      => frm(i).c
+      => mk(TrigValue, i).c
+      => dst.c;
+  }
+}
 
 
 
@@ -379,6 +443,14 @@ function void setuBufferUIs(ModuckP trigPitchTriggerRouter, int rowId){
   pitchShiftUI => lpOut.to("note"+(16*rowId+2)).c;
 
 
+  def(beatRitmoUI, rowCol.rows[rowId].beatRitmoUI);
+  launchpad
+    .b(frm("cc105").to(mk(Bigger, 0) => beatRitmoUI.to(P_ClearAll).c))
+    .b(frm("note"+(rowId*16+3)).to(beatRitmoUI, P_Trigger));
+
+  beatRitmoUI => lpOut.to("note"+(16*rowId+3)).c;
+
+
   (trigPitchTriggerRouter => frm(rowId).c)
     .b(bufUI)
     .b(pitchLockUI);
@@ -405,10 +477,16 @@ function ModuckP outPitchQuant(){
 
 function void setupRowOutputs(Row row){
   row.outs
-    .b(frm(0).to(outPitchQuant() => mk(NoteOut,circuit,0).c))
-    .b(frm(1).to(outPitchQuant() => mk(NoteOut,circuit,1).c))
-    /* .b(frm(0).to( mk(Printer, "OUT 0"))) */
-    /* .b(frm(1).to( mk(Printer, "OUT 1"))) */
+    /* .b(frm(0).to(outPitchQuant() => mk(NoteOut,circuit,0).c)) */
+    /* .b(frm(1).to(outPitchQuant() => mk(NoteOut,circuit,1).c)) */
+    .b(frm(0).to(outPitchQuant() => mk(NoteOut,sys1,0).c))
+    .b(frm(1).to(outPitchQuant() => mk(NoteOut,ms20,0).c))
+    .b(frm(2).to(outPitchQuant() => mk(NoteOut,brute,0).c))
+    .b(frm(3).to(outPitchQuant() => mk(NoteOut,nocoast,0).c))
+    .b(frm(0).to( mk(Printer, "Out 0")))
+    .b(frm(1).to( mk(Printer, "Out 1")))
+    .b(frm(2).to( mk(Printer, "Out 2")))
+    .b(frm(3).to( mk(Printer, "Out 3")))
     /* .b(frm(2).to(mk(NoteOut,circuit,9))) */
     /*.b(frm(2).to(mk(NoteOut,circuit,10)))*/
     /*.b(frm(3).to(mk(NoteOut,circuit,12)))*/
@@ -492,6 +570,9 @@ rowCol.rowIndexSelector.set(0);
 Util.runForever();
 
 
+
+
+// Clock experiment
 
 /* 
  def(bcr, mk(MidInp, MIDI_IN_BCR, 8));

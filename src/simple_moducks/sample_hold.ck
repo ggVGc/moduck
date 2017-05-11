@@ -52,12 +52,21 @@ genHandler(SetHandler, P_Set,
 
 
 public class SampleHold extends Moduck{
+  Shared shared;
+
+  fun IntRef get(){
+    if(shared.val != null){
+      return IntRef.make(shared.val.i);
+    }else{
+      return null;
+    }
+  }
+
   maker(SampleHold, dur holdTime){
     SampleHold ret;
-    Shared shared;
     OUT(P_Trigger);
-    IN(TrigHandler, (shared));
-    IN(SetHandler, (shared));
+    IN(TrigHandler, (ret.shared));
+    IN(SetHandler, (ret.shared));
     ret.addVal("holdTime", Util.toSamples(holdTime));
     ret.addVal("forever", false);
     ret.addVal("triggerOnSet", false);
