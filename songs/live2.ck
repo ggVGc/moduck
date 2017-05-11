@@ -10,7 +10,6 @@ include(parts/rhythms.ck)
 
 define(OUT_DEVICE_COUNT, 4);
 define(ROW_COUNT, 4);
-define(INPUT_TYPES, 3);
 define(QUANTIZATION, Bar)
 
 Runner.setPlaying(1);
@@ -301,7 +300,6 @@ class RowCollection{
   Row rows[0];
   def(rowIndexSelector, mk(Repeater));
   def(keysIn, mk(Repeater, rowTags));
-  /* def(noteHoldToggle, mk(Toggler, false)); */
 }
 
 
@@ -358,11 +356,6 @@ openOut(MIDI_OUT_CIRCUIT) @=> MidiOut circuit;
 
 // MAPPINGS
 
-/* 
- launchpad => frm("note"+(16*7+8)).to(rowCol.noteHoldToggle, P_Toggle).c;
- rowCol.noteHoldToggle => LP.orange().c =>lpOut.to("note"+(16*7+8)).c;
- */
-
 setupOutputSelection();
 
 rowCol.rows.size() => int rowCount;
@@ -378,16 +371,6 @@ for(0=>int keyInd;keyInd<Scales.MinorNatural.size();++keyInd){
     => rowCol.keysIn.to("beatRitmo"+keyInd).c;
 }
 
-/* 
- for(0=>int i;i<INPUT_TYPES;++i){
-   launchpad => frm("cc"+(111-i)).to(mk(Value, i) => rowCol.inpTypeSetter.c).c;
- 
-   rowCol.inpTypeSetter
-     => mk(Processor, Eq.make(i)).c
-     => LP.orange().c
-     => lpOut.to("cc"+(111-i)).c;
- }
- */
 
 fun void numberedConnect(ModuckP src, ModuckP dst, int count){
   for(0=>int i;i<count;++i){
@@ -565,7 +548,6 @@ launchpadDeviceOut.send(msg);
 
 samp =>  now;
 rowCol.rowIndexSelector.set(0);
-/* rowCol.inpTypeSetter.set(0); */
 
 Util.runForever();
 
