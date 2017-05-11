@@ -1,2 +1,2 @@
 
-define(MAX_ROUTER_TARGETS, 10)
+define(MAX_ROUTER_TARGETS, 24)

@@ -195,20 +195,35 @@ fun Row makeRow(ModuckP clockIn){
    ThingAndBuffer.make(beatRitmoThing, null, mk(Repeater), QUANTIZATION, beatRitmoTags)
      @=> ThingAndBuffer beatRitmoSrc;
    */
-  ThingAndBuffer.make(makeBeatRitmo(), "0", QUANTIZATION)
+  ThingAndBuffer.make(mk(Repeater), P_Trigger, QUANTIZATION)
     @=> ThingAndBuffer beatRitmoSrc;
 
+  def(beatRitmo, makeBeatRitmo());
+  def(beatRitmoStacker, mk(Stacker));
+  def(beatRitmoRouter, mk(Router, 0));
 
-  /* 
-   for(0=>int tagInd;tagInd<beatRitmoTags.size();++tagInd){
-     beatRitmoTags[tagInd] @=> string tag;
-     ret.input
-       => frm("beatRitmo"+tagInd).c
-       => beatRitmoSrc.connector.to(tagInd).c;
-   }
-   */
+  for(0=>int tagInd;tagInd<beatRitmoTags.size();++tagInd){
+    beatRitmoTags[tagInd] @=> string tag;
+    ret.input
+      => frm("beatRitmo"+tagInd).c
+      => beatRitmoStacker.to(tagInd).c;
+    
+    beatRitmoRouter
+      => frm(tagInd).c
+      => beatRitmo.to(tagInd).c;
+  }
 
-  beatRitmoSrc.thing
+  beatRitmoStacker
+    => frm(P_Source).c
+    => beatRitmoSrc.connector.c
+    => beatRitmoRouter.to("index").c;
+  beatRitmoSrc.connector => beatRitmoRouter.to(P_Trigger).c;
+  beatRitmoStacker
+    => MBUtil.onlyLow().c
+    => beatRitmoSrc.connector.c;
+
+
+  beatRitmo
     => mk(SampleHold, D16).c
     => notes.connector.c;
 
@@ -285,7 +300,7 @@ fun Row makeRow(ModuckP clockIn){
 
   clockIn
     .b(mk(PulseGen, 2, Runner.timePerTick()/2) => bufClock.c)
-    .b(beatRitmoSrc.thing.to(P_Clock));
+    .b(beatRitmo.to(P_Clock));
 
   bufClock
     .b(notes.connector.to(P_Clock))

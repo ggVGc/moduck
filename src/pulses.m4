@@ -17,6 +17,7 @@ define(P_Toggle, "toggle")
 define(P_GoTo, "goto")
 define(P_Hold, "hold")
 define(P_Active, "active")
+define(P_Source, "source")
 define(P_Default, "")
 
 define(pulseRecvPrefix, "received_")

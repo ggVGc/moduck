@@ -27,6 +27,7 @@ Machine.add("simple_moducks/bigger.ck");
 Machine.add("simple_moducks/pulse_gen.ck");
 Machine.add("simple_moducks/counter.ck");
 Machine.add("simple_moducks/prio.ck");
+Machine.add("simple_moducks/stacker.ck");
 Machine.add("simple_moducks/delta_counter.ck");
 /* Machine.add("simple_moducks/trigger.ck"); */
 /* Machine.add("simple_moducks/clamper.ck"); */

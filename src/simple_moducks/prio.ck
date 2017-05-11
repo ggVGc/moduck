@@ -2,11 +2,6 @@
 include(macros.m4)
 include(constants.m4)
 
-genHandler(TrigHandler, P_Trigger,
-  HANDLE{
-  },
-  ;
-)
 
 class InHandler extends EventHandler{
   int handlerIndex;
