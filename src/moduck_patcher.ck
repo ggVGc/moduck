@@ -191,6 +191,10 @@ public class ModuckP extends Moduck{
     return _iff(m, ""+tag);
   }
 
+  fun Conditional _iff(ModuckP m){
+    return _iff(m, P_Default);
+  }
+
   fun ModuckP c(Moduck other){
     return Connector.make(this, [P_Default], [P_Default]).c(other);
   }

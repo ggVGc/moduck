@@ -49,71 +49,6 @@ public class MUtil{
   }
 
 
-  // TODO: Reimplement these again if they are actually needed
-  /* 
-   fun static Moduck mul2(Moduck a, Moduck b){
-     Multiplier.make(2) @=> Multiplier mult;
-     Patch.connect(a, null, mult, "0");
-     Patch.connect(b, null, mult, "1");
-     samp => now;
-     a.doHandle(P_Trigger, 0);
-     b.doHandle(P_Trigger, 0);
-     return mult;
-   }
-
-   fun static Moduck mul3(Moduck a, Moduck b, Moduck c){
-     Multiplier.make(3) @=> Multiplier mult;
-     Patch.connect(a, null, mult, "0");
-     Patch.connect(b, null, mult, "1");
-     Patch.connect(c, null, mult, "2");
-     samp => now;
-     a.doHandle(P_Trigger, 0);
-     b.doHandle(P_Trigger, 0);
-     c.doHandle(P_Trigger, 0);
-     return mult;
-   }
-
-
-   fun static Moduck add2(Moduck a, Moduck b){
-     Adder.make(2) @=> Adder add;
-     Patch.connect(a, null, add, "0");
-     Patch.connect(b, null, add, "1");
-     samp => now;
-     a.doHandle(P_Trigger, 0);
-     b.doHandle(P_Trigger, 0);
-     return add;
-   }
-
-   fun static Moduck mul3(Moduck a, Moduck b, Moduck c){
-     Adder.make(3) @=> Adder add;
-     Patch.connect(a, null, add, "0");
-     Patch.connect(b, null, add, "1");
-     Patch.connect(c, null, add, "2");
-     samp => now;
-     a.doHandle(P_Trigger, 0);
-     b.doHandle(P_Trigger, 0);
-     c.doHandle(P_Trigger, 0);
-     return add;
-   }
-   */
-
-
-
-  fun static ModuckP update(ModuckP m, string srcTag, string dstTag, ModuckP processor){
-    // TODO: Default value always 0 here..
-    ModuckP.make(Value.make(0)) @=> ModuckP val;
-    m => val.fromTo(srcTag, "value").c;
-
-    return Repeater.make()
-      => val.c
-      => processor.c
-      => m.to(dstTag).c
-    ;
-  }
-
-
-
-
   fun static ModuckP passThrough(ModuckP src, string ignoreTags[]){
     src.getSourceTags() @=> string origTags[];
     ModuckP.make(Repeater.make(origTags)) @=> ModuckP in;
@@ -142,11 +77,6 @@ public class MUtil{
   }
 
 
-  /*
-    fun static ModuckP update(ModuckP m, ModuckP processor){
-      return update(m, P_Default, P_Default, processor);
-    }
-   */
 
 }
 

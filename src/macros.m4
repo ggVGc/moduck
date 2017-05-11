@@ -48,6 +48,34 @@ define(genHandler,
   }
 )
 
+define(genTagHandler, 
+  class $1 extends EventHandler{
+    string tag;
+
+    `esyscmd(../intersperse.py ";" "$3")';
+      $2
+    
+
+    fun static $1 make(string tag, `esyscmd(../intersperse.py `","' "$3")'){
+      $1 ret;
+      tag => ret.tag;
+      `esyscmd(../gen_assignments.py "$3")'
+      ret.init();
+      return ret;
+    }
+
+    fun $1 add(Moduck parent){
+      parent.addIn(tag, this);
+      return this;
+    }
+  }
+)
+
+
+dnl define(genHandler2,
+dnl   genHandler(H_$1, P_$1, $2, $3)
+dnl )
+
 
 define(IN, $1.make $2 .add(ret))
 define(OUT, ret.addOut($1);)

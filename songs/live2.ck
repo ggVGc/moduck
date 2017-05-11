@@ -5,24 +5,15 @@ include(time_macros.m4)
 include(_all_instruments.m4)
 include(funcs.m4)
 include(parts/rec_buf_ui.ck)
+include(parts/multi_router.ck)
+include(parts/rhythms.ck)
 
-/* 
- TODO:
-   * Trigger correct input type based on starting buf record.
- 
- */
-
-
-
-/* define(SEQ_COUNT, 1); */
 define(OUT_DEVICE_COUNT, 4);
-define(ROW_COUNT, 7);
+define(ROW_COUNT, 4);
 define(INPUT_TYPES, 3);
 define(QUANTIZATION, Bar)
 
-
 Runner.setPlaying(1);
-
 
 fun ModuckP makeTogglingOuts(int outCount){
   [P_Trigger] @=> string rootTags[];
@@ -59,44 +50,166 @@ fun ModuckP makeTogglingOuts(int outCount){
 }
 
 
+class ThingAndBuffer{
+  ModuckP connector;
+  ModuckP bufUI;
+  ModuckP thing;
+  ModuckP buf;
+  def(activity, mk(Repeater));
+
+  fun static ThingAndBuffer make(ModuckP thing, string targetTag, int bufQuantization){
+    return make(thing, targetTag, mk(Repeater), bufQuantization);
+  }
+
+  fun static ThingAndBuffer make(ModuckP thing, string targetTag, ModuckP insert, int bufQuantization){
+    ThingAndBuffer ret;
+    thing @=> ret.thing;
+    mk(RecBuf, bufQuantization) @=> ret.buf;
+    def(root, mk(Repeater, [P_Trigger, P_Clock]));
+    def(proxy, mk(Prio));
+
+    root => ret.buf.listen(P_Clock).c;
+    ret.buf => proxy.to(0).c;
+    (root => frm(P_Trigger).c)
+      .b(proxy.to(1))
+      .b(ret.buf.to(P_Set));
+
+    proxy => insert.c => thing.to(targetTag).c;
+    thing => frm(recv(targetTag)).c => ret.activity.c;
+
+    mk(Wrapper, root, thing) @=> ret.connector;
+    recBufUI(ret.buf) @=> ret.bufUI;
+    return ret;
+  }
+}
+
+
+["trig", "trigpitch", "pitch", "pitchOffset", "beatRitmo"] @=> string rowTags[];
 
 
 class Row{
   ModuckP outs;
   ModuckP bufUI;
-  ModuckP offsetBufUI;
-  def(notesIn, mk(Repeater));
-  def(inpTypeSetter, mk(Repeater));
+  ModuckP pitchLockUI;
+  ModuckP pitchShiftUI;
+  def(input, mk(Repeater, rowTags));
   def(playbackRate, mk(Repeater));
   def(nudgeForward, mk(Repeater));
   def(nudgeBack, mk(Repeater));
 }
 
 
-fun Row makeRow(ModuckP clockIn, ModuckP noteHoldToggle){
+fun ModuckP numToTag(ModuckP m, int maxNum){
+  def(root, mk(Repeater));
+  for(0=>int i;i<maxNum;++i){
+    root
+      => mk(Processor, Eq.make(i)).c
+      => m.to(i).c;
+  }
+
+  return mk(Wrapper, root, m);
+}
+
+fun Row makeRow(ModuckP clockIn){
   Row ret;
 
-  def(buf, mk(RecBuf, QUANTIZATION));
-  def(notesOut, mk(Repeater));
-  def(pitchLocker, mk(TrigValue, null));
-  def(holdTog, mk(Toggler));
-  def(inpTypeRouter, mk(Router, 0, false));
-  def(octaveShifter, mk(Offset, 0));
-  def(pitchLockBuf, mk(RecBuf, QUANTIZATION));
+  ThingAndBuffer.make(mk(Repeater), P_Trigger, QUANTIZATION)
+    @=> ThingAndBuffer notes;
+  ThingAndBuffer.make(mk(Value, null), P_Set, MBUtil.onlyHigh(), QUANTIZATION)
+    @=> ThingAndBuffer pitchLock;
+  ThingAndBuffer.make(mk(Offset, 0), "offset", QUANTIZATION)
+    @=> ThingAndBuffer pitchShift;
 
-  def(bufClock, mk(PulseDiv, 2));
+
+  def(beatRitmoThing, ritmo(true, [
+    fourFour(B*2)
+    ,fourFour(B)
+    ,fourFour(B2)
+    ,fourFour(B4)
+    ,fourFour(B8)
+    ,fourFour(B16)
+    ,fourFour(B32)
+
+    ,fourFour(B+B2)
+    ,fourFour(B2+B4)
+    ,fourFour(B4+B8)
+    ,fourFour(B8+B16)
+    /* ,fourFour(B8+B16, 0) */
+    /* ,fourFour(B16+B32, 0) */
+    /* ,fourFour(B7, 0) */
+    /* ,fourFour(B5, 0) */
+    /* ,fourFour(B3, 0) */
+  ]));
+
+
+  ThingAndBuffer.make(mk(Repeater), P_Trigger, QUANTIZATION)
+    @=> ThingAndBuffer beatRitmoSrc;
+
+  
+  ret.input => frm("beatRitmo").c
+    => mk(Printer, "diddles").c
+    => beatRitmoSrc.connector.c;
+  beatRitmoSrc.thing => numToTag(beatRitmoThing, 10).c
+    => mk(SampleHold, D16).c
+    => notes.connector.c;
+
+
+  ret.input => frm("trig").c => mk(TrigValue, 0).c => notes.connector.c;
+  ret.input => frm("pitchOffset").c => pitchShift.connector.c;
+
+  ret.input => frm("trigpitch").c => mk(TrigValue, 0).c => notes.connector.c;
+  ret.input => frm("trigpitch").c
+    => iff(pitchLock.buf, P_Playing) // This could all be avoided with a better RecBuf implementation
+      .then(iff(pitchLock.buf, "hasData")
+            .then( iff(pitchLock.buf, P_Recording)
+              .then(pitchLock.connector)
+              .els(mk(Blackhole))
+            )
+            .els(pitchLock.connector)
+        )
+      .els(pitchLock.connector).c;
+
+  def(tmpPitchOverride, mk(TrigValue, null));
+  ret.input => frm("pitch").c
+    => iff(pitchLock.buf, P_Playing) // This could all be avoided with a better RecBuf implementation
+      .then(iff(pitchLock.buf, "hasData")
+            .then( iff(pitchLock.buf, P_Recording)
+              .then(pitchLock.connector)
+              .els(tmpPitchOverride.to(P_Set))
+            )
+            .els(pitchLock.connector)
+        )
+      .els(pitchLock.connector).c;
+
+
+
+  makeTogglingOuts(OUT_DEVICE_COUNT) @=> ret.outs;
+
+  notes.connector => MBUtil.onlyLow().c => ret.outs.c;
+  notes.connector
+    => mk(Delay, samp).c // Basically a hack, but needed until I have a better RecBuf implementation
+    => MBUtil.onlyHigh().c
+    => iff(tmpPitchOverride, recv(P_Set))
+      .then(tmpPitchOverride)
+      .els(pitchLock.thing).c
+    => iff(pitchShift.activity)
+        .then(pitchShift.thing)
+        .els(mk(Repeater)).c
+    => ret.outs.c;
+
+  notes.bufUI @=> ret.bufUI;
+  pitchLock.bufUI @=> ret.pitchLockUI;
+  pitchShift.bufUI @=> ret.pitchShiftUI;
+
 
   def(backNudgeVal, mk(TrigValue, 90));
   def(forwardNudgeVal, mk(TrigValue, 110));
-
   def(scalingProxy, mk(Prio));
 
   ret.playbackRate
     .b(scalingProxy.to(0))
     .b(mk(Add, 15) => forwardNudgeVal.to(P_Set).c)
     .b(mk(Add, -15) => backNudgeVal.to(P_Set).c) ;
-
-  bufClock => frm("scaling").c => mk(Printer, "playback rate").c;
 
   ret.nudgeForward
     => forwardNudgeVal.c
@@ -106,127 +219,284 @@ fun Row makeRow(ModuckP clockIn, ModuckP noteHoldToggle){
     => backNudgeVal.c
     => scalingProxy.to(1).c;
 
+  def(bufClock, mk(PulseDiv, 2));
+
   scalingProxy => bufClock.to("scaling").c;
 
   clockIn
     .b(mk(PulseGen, 2, Runner.timePerTick()/2) => bufClock.c)
-    .b(pitchLockBuf.to(P_Clock));
+    .b(beatRitmoThing.to(P_Clock));
 
-
-  bufClock => buf.to(P_Clock).c;
-    /* 
-     => iff(ret.nudgeBack, P_Default)
-         .then(
-             mk(PulseDiv, 2).set("scaling", 60)
-         ).els(
-           iff(ret.nudgeForward, P_Default)
-           .then(
-             mk(PulseGen, 2, Runner.timePerTick()/2)
-           ).els(
-             mk(Repeater)
-           )
-         ).c
-     => buf.to(P_Clock).c;
-     */
-
-  noteHoldToggle => MBUtil.onlyLow().c => inpTypeRouter.c;
-
-  ret.inpTypeSetter => inpTypeRouter.to("index").c;
-
-  ret.notesIn => inpTypeRouter.c;
-
-
-  // Receives input from keyboard and recorded buffer
-  def(notesProxy, mk(Prio));
-  def(pitchLockProxy, mk(Prio));
-
-  inpTypeRouter
-    .b(frm(0).to(buf, P_Set))
-    .b(frm(0).to(notesProxy, 1))
-    .b(frm(1).to(pitchLockBuf, P_Set))
-    .b(frm(1).to(pitchLockProxy, 1))
-    .b(frm(2).to(mk(Offset, -60) => mk(Mul, 12).c => octaveShifter.to("offset").c));
-
-  buf => notesProxy.to(0).c;
-
-  pitchLockBuf => pitchLockProxy.to(0).c;
-  pitchLockProxy => pitchLocker.to(P_Set).c;
-
-  notesProxy
-    => iff(pitchLocker, recv(P_Set))
-      .then(pitchLocker)
-      .els(mk(Repeater)).c
-    => octaveShifter.c
-    => notesOut.c;
-
-
-  makeTogglingOuts(OUT_DEVICE_COUNT).hook(notesOut.listen(P_Trigger)) @=> ret.outs;
-  recBufUI(buf) @=> ret.bufUI;
-  recBufUI(pitchLockBuf) @=> ret.offsetBufUI;
+  bufClock
+    .b(notes.connector.to(P_Clock))
+    .b(pitchLock.connector.to(P_Clock))
+    .b(pitchShift.connector.to(P_Clock))
+    .b(beatRitmoSrc.connector.to(P_Clock));
 
   return ret;
 }
 
 class RowCollection{
   Row rows[0];
-  def(inpTypeSetter, mk(Repeater));
   def(rowIndexSelector, mk(Repeater));
-  def(keysIn, mk(Repeater));
-  def(noteHoldToggle, mk(Toggler, false));
+  def(keysIn, mk(Repeater, rowTags));
+  /* def(noteHoldToggle, mk(Toggler, false)); */
 }
 
 
-fun RowCollection setupRows(ModuckP clockIn){
+fun RowCollection makeRowCollection(ModuckP clockIn){
   RowCollection ret;
 
-  def(inputLaneRouter, mk(Router, 0));
-  ret.rowIndexSelector => inputLaneRouter.to("index").c;
-
-  def(inputNoteHold, mk(SampleHold, 0::samp).set("forever", true));
-
-
-  ret.noteHoldToggle => MBUtil.onlyLow().c => inputLaneRouter.c;
-
-  ret.keysIn => MBUtil.onlyHigh().c => inputNoteHold.to(P_Set).c;
-  ret.keysIn
-    => iff(ret.noteHoldToggle, P_Trigger)
-    .then(inputNoteHold => inputLaneRouter.c)
-    .els(inputLaneRouter).c;
-
+  ModuckP rowInputs[0];
   for(0=>int i;i<ROW_COUNT;++i){
     10::ms => now; // Keep JACK happy, prevents getting killed because of buffer underrun
-    makeRow(clockIn, ret.noteHoldToggle) @=> Row row;
-    ret.inpTypeSetter => row.inpTypeSetter.c;
-    inputLaneRouter => frm(i).to(row.notesIn).c;
+    makeRow(clockIn) @=> Row row;
+    rowInputs << row.input;
     ret.rows << row;
   }
+
+  ret.rowIndexSelector => multiRouter(ret.keysIn, rowTags, rowInputs).c;
+
   return ret;
 }
 
 
 def(clock, mk(Repeater));
 
-setupRows(clock) @=> RowCollection rowCol;
-
-def(metronome, mk(Repeater));
-clock
-  => mk(PulseDiv, B).c
-  => mk(SampleHold, 100::ms).c
-  => metronome.c
-;
-
+makeRowCollection(clock) @=> RowCollection rowCol;
 
 // DEVICES
+
+
+Runner.masterClock => clock.c;
 
 <<<"Opening launchpad in">>>;
 def(launchpad, mk(MidInp, MIDI_IN_LAUNCHPAD, 0))
 <<<"Opening keyboard in">>>;
+/* def(keyboard, mk(MidInp, MIDI_IN_CIRCUIT, 0)); */
+def(nanoK, mk(MidInp, MIDI_IN_NANO_KTRL, 0));
 /* def(keyboard, mk(MidInp, MIDI_IN_OXYGEN, 0)); */
-def(keyboard, mk(MidInp, MIDI_IN_K49, 0));
-def(circuitIn, mk(MidInp, MIDI_IN_CIRCUIT, 9));
-def(bcr, mk(MidInp, MIDI_IN_BCR, 8));
+/* def(keyboard, mk(MidInp, MIDI_IN_K49, 0)); */
+/* def(circuitIn, mk(MidInp, MIDI_IN_CIRCUIT, 9)); */
 
-bcr => frm("cc40").c => mk(Printer, "bcr").c;
+
+nanoK => mk(Printer, "nano").from("cc").c;
+
+openOut(MIDI_OUT_LAUNCHPAD) @=> MidiOut launchpadDeviceOut;
+def(lpOut, mk(NoteOut, launchpadDeviceOut, 0));
+
+// OUTPUTS
+
+
+openOut(MIDI_OUT_MICROBRUTE) @=> MidiOut brute;
+openOut(MIDI_OUT_MS_20) @=>  MidiOut ms20;
+openOut(MIDI_OUT_USB_MIDI) @=> MidiOut nocoast;
+openOut(MIDI_OUT_SYS1) @=> MidiOut sys1;
+openOut(MIDI_OUT_CIRCUIT) @=> MidiOut circuit;
+
+
+// MAPPINGS
+
+/* 
+ launchpad => frm("note"+(16*7+8)).to(rowCol.noteHoldToggle, P_Toggle).c;
+ rowCol.noteHoldToggle => LP.orange().c =>lpOut.to("note"+(16*7+8)).c;
+ */
+
+setupOutputSelection();
+
+rowCol.rows.size() => int rowCount;
+launchpadKeyboard(launchpad, rowCount, rowCount+1, Scales.MinorNatural.size()) => mk(Offset, 7).c => rowCol.keysIn.to("trigpitch").c;
+launchpadKeyboard(launchpad, rowCount+1, rowCount+2, Scales.MinorNatural.size()) => mk(Offset, 3*7).c => rowCol.keysIn.to("pitch").c;
+launchpadKeyboard(launchpad, rowCount+2, rowCount+3, Scales.MinorNatural.size()) => rowCol.keysIn.to("pitchOffset").c;
+
+fun void numberedConnect(ModuckP src, ModuckP dst, int count){
+  for(0=>int i;i<count;++i){
+    src
+      => frm(i).c
+      => mk(TrigValue, i).c
+      => dst.c;
+  }
+}
+
+numberedConnect(launchpadKeyboard(launchpad, rowCount+3, rowCount+4, Scales.MinorNatural.size())
+    ,mk(Repeater) => rowCol.keysIn.to("beatRitmo").c
+    ,Scales.MinorNatural.size());
+
+
+/* 
+ for(0=>int i;i<INPUT_TYPES;++i){
+   launchpad => frm("cc"+(111-i)).to(mk(Value, i) => rowCol.inpTypeSetter.c).c;
+ 
+   rowCol.inpTypeSetter
+     => mk(Processor, Eq.make(i)).c
+     => LP.orange().c
+     => lpOut.to("cc"+(111-i)).c;
+ }
+ */
+
+
+
+// Use one button to start/stop both trig and pitch buffer
+def(trigAndPitchBufRouter, mk(Router, 0));
+launchpad
+  => frm("cc104").c
+  => trigAndPitchBufRouter.c;
+// Match index of row
+rowCol.rowIndexSelector => trigAndPitchBufRouter.to("index").c;
+
+
+for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
+  rowCol.rows[rowId] @=> Row row;
+  setupRowOutputs(row);
+  setupSpeedControls(row, rowId);
+  makeOutsUIRow(rowId);
+  setuBufferUIs(trigAndPitchBufRouter, rowId);
+}
+
+
+function void setuBufferUIs(ModuckP trigPitchTriggerRouter, int rowId){
+  def(bufUI, rowCol.rows[rowId].bufUI);
+  launchpad
+    .b(frm("cc105").to(mk(Bigger, 0) => bufUI.to(P_ClearAll).c))
+    .b(frm("note"+(rowId*16)).to(bufUI, P_Trigger));
+
+  bufUI => lpOut.to("note"+(16*rowId)).c;
+
+
+  def(pitchLockUI, rowCol.rows[rowId].pitchLockUI);
+  launchpad
+    .b(frm("cc105").to(mk(Bigger, 0) => pitchLockUI.to(P_ClearAll).c))
+    .b(frm("note"+(rowId*16+1)).to(pitchLockUI, P_Trigger));
+
+  pitchLockUI => lpOut.to("note"+(16*rowId+1)).c;
+
+
+  def(pitchShiftUI, rowCol.rows[rowId].pitchShiftUI);
+  launchpad
+    .b(frm("cc105").to(mk(Bigger, 0) => pitchShiftUI.to(P_ClearAll).c))
+    .b(frm("note"+(rowId*16+2)).to(pitchShiftUI, P_Trigger));
+
+  pitchShiftUI => lpOut.to("note"+(16*rowId+2)).c;
+
+
+  (trigPitchTriggerRouter => frm(rowId).c)
+    .b(bufUI)
+    .b(pitchLockUI);
+
+}
+
+
+function void setupSpeedControls(Row row, int rowId){
+  // Make it easier to go to center by splitting into 3 intervals
+  (nanoK => frm("cc"+(14+rowId)).c)
+    .b(mk(RangeMapper, 0, 55, 0, 99) => row.playbackRate.c)
+    .b(mk(RangeMapper, 56, 73, 100, 100) => row.playbackRate.c)
+    .b(mk(RangeMapper, 74, 127, 101, 200) => row.playbackRate.c);
+  nanoK => frm("cc"+(23+rowId)).c => row.nudgeForward.c;
+  nanoK => frm("cc"+(33+rowId)).c => row.nudgeBack.c;
+}
+
+
+function ModuckP outPitchQuant(){
+    return mk(Repeater)
+      => mk(Mapper, Scales.MinorNatural, 12).c
+      => octaves(3).c;
+}
+
+function void setupRowOutputs(Row row){
+  row.outs
+    .b(frm(0).to(outPitchQuant() => mk(NoteOut,circuit,0).c))
+    .b(frm(1).to(outPitchQuant() => mk(NoteOut,circuit,1).c))
+    /* .b(frm(0).to( mk(Printer, "OUT 0"))) */
+    /* .b(frm(1).to( mk(Printer, "OUT 1"))) */
+    /* .b(frm(2).to(mk(NoteOut,circuit,9))) */
+    /*.b(frm(2).to(mk(NoteOut,circuit,10)))*/
+    /*.b(frm(3).to(mk(NoteOut,circuit,12)))*/
+    /*.b(frm(0).to(mk(NoteOut,brute,0)))
+    /* 
+     .b(frm(1).to(mk(NoteOut, ms20, 0)))
+     .b(frm(2).to(mk(NoteOut, nocoast, 0)))
+     .b(frm(3).to(mk(NoteOut, sys1, 0)))
+     */
+  ;
+}
+
+
+
+
+function void setupOutputSelection(){
+  for(0=>int rowInd;rowInd<rowCol.rows.size();++rowInd){
+    // Select outputs with side buttons
+    8+rowInd*16 => int ind;
+    launchpad
+      => mk(Bigger,0).from("note"+ind).c
+      => mk(TrigValue,rowInd).c
+      => rowCol.rowIndexSelector.c
+    ;
+
+    rowCol.rowIndexSelector
+      => MBUtil.onlyHigh().c
+      => mk(Processor, Eq.make(rowInd)).c
+      => mk(TrigValue, rowInd).c
+      => LP.red().c
+      => lpOut.to("note"+ind).c;
+  }
+}
+
+
+
+function void makeOutsUIRow(int rowId){
+  for(0=>int outputId;outputId<OUT_DEVICE_COUNT;++outputId){
+    def(outs, rowCol.rows[rowId].outs);
+    launchpad
+      => frm("note"+(rowId*16+4+outputId)).c
+      => outs.to("toggleOut"+outputId).c;
+
+    outs
+      => frm("outActive"+outputId).c
+      => LP.red().c
+      => lpOut.to("note"+(rowId*16+4+outputId)).c;
+  }
+}
+
+
+function ModuckP launchpadKeyboard(ModuckP launchpadInstance, int startRow, int endRow, int width){
+  endRow-startRow => int maxInd;
+  def(out, mk(Repeater, Util.concatStrings([
+    ["note"]
+    ,Util.numberedStrings("", Util.range(0,width))
+  ])));
+
+  for(0=>int rowInd;rowInd<maxInd;++rowInd){
+    for(0=>int i;i<width;++i){
+      rowInd*width+i => int ind;
+      (launchpadInstance => frm("note"+((startRow + (maxInd-rowInd-1))*16+i)).c => mk(TrigValue, ind).c)
+        .b(out.to("note"))
+        .b(out.to(ind));
+    }
+  }
+  return out;
+}
+
+
+
+// Send launchpad reset message
+MidiMsg msg;
+176 => msg.data1;
+launchpadDeviceOut.send(msg);
+
+samp =>  now;
+rowCol.rowIndexSelector.set(0);
+/* rowCol.inpTypeSetter.set(0); */
+
+Util.runForever();
+
+
+
+/* 
+ def(bcr, mk(MidInp, MIDI_IN_BCR, 8));
+ bcr => frm("cc40").c => mk(Printer, "bcr").c;
+ */
 
 /* 
  circuitIn => frm("cc").c => mk(Printer, "Circuit cc").c;
@@ -262,250 +532,3 @@ bcr => frm("cc40").c => mk(Printer, "bcr").c;
    => clock.c;
  */
 
-Runner.masterClock => clock.c;
-
-
-def(nanoK, mk(MidInp, MIDI_IN_NANO_KTRL, 0));
-
-nanoK => mk(Printer, "nano").from("cc").c;
-
-openOut(MIDI_OUT_LAUNCHPAD) @=> MidiOut launchpadDeviceOut;
-def(lpOut, mk(NoteOut, launchpadDeviceOut, 0));
-
-// OUTPUTS
-
-fun MidiOut openOut(int port){
-  MidiOut dev;
-  dev.open(port);
-  50::ms => now;
-  return dev;
-}
-
-openOut(MIDI_OUT_MICROBRUTE) @=> MidiOut brute;
-openOut(MIDI_OUT_MS_20) @=>  MidiOut ms20;
-openOut(MIDI_OUT_USB_MIDI) @=> MidiOut nocoast;
-openOut(MIDI_OUT_SYS1) @=> MidiOut sys1;
-openOut(MIDI_OUT_CIRCUIT) @=> MidiOut circuit;
-
-for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
-  rowCol.rows[rowId] @=> Row row;
-  row.outs
-    .b(frm(0).to(mk(NoteOut,circuit,0)))
-    .b(frm(1).to(mk(NoteOut,circuit,1)))
-    .b(frm(2).to(mk(NoteOut,circuit,9)))
-    /*.b(frm(2).to(mk(NoteOut,circuit,10)))*/
-    /*.b(frm(3).to(mk(NoteOut,circuit,12)))*/
-    /*.b(frm(0).to(mk(NoteOut,brute,0)))
-    /* 
-     .b(frm(1).to(mk(NoteOut, ms20, 0)))
-     .b(frm(2).to(mk(NoteOut, nocoast, 0)))
-     .b(frm(3).to(mk(NoteOut, sys1, 0)))
-     */
-  ;
-
-  // Make it easier to go to center by splitting into 3 intervals
-  (nanoK => frm("cc"+(14+rowId)).c)
-    .b(mk(RangeMapper, 0, 55, 0, 99) => row.playbackRate.c)
-    .b(mk(RangeMapper, 56, 73, 100, 100) => row.playbackRate.c)
-    .b(mk(RangeMapper, 74, 127, 101, 200) => row.playbackRate.c);
-  nanoK => frm("cc"+(23+rowId)).c => row.nudgeForward.c;
-  nanoK => frm("cc"+(33+rowId)).c => row.nudgeBack.c;
-}
-
-
-// MAPPINGS
-
-keyboard => frm("note").c => rowCol.keysIn.c;
-
-
-for(0=>int i;i<INPUT_TYPES;++i){
-  launchpad => frm("cc"+(111-i)).to(mk(Value, i) => rowCol.inpTypeSetter.c).c;
-
-  rowCol.inpTypeSetter
-    => mk(Processor, Eq.make(i)).c
-    => LP.orange().c
-    => lpOut.to("cc"+(111-i)).c;
-}
-
-launchpad => frm("note"+(16*7+8)).to(rowCol.noteHoldToggle, P_Toggle).c;
-rowCol.noteHoldToggle => LP.orange().c =>lpOut.to("note"+(16*7+8)).c;
-
-
-launchpad => frm("note"+(16*7+0)).c => mk(TrigValue, 60).c => rowCol.keysIn.c;
-launchpad => frm("note"+(16*7+1)).c => mk(TrigValue, 61).c => rowCol.keysIn.c;
-launchpad => frm("note"+(16*7+2)).c => mk(TrigValue, 63).c => rowCol.keysIn.c;
-launchpad => frm("note"+(16*7+3)).c => mk(TrigValue, 65).c => rowCol.keysIn.c;
-launchpad => frm("note"+(16*7+4)).c => mk(TrigValue, 67).c => rowCol.keysIn.c;
-launchpad => frm("note"+(16*7+5)).c => mk(TrigValue, 68).c => rowCol.keysIn.c;
-launchpad => frm("note"+(16*7+6)).c => mk(TrigValue, 70).c => rowCol.keysIn.c;
-launchpad => frm("note"+(16*7+7)).c => mk(TrigValue, 72).c => rowCol.keysIn.c;
-
-
-setupOutputSelection();
-
-for(0=>int rowId;rowId<ROW_COUNT;++rowId){
-  makeOutsUIRow(rowId);
-
-  def(ui, rowCol.rows[rowId].bufUI);
-  launchpad
-    .b(frm("cc104").to(mk(Bigger, 0) => ui.to(P_ClearAll).c))
-    .b(frm("note"+(rowId*16)).to(ui, P_Trigger));
-    /* .b(frm("note"+(rowId*16)).to((mk(Value, 0) => rowCol.inpTypeSetter.c).whenNot(ui, recv(P_ClearAll)))); */
-
-  ui => lpOut.to("note"+(16*rowId)).c;
-
-  def(offsetUI, rowCol.rows[rowId].offsetBufUI);
-  launchpad
-    .b(frm("cc104").to(mk(Bigger, 0) => offsetUI.to(P_ClearAll).c))
-    .b(frm("note"+(rowId*16+1)).to(offsetUI, P_Trigger));
-    /* .b(frm("note"+(rowId*16+1)).to((mk(Value, 1) => rowCol.inpTypeSetter.c).whenNot(offsetUI, recv(P_ClearAll)))); */
-
-  offsetUI => lpOut.to("note"+(16*rowId+1)).c;
-}
-
-
-fun void setupOutputSelection(){
-  for(0=>int rowInd;rowInd<rowCol.rows.size();++rowInd){
-    // Select outputs with side buttons
-    8+rowInd*16 => int ind;
-    launchpad
-      => mk(Bigger,0).from("note"+ind).c
-      => mk(TrigValue,rowInd).c
-      => rowCol.rowIndexSelector.c
-    ;
-
-    rowCol.rowIndexSelector
-      => MBUtil.onlyHigh().c
-      => mk(Processor, Eq.make(rowInd)).c
-      => mk(TrigValue, rowInd).c
-      => LP.red().c
-      => lpOut.to("note"+ind).c;
-  }
-}
-
-
-
-fun void makeOutsUIRow(int rowId){
-  for(0=>int outputId;outputId<OUT_DEVICE_COUNT;++outputId){
-    def(outs, rowCol.rows[rowId].outs);
-    launchpad
-      => frm("note"+(rowId*16+4+outputId)).c
-      => outs.to("toggleOut"+outputId).c;
-
-    outs
-      => frm("outActive"+outputId).c
-      => LP.red().c
-      => lpOut.to("note"+(rowId*16+4+outputId)).c;
-  }
-}
-
-
-
-// UI SETUP
-
-
-
-// Send launchpad reset message
-MidiMsg msg;
-176 => msg.data1;
-launchpadDeviceOut.send(msg);
-
-samp =>  now;
-rowCol.rowIndexSelector.set(0);
-rowCol.inpTypeSetter.set(0);
-
-Util.runForever();
-
-
-
-
-
-/* nanoktrl => mk(Printer, "nanoktrl note").from("note").c; */
-/* nanoktrl => mk(Printer, "nanoktrl cc").from("cc").c; */
-/* launchpad => mk(Printer, "lp note").from("note").c; */
-/* launchpad => mk(Printer, "lp cc").from("cc").c; */
-/* oxygen => mk(Printer, "oxygen cc").from("cc").c; */
-/* oxygen => mk(Printer, "oxygen note").from("note").c; */
-
-
-/* 
- fun void setupActiveBufsIndicators(){
-   for(0=>int rowInd;rowInd<ROW_COUNT;++rowInd){
-     for(0=>int bufId;bufId<SEQ_COUNT;++bufId){
-       bufs[rowInd]
-         => mk(TrigValue, rowInd*16+bufId).from("active_"+bufId).c
-         => mk(NoteOut, launchpadDeviceOut, 0).c;
-     }
-   }
- }
- */
-
-/* 
- metronome
-   => mk(TrigValue, 7*16).c
-   => mk(NoteOut, launchpadDeviceOut, 0, false).c
- ;
- */
-
-
-/* 
- fun ModuckP makeRecBufs(int count){
-   def(recBlocker, mk(Blocker));
-   def(rit, ritmo(false
-     ,[P_GoTo, P_Set]
-     ,[ mk(Buffer)
-       ,mk(Buffer)
-       ,mk(Buffer)
-       ,mk(Buffer)
-   ]));
- 
- 
-   def(root, mk(Repeater, Util.concatStrings(
-       [rit.getSourceTags(), [P_GoTo, P_Gate, "rec", "length"]])));
- 
-   root
-     .b(recBlocker
-       .fromTo("rec", P_Gate)
-       .fromTo(P_Gate, P_Trigger)
-     ).b(rit
-       .listen(P_GoTo)
-       .listen(rit.getSourceTags())
-     );
-   recBlocker => rit.to("active_"+P_Set).c;
- 
-   def(restarter, mk(Repeater));
- 
-   restarter
-     => mk(TrigValue, 0).c
-     => rit.to(P_GoTo).c
-   ;
- 
-   root
-     => frm(P_Clock).c
-     => (mk(PulseDiv, Bar).hook(root.fromTo("length", "divisor")) ).c
-     => restarter.c
-   ;
- 
-   [P_Trigger] @=> string outTags[];
-   for(0=>int i;i<count;++i){
-     outTags << "active_"+i;
-   }
- 
-   def(out, mk(Repeater, outTags));
- 
-   root => frm(P_Gate).to(out, P_Trigger).c;
-   rit => out.c;
- 
-   for(0=>int i;i<count;++i){
-     // Send out any low signals,
-     // to prevent hanging notes when disabling buffers
-     rit
-       => frm(recv(""+i)).c
-       => MBUtil.onlyLow().c
-       => out.c;
-     rit => out.listen("active_"+i).c;
-   }
- 
-   return mk(Wrapper, root, out);
- }
- */

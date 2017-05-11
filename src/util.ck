@@ -2,13 +2,13 @@
 
 
 public class Util{
-  fun static dur bpmToDur(float bpm){
+  fun static dur bpmToDur(int bpm){
     return minute / bpm;
   }
 
 
   fun static int toSamples(dur d){
-    return (d / samp) $ int;
+    return (d / samp )$ int;
   }
 
 
@@ -201,6 +201,15 @@ public class Util{
       prefix+strings[i] => ret[i];
     }
     return ret;
+  }
+
+  fun string[] genStringNums(int start, int count){
+    return numberedStrings("", range(start,start+count));
+  }
+
+
+  fun string[] genStringNums(int count){
+    return genStringNums(0, count);
   }
 
   fun static int equals(float a, float b){
