@@ -1,15 +1,19 @@
 include(macros.m4)
 
-fun void sendNoteOff(MidiOut device, MidiMsg @ msg, int n, int channel, int isCC){
-  if(isCC){
-    176 + channel => msg.data1; // NoteOff
-    n => msg.data2;
+fun void sendNoteOff(MidiOut device, MidiMsg @ msg, int n, int channel, int isCC, int zeroVelNoteOff){
+  if(zeroVelNoteOff){
+    sendNoteOn(device, msg, n, 0, channel, false);
   }else{
-    128 + channel => msg.data1; // NoteOff
-    n => msg.data2;
+    if(isCC){
+      176 + channel => msg.data1; // NoteOff
+      n => msg.data2;
+    }else{
+      128 + channel => msg.data1; // NoteOff
+      n => msg.data2;
+    }
+    0 => msg.data3;
+    device.send(msg);
   }
-  0 => msg.data3;
-  device.send(msg);
 }
 
 fun void sendNoteOn(MidiOut device, MidiMsg @ msg, int n, int velocity, int channel, int isCC){
@@ -29,7 +33,7 @@ genHandler(NoteHandler, "note",
     null @=> IntRef lastNote;
     HANDLE{
       if(lastNote != null){
-        sendNoteOff(device, msg, lastNote.i, channel, false);
+        sendNoteOff(device, msg, lastNote.i, channel, false, zeroVelNoteOff);
         null @=> lastNote;
       }
       if(v != null){
@@ -40,6 +44,7 @@ genHandler(NoteHandler, "note",
     MidiOut device;
     MidiMsg msg;
     int channel;
+    int zeroVelNoteOff;
 )
 
 class GateHandler extends EventHandler{
@@ -47,22 +52,24 @@ class GateHandler extends EventHandler{
   int channel;
   int noteNum;
   int isCC;
+  int zeroVelNoteOff;
   MidiMsg @ msg;
   fun void handle(IntRef v){
     if(v != null){
       sendNoteOn(device, msg, noteNum, v.i, channel, isCC);
     }else{
-      sendNoteOff(device, msg, noteNum, channel, isCC);
+      sendNoteOff(device, msg, noteNum, channel, isCC, zeroVelNoteOff);
     }
   }
 
-  fun static GateHandler make(MidiOut device, MidiMsg @ msg, int channel, int noteNum, int isCC){
+  fun static GateHandler make(MidiOut device, MidiMsg @ msg, int channel, int noteNum, int isCC, int zeroVelNoteOff){
     GateHandler ret;
     msg @=> ret.msg;
     channel => ret.channel;
     device @=> ret.device;
     noteNum => ret.noteNum;
     isCC => ret.isCC;
+    zeroVelNoteOff => ret.zeroVelNoteOff;
     return ret;
   }
 }
@@ -72,13 +79,17 @@ class GateHandler extends EventHandler{
 public class NoteOut extends Moduck{
   static int enabled;
   fun static NoteOut make(MidiOut @ device, int channel){
+    return make(device, channel, false);
+  }
+
+  fun static NoteOut make(MidiOut @ device, int channel, int zeroVelNoteOff){
     NoteOut ret;
     OUT(P_Gate);
     MidiMsg msg;
-    IN(NoteHandler, (device, msg, channel));
+    IN(NoteHandler, (device, msg, channel, zeroVelNoteOff));
     for(0=>int i;i<128;++i){
-      ret.addIn("note"+i, GateHandler.make(device, msg, channel, i, false));
-      ret.addIn("cc"+i, GateHandler.make(device, msg, channel, i, true));
+      ret.addIn("note"+i, GateHandler.make(device, msg, channel, i, false, zeroVelNoteOff));
+      ret.addIn("cc"+i, GateHandler.make(device, msg, channel, i, true, zeroVelNoteOff));
     }
     ret.addVal("velocity", 127);
     return ret;

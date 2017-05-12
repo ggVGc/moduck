@@ -18,13 +18,14 @@ fun ModuckP recBufUI(ModuckP recBuf){
 
   // Indicators
   def(trigOut, mk(Prio) => out.c);
-  def(trigCol, iff(recBuf, P_Recording).then(LP.red2()).els(LP.yellow()));
+  def(trigCol, iff(recBuf, P_Recording).then(LP.red2()).els(LP.green()));
   recBuf
-    .b("hasData", LP.green() => trigOut.to(0).c)
+    /* .b("hasData", LP.green() => trigOut.to(0).c) */
     .b(P_Playing, LP.orange() => trigOut.to(1).c)
     .b(P_Recording, LP.red() => trigOut.to(2).c)
     .b(P_Trigger, trigCol => trigOut.to(3).c)
-    .b(P_Looped, LP.green2() => mk(SampleHold, 200::ms).to(P_Set).to(P_Trigger).c => trigOut.to(4).c);
+    /* .b(P_Looped, LP.green2() => mk(SampleHold, 200::ms).to(P_Set).to(P_Trigger).c => trigOut.to(4).c); */
+    .b(P_Looped, LP.red() => mk(SampleHold, 150::ms).to(P_Set).to(P_Trigger).c => trigOut.to(4).c);
 
   return mk(Wrapper, in, out);
 }

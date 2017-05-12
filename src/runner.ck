@@ -132,7 +132,7 @@ public class Runner extends RunnerBase{
 
 false => Runner.isPlaying;
 
-64 => Runner.ticksPerBeat;
+96 => Runner.ticksPerBeat;
 
 
 ClockGen.make(120*Runner.ticksPerBeat) @=> Runner._masterClockGen;
