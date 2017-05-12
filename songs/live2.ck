@@ -352,13 +352,13 @@ def(launchpad, mk(MidInp, MIDI_IN_LAUNCHPAD, 0))
 def(apc1, apcToLaunchadAdapterIn(mk(MidInp, MIDI_IN_APC, 0)))
 <<<"Opening keyboard in">>>;
 /* def(keyboard, mk(MidInp, MIDI_IN_CIRCUIT, 0)); */
-def(nanoK, mk(MidInp, MIDI_IN_NANO_KTRL, 0));
+/* def(nanoK, mk(MidInp, MIDI_IN_NANO_KTRL, 0)); */
+def(nanoK, mk(Repeater));
 /* def(keyboard, mk(MidInp, MIDI_IN_OXYGEN, 0)); */
 /* def(keyboard, mk(MidInp, MIDI_IN_K49, 0)); */
 /* def(circuitIn, mk(MidInp, MIDI_IN_CIRCUIT, 9)); */
 
 
-nanoK => mk(Printer, "nano").from("cc").c;
 
 openOut(MIDI_OUT_LAUNCHPAD) @=> MidiOut launchpadDeviceOut;
 openOut(MIDI_OUT_APC) @=> MidiOut apcDeviceOut;
