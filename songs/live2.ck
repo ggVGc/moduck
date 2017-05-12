@@ -8,7 +8,7 @@ include(parts/rec_buf_ui.ck)
 include(parts/multi_router.ck)
 include(parts/rhythms.ck)
 
-define(OUT_DEVICE_COUNT, 4);
+define(OUT_DEVICE_COUNT, 6);
 define(ROW_COUNT, 4);
 define(QUANTIZATION, Bar)
 
@@ -509,7 +509,7 @@ fun ModuckP apcToLaunchadAdapterIn(ModuckP apcInstance){
 
 // Use one button to start/stop both trig and pitch buffer
 def(trigAndPitchBufRouter, mk(Router, 0));
-apc1
+launchpad
   => frm("cc104").c
   => trigAndPitchBufRouter.c;
 // Match index of row
@@ -528,35 +528,35 @@ for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
 
 function void setuBufferUIs(ModuckP trigPitchTriggerRouter, int rowId){
   def(bufUI, rowCol.rows[rowId].bufUI);
-  apc1
+  launchpad
     .b(frm("cc105").to(mk(Bigger, 0) => bufUI.to(P_ClearAll).c))
     .b(frm("note"+(rowId*16)).to(bufUI, P_Trigger));
 
-  bufUI => apcOut1.to("note"+(16*rowId)).c;
+  bufUI => lpOut.to("note"+(16*rowId)).c;
 
 
   def(pitchLockUI, rowCol.rows[rowId].pitchLockUI);
-  apc1
+  launchpad
     .b(frm("cc105").to(mk(Bigger, 0) => pitchLockUI.to(P_ClearAll).c))
     .b(frm("note"+(rowId*16+1)).to(pitchLockUI, P_Trigger));
 
-  pitchLockUI => apcOut1.to("note"+(16*rowId+1)).c;
+  pitchLockUI => lpOut.to("note"+(16*rowId+1)).c;
 
 
   def(pitchShiftUI, rowCol.rows[rowId].pitchShiftUI);
-  apc1
+  launchpad
     .b(frm("cc105").to(mk(Bigger, 0) => pitchShiftUI.to(P_ClearAll).c))
     .b(frm("note"+(rowId*16+2)).to(pitchShiftUI, P_Trigger));
 
-  pitchShiftUI => apcOut1.to("note"+(16*rowId+2)).c;
+  pitchShiftUI => lpOut.to("note"+(16*rowId+2)).c;
 
 
   def(beatRitmoUI, rowCol.rows[rowId].beatRitmoUI);
-  apc1
+  launchpad
     .b(frm("cc105").to(mk(Bigger, 0) => beatRitmoUI.to(P_ClearAll).c))
     .b(frm("note"+(rowId*16+3)).to(beatRitmoUI, P_Trigger));
 
-  beatRitmoUI => apcOut1.to("note"+(16*rowId+3)).c;
+  beatRitmoUI => lpOut.to("note"+(16*rowId+3)).c;
 
 
   (trigPitchTriggerRouter => frm(rowId).c)
@@ -585,25 +585,13 @@ function ModuckP outPitchQuant(){
 
 function void setupRowOutputs(Row row){
   row.outs
-    /* .b(frm(0).to(outPitchQuant() => mk(NoteOut,circuit,0).c)) */
-    /* .b(frm(1).to(outPitchQuant() => mk(NoteOut,circuit,1).c)) */
-    .b(frm(0).to(outPitchQuant() => mk(NoteOut,sys1,0).c))
-    .b(frm(1).to(outPitchQuant() => mk(NoteOut,ms20,0).c))
-    .b(frm(2).to(outPitchQuant() => mk(NoteOut,brute,0).c))
-    .b(frm(3).to(outPitchQuant() => mk(NoteOut,nocoast,0).c))
-    .b(frm(0).to( mk(Printer, "Out 0")))
-    .b(frm(1).to( mk(Printer, "Out 1")))
-    .b(frm(2).to( mk(Printer, "Out 2")))
-    .b(frm(3).to( mk(Printer, "Out 3")))
-    /* .b(frm(2).to(mk(NoteOut,circuit,9))) */
-    /*.b(frm(2).to(mk(NoteOut,circuit,10)))*/
-    /*.b(frm(3).to(mk(NoteOut,circuit,12)))*/
-    /*.b(frm(0).to(mk(NoteOut,brute,0)))
-    /* 
-     .b(frm(1).to(mk(NoteOut, ms20, 0)))
-     .b(frm(2).to(mk(NoteOut, nocoast, 0)))
-     .b(frm(3).to(mk(NoteOut, sys1, 0)))
-     */
+    .b(frm(0).to(outPitchQuant() => mk(NoteOut,circuit,0).c))
+    .b(frm(1).to(outPitchQuant() => mk(NoteOut,circuit,1).c))
+    .b(frm(2).to(outPitchQuant() => mk(NoteOut,nocoast,0).c))
+    .b(frm(3).to(outPitchQuant() => mk(NoteOut,brute,0).c))
+    .b(frm(4).to(outPitchQuant() => mk(NoteOut,ms20,0).c))
+    .b(frm(5).to(outPitchQuant() => mk(NoteOut,sys1,0).c))
+    /* .b(frm(5).to(outPitchQuant() => mk(NoteOut,circuit,10).c)) */ // Drums
   ;
 }
 
@@ -636,13 +624,13 @@ function void makeOutsUIRow(int rowId){
   for(0=>int outputId;outputId<OUT_DEVICE_COUNT;++outputId){
     def(outs, rowCol.rows[rowId].outs);
     apc1
-      => frm("note"+(rowId*16+4+outputId)).c
+      => frm("note"+(rowId*16+outputId)).c
       => outs.to("toggleOut"+outputId).c;
 
     outs
       => frm("outActive"+outputId).c
       => LP.red().c
-      => apcOut1.to("note"+(rowId*16+4+outputId)).c;
+      => apcOut1.to("note"+(rowId*16+outputId)).c;
   }
 }
 
