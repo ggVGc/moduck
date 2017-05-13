@@ -125,14 +125,14 @@ class ThingAndBuffer{
 <<<B8+B16>>>;
 
 [
-    fourFour(B*2)
-    ,fourFour(B)
+    /* fourFour(B*2) */
+    fourFour(B)
     ,fourFour(B2)
     ,fourFour(B4)
     ,fourFour(B8)
     ,fourFour(B16)
-    ,fourFour(B32)
-    ,mk(Blackhole)
+    /* ,fourFour(B32) */
+    /* ,mk(Blackhole) */
 
     ,fourFour(B+B2)
     ,fourFour(B2+B4)
@@ -190,9 +190,6 @@ fun Row makeRow(ModuckP clockIn){
     @=> ThingAndBuffer pitchLock;
   ThingAndBuffer.make(mk(Offset, 0), "offset", QUANTIZATION)
     @=> ThingAndBuffer pitchShift;
-
-
-
 
   /* 
    ThingAndBuffer.make(beatRitmoThing, null, mk(Repeater), QUANTIZATION, beatRitmoTags)
@@ -384,14 +381,23 @@ launchpadKeyboard(apc1, rowCount, rowCount+1, Scales.MinorNatural.size()) => mk(
 launchpadKeyboard(apc1, rowCount+1, rowCount+2, Scales.MinorNatural.size()) => mk(Offset, 3*7).c => rowCol.keysIn.to("pitch").c;
 launchpadKeyboard(apc1, rowCount+2, rowCount+3, Scales.MinorNatural.size()) => rowCol.keysIn.to("pitchOffset").c;
 
-launchpadKeyboard(launchpad, 6, 8, 8) @=> ModuckP ritmoKeyboard;
+/* 
+ launchpadKeyboard(launchpad, 6, 8, 8) @=> ModuckP ritmoKeyboard;
+ 
+ for(0=>int keyInd;keyInd<beatRitmoTags.size();++keyInd){
+   ritmoKeyboard
+     => frm(keyInd).c
+     => rowCol.keysIn.to("beatRitmo"+keyInd).c;
+ }
+ */
 
-for(0=>int keyInd;keyInd<beatRitmoTags.size();++keyInd){
-  ritmoKeyboard
-    => frm(keyInd).c
-    => rowCol.keysIn.to("beatRitmo"+keyInd).c;
+launchpad => mk(Printer, "ouaa").from("note").c;
+
+for(0=>int i;i<8;++i){
+  launchpad
+    => frm("note"+(8+(7-i)*16)).c
+    => rowCol.keysIn.to("beatRitmo"+i).c;
 }
-
 
 fun void numberedConnect(ModuckP src, ModuckP dst, int count){
   for(0=>int i;i<count;++i){

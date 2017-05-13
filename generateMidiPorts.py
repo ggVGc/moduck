@@ -72,14 +72,9 @@ with open(sys.argv[1], "w") as outFile:
     if portIn != -1:
       w("in", portIn)
     else:
-      w("in", 16)
+      w("in", 32)
     if portOut != -1:
       w("out", portOut)
     else:
-      w("out", 16)
-
-
-  
-  #for p in ports:
-
+      w("out", 32)
 
