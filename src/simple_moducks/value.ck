@@ -1,5 +1,3 @@
-include(macros.m4)
-
 /* 
  genHandler(TrigHandler, P_Trigger,
    HANDLE{

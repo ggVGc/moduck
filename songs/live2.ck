@@ -2,12 +2,12 @@
 
 include(song_macros.m4)
 include(time_macros.m4)
-include(_all_instruments.m4)
 include(funcs.m4)
 include(parts/rec_buf_ui.ck)
 include(parts/multi_router.ck)
 include(parts/multi_switcher.ck)
 include(parts/rhythms.ck)
+include(instruments/ritmo.ck)
 
 define(OUT_DEVICE_COUNT, 6);
 define(ROW_COUNT, 8);

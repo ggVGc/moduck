@@ -1,6 +1,5 @@
 
 include(moduck_macros.m4)
-include(song_macros.m4)
 
 genHandler(TrigHandler, P_Trigger, 
   HANDLE{

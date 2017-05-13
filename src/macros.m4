@@ -1,8 +1,6 @@
 
 include(pulses.m4)
 
-ifdef(`MACROS_INCLUDED',,`define(MACROS_INCLUDED,1)dnl
-
 
 define(BOOL, int)
 define(TRUE, 1)
@@ -20,6 +18,4 @@ define(WARNING,
 
 define(ASSERT,
     if(!($1)){<<<"Assertion Failure: $1 -- `FILIN'">>>;})
-
-')
 
