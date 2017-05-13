@@ -401,9 +401,19 @@ for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
   setuBufferUIs(trigAndPitchBufRouter, rowId);
 }
 
+def(trigPitchToggle, mk(Toggler, false));
 
-launchpadKeyboard(launchpad, 0, 5, Scales.MinorNatural.size()) => rowCol.keysIn.to("trigpitch").c;
-launchpadKeyboard(launchpad, 5, 8, Scales.MinorNatural.size()) => mk(Offset, -7).c => rowCol.keysIn.to("pitchOffset").c;
+trigPitchToggle => LP.green().c => launchpad.to("cc104").c;
+launchpad => frm("cc104").c => mk(Bigger, 0).c => trigPitchToggle.to(P_Toggle).c;
+
+
+Scales.MinorNatural.size() => int scaleNoteCount;
+launchpadKeyboard(launchpad, 0, 5, scaleNoteCount)
+  => iff(trigPitchToggle, P_Trigger)
+    .then(rowCol.keysIn.to("pitch"))
+    .els(rowCol.keysIn.to("trigpitch")).c;
+launchpadKeyboard(launchpad, 5, 8, scaleNoteCount) => mk(Offset, -7).c => rowCol.keysIn.to("pitchOffset").c;
+
 /* 
  rowCol.rows.size() => int rowCount;
  launchpadKeyboard(apc1, rowCount, rowCount+1, Scales.MinorNatural.size()) => mk(Offset, 7).c => rowCol.keysIn.to("trigpitch").c;
