@@ -10,7 +10,7 @@ include(parts/rhythms.ck)
 
 define(OUT_DEVICE_COUNT, 6);
 define(ROW_COUNT, 8);
-define(QUANTIZATION, Bar)
+define(QUANTIZATION, B)
 
 Runner.setPlaying(1);
 
@@ -126,7 +126,10 @@ class ThingAndBuffer{
 
 [
     /* fourFour(B*2) */
-    fourFour(B)
+    fourFour(B+B2)
+    ,fourFour(B2+B4)
+    ,fourFour(B/3)
+    ,fourFour(B)
     ,fourFour(B2)
     ,fourFour(B4)
     ,fourFour(B8)
@@ -134,9 +137,6 @@ class ThingAndBuffer{
     /* ,fourFour(B32) */
     /* ,mk(Blackhole) */
 
-    ,fourFour(B+B2)
-    ,fourFour(B2+B4)
-    ,fourFour(B/3)
     /* ,fourFour(B4+B8) */
     /* ,fourFour(B16+B32) */
     /* ,fourFour(B7, 0) */
@@ -381,8 +381,29 @@ openOut(MIDI_OUT_CIRCUIT) @=> MidiOut circuit;
 // MAPPINGS
 
 setupOutputSelection();
+setupBeatRitmoUI();
 
-launchpadKeyboard(launchpad, 0, 8, Scales.MinorNatural.size()) => rowCol.keysIn.to("trigpitch").c;
+// Use one button to start/stop both trig and pitch buffer
+def(trigAndPitchBufRouter, mk(Router, 0));
+apc2
+  => frm("cc104").c
+  => trigAndPitchBufRouter.c;
+// Match index of row
+rowCol.rowIndexSelector => trigAndPitchBufRouter.to("index").c;
+
+
+for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
+  10::ms => now;
+  rowCol.rows[rowId] @=> Row row;
+  setupRowOutputs(row);
+  setupSpeedControls(row, rowId);
+  makeOutsUIRow(rowId);
+  setuBufferUIs(trigAndPitchBufRouter, rowId);
+}
+
+
+launchpadKeyboard(launchpad, 0, 5, Scales.MinorNatural.size()) => rowCol.keysIn.to("trigpitch").c;
+launchpadKeyboard(launchpad, 5, 8, Scales.MinorNatural.size()) => mk(Offset, -7).c => rowCol.keysIn.to("pitchOffset").c;
 /* 
  rowCol.rows.size() => int rowCount;
  launchpadKeyboard(apc1, rowCount, rowCount+1, Scales.MinorNatural.size()) => mk(Offset, 7).c => rowCol.keysIn.to("trigpitch").c;
@@ -401,10 +422,16 @@ launchpadKeyboard(launchpad, 0, 8, Scales.MinorNatural.size()) => rowCol.keysIn.
  */
 
 
-for(0=>int i;i<8;++i){
-  launchpad
-    => frm("note"+(8+(7-i)*16)).c
-    => rowCol.keysIn.to("beatRitmo"+i).c;
+
+
+
+
+fun void setupBeatRitmoUI(){
+  for(0=>int i;i<8;++i){
+    launchpad
+      => frm("note"+(7+(7-i)*16)).c
+      => rowCol.keysIn.to("beatRitmo"+i).c;
+  }
 }
 
 fun void numberedConnect(ModuckP src, ModuckP dst, int count){
@@ -521,23 +548,6 @@ fun ModuckP apcToLaunchadAdapterIn(ModuckP apcInstance){
 
 
 
-// Use one button to start/stop both trig and pitch buffer
-def(trigAndPitchBufRouter, mk(Router, 0));
-apc2
-  => frm("cc104").c
-  => trigAndPitchBufRouter.c;
-// Match index of row
-rowCol.rowIndexSelector => trigAndPitchBufRouter.to("index").c;
-
-
-for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
-  10::ms => now;
-  rowCol.rows[rowId] @=> Row row;
-  setupRowOutputs(row);
-  setupSpeedControls(row, rowId);
-  makeOutsUIRow(rowId);
-  setuBufferUIs(trigAndPitchBufRouter, rowId);
-}
 
 
 function void setuBufferUIs(ModuckP trigPitchTriggerRouter, int rowId){
@@ -599,7 +609,9 @@ function ModuckP outPitchQuant(){
 
 function void setupRowOutputs(Row row){
   row.outs
-    .b(frm(0).to(outPitchQuant() => mk(NoteOut,circuit,0).c))
+    .b(frm(0).to(outPitchQuant()
+ => mk(Printer, "Out0").c         
+          => mk(NoteOut,circuit,0).c))
     .b(frm(1).to(outPitchQuant() => mk(NoteOut,circuit,1).c))
     .b(frm(2).to(outPitchQuant() => mk(NoteOut,nocoast,0).c))
     .b(frm(3).to(outPitchQuant() => mk(NoteOut,brute,0).c))
