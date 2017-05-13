@@ -1,5 +1,5 @@
 
-include(macros.m4)
+include(moduck_macros.m4)
 
 genHandler(TrigHandler, P_Trigger, 
   IntRef lastVal;
@@ -9,7 +9,12 @@ genHandler(TrigHandler, P_Trigger,
         nums[numInd] @=> int n;
         if(v.i == n){
           parent.send(""+n, IntRef.yes());
-          IntRef.make(n) @=> lastVal;
+
+          if(lastVal != null){
+            parent.send(""+lastVal.i, null);
+          }
+
+          v @=> lastVal;
           return;
         }
 

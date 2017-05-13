@@ -1,5 +1,5 @@
 
-include(macros.m4)
+include(moduck_macros.m4)
 
 genHandler( TrigHandler, P_Trigger, HANDLE{
     if(null != v){

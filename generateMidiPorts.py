@@ -34,7 +34,7 @@ import os
 import subprocess
 
 
-def findDevicePorts(hintName, fullString):
+def findDevicePorts(hintName, fullString, minCount):
   inputsStart = fullString.find("MIDI inputs")
   outputsStart = fullString.find("MIDI outputs")
 
@@ -49,13 +49,16 @@ def findDevicePorts(hintName, fullString):
   curInStart = inputsStart
   curOutStart = outputsStart
 
+  x = 0
   while True:
     (inAdd, inPort) = findPort(fullString[curInStart:outputsStart])
     curInStart += inAdd
     (outAdd, outPort) = findPort(fullString[curOutStart:])
     curOutStart += outAdd
-    if inPort == -1 and outPort == -1:
-      break
+    if x>=minCount:
+      if type(outPort) is str or(inPort == -1 and outPort == -1):
+        break
+    x+=1
     yield (inPort, outPort)
 
 
@@ -76,7 +79,7 @@ with open(sys.argv[1], "w") as outFile:
     if len(d) > 1:
       rootName = d[1]
 
-    ports = [x for x in findDevicePorts(d[0], chuckOutput)]
+    ports = [x for x in findDevicePorts(d[0], chuckOutput, 2)]
     if len(ports) == 0:
         write(rootName, "in", 32)
         write(rootName, "out", 32)

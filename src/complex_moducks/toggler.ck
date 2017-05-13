@@ -6,7 +6,7 @@ public class Toggler{
   maker(Moduck, int initiallyOn){
     def(in, mk(Repeater, [P_Trigger, P_Toggle]));
     def(out, mk(Repeater));
-    def(inSwitcher, mk(Switcher, false));
+    def(inSwitcher, mk(GateSwitch, false));
 
     in => inSwitcher.from(P_Toggle).c;
 

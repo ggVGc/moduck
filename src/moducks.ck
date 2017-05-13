@@ -8,6 +8,7 @@ Machine.add("simple_moducks/note_out.ck");
 Machine.add("simple_moducks/mid_inp.ck");
 Machine.add("simple_moducks/pulse_div.ck");
 Machine.add("simple_moducks/router.ck");
+Machine.add("simple_moducks/switcher.ck");
 Machine.add("simple_moducks/multiplier.ck");
 Machine.add("simple_moducks/adder.ck");
 Machine.add("simple_moducks/buffer.ck");

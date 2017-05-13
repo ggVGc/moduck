@@ -1,4 +1,4 @@
-include(macros.m4)
+include(moduck_macros.m4)
 
 
 fun void doStep(ModuckBase parent, int entries[], int loop){

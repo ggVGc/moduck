@@ -6,6 +6,7 @@ include(_all_instruments.m4)
 include(funcs.m4)
 include(parts/rec_buf_ui.ck)
 include(parts/multi_router.ck)
+include(parts/multi_switcher.ck)
 include(parts/rhythms.ck)
 
 define(OUT_DEVICE_COUNT, 6);
@@ -411,10 +412,23 @@ triggerKeyboard
 launchpadKeyboard(launchpad, 5, 8, scaleNoteCount) => mk(Offset, -7).c => rowCol.keysIn.to("pitchOffset").c;
 
 
-(rowCol.rows[0].outs
+ModuckP rowOutputs[0];
+for(0=>int rowInd;rowInd<ROW_COUNT;++rowInd){
+  rowOutputs <<
+    (rowCol.rows[rowInd].outs
     => frm(recv(P_Trigger)).c
-    => mk(NumToOut, Util.range(127)).c
-) => triggerKeyboard.listen(Util.genStringNums(127)).c;
+    => mk(NumToOut, Util.range(127)).c);
+}
+
+rowCol.rowIndexSelector => multiSwitcher(rowOutputs, Util.genStringNums(127), triggerKeyboard).c;
+/* rowOutputs[0] => triggerKeyboard.listen(Util.genStringNums(127)).c; */
+
+/* 
+ (rowCol.rows[0].outs
+     => frm(recv(P_Trigger)).c
+     => mk(NumToOut, Util.range(127)).c
+ ) => triggerKeyboard.listen(Util.genStringNums(127)).c;
+ */
 
 
 /* 

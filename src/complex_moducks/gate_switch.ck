@@ -1,8 +1,8 @@
 
-include(macros.m4)
+include(moduck_macros.m4)
 include(song_macros.m4)
 
-public class Switcher{
+public class GateSwitch{
 
   fun static Moduck make(){
     return make(true);

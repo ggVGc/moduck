@@ -1,4 +1,4 @@
-include(macros.m4)
+include(moduck_macros.m4)
 
 fun void sendNoteOff(MidiOut device, MidiMsg @ msg, int n, int channel, int isCC, int zeroVelNoteOff){
   if(zeroVelNoteOff){

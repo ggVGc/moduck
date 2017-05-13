@@ -1,4 +1,4 @@
-include(macros.m4)
+include(moduck_macros.m4)
 include(song_macros.m4)
 
 public class TrigValue extends Moduck{

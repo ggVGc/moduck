@@ -29,7 +29,7 @@ Machine.add("moduck_util_base.ck");
 samp => now;
 Machine.add("complex_moducks/trig_value.ck");
 Machine.add("complex_moducks/probably.ck");
-Machine.add("complex_moducks/switcher.ck");
+Machine.add("complex_moducks/gate_switch.ck");
 Machine.add("complex_moducks/toggler.ck");
 Machine.add("complex_moducks/once_trigger.ck");
 Machine.add("complex_moducks/rec_buf.ck");

@@ -1,5 +1,5 @@
 
-include(macros.m4)
+include(moduck_macros.m4)
 
 fun int doMult(ModuckBase m, int count){
     0 => int acc;

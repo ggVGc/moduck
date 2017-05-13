@@ -1,4 +1,4 @@
-include(macros.m4)
+include(moduck_macros.m4)
 
 class Responder extends MIDIFlowerPetal{
   Moduck parent;

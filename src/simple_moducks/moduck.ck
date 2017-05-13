@@ -1,6 +1,6 @@
 
 include(pulses.m4)
-include(macros.m4)
+include(moduck_macros.m4)
 
 
 public class Moduck extends ModuckBase {

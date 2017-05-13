@@ -1,4 +1,4 @@
-include(macros.m4)
+include(moduck_macros.m4)
 
 
 // TODO: This should use a gate signal instead

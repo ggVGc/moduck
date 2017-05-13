@@ -1,5 +1,5 @@
 
-include(macros.m4)
+include(moduck_macros.m4)
 
 
 fun void print(string msg, IntRef v){
