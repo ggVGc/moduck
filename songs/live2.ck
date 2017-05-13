@@ -9,7 +9,7 @@ include(parts/multi_router.ck)
 include(parts/rhythms.ck)
 
 define(OUT_DEVICE_COUNT, 6);
-define(ROW_COUNT, 4);
+define(ROW_COUNT, 8);
 define(QUANTIZATION, Bar)
 
 Runner.setPlaying(1);
@@ -203,6 +203,7 @@ fun Row makeRow(ModuckP clockIn){
   def(beatRitmoRouter, mk(Router, 0));
 
   for(0=>int tagInd;tagInd<beatRitmoTags.size();++tagInd){
+    10::ms => now;
     beatRitmoTags[tagInd] @=> string tag;
     ret.input
       => frm("beatRitmo"+tagInd).c
@@ -345,8 +346,20 @@ makeRowCollection(clock) @=> RowCollection rowCol;
 Runner.masterClock => clock.c;
 
 <<<"Opening launchpad in">>>;
-def(launchpad, mk(MidInp, MIDI_IN_LAUNCHPAD, 0))
-def(apc1, apcToLaunchadAdapterIn(mk(MidInp, MIDI_IN_APC, 0)))
+openOut(MIDI_OUT_LAUNCHPAD) @=> MidiOut launchpadDeviceOut;
+def(launchpad, mk(Wrapper, 
+    mk(NoteOut, launchpadDeviceOut, 0)
+    ,mk(MidInp, MIDI_IN_LAUNCHPAD, 0)
+));
+
+def(apc1, mk(Wrapper, 
+    apcToLaunchadAdapterOut(mk(NoteOut, openOut(MIDI_OUT_APC), 0, true))
+    ,apcToLaunchadAdapterIn(mk(MidInp, MIDI_IN_APC, 0))
+));
+def(apc2, mk(Wrapper, 
+    apcToLaunchadAdapterOut(mk(NoteOut, openOut(MIDI_OUT_APC1), 0, true))
+    ,apcToLaunchadAdapterIn(mk(MidInp, MIDI_IN_APC1, 0))
+));
 <<<"Opening keyboard in">>>;
 /* def(keyboard, mk(MidInp, MIDI_IN_CIRCUIT, 0)); */
 /* def(nanoK, mk(MidInp, MIDI_IN_NANO_KTRL, 0)); */
@@ -354,13 +367,6 @@ def(nanoK, mk(Repeater));
 /* def(keyboard, mk(MidInp, MIDI_IN_OXYGEN, 0)); */
 /* def(keyboard, mk(MidInp, MIDI_IN_K49, 0)); */
 /* def(circuitIn, mk(MidInp, MIDI_IN_CIRCUIT, 9)); */
-
-
-
-openOut(MIDI_OUT_LAUNCHPAD) @=> MidiOut launchpadDeviceOut;
-openOut(MIDI_OUT_APC) @=> MidiOut apcDeviceOut;
-def(lpOut, mk(NoteOut, launchpadDeviceOut, 0));
-def(apcOut1, apcToLaunchadAdapterOut(mk(NoteOut, apcDeviceOut, 0, true)));
 
 // OUTPUTS
 
@@ -376,10 +382,13 @@ openOut(MIDI_OUT_CIRCUIT) @=> MidiOut circuit;
 
 setupOutputSelection();
 
-rowCol.rows.size() => int rowCount;
-launchpadKeyboard(apc1, rowCount, rowCount+1, Scales.MinorNatural.size()) => mk(Offset, 7).c => rowCol.keysIn.to("trigpitch").c;
-launchpadKeyboard(apc1, rowCount+1, rowCount+2, Scales.MinorNatural.size()) => mk(Offset, 3*7).c => rowCol.keysIn.to("pitch").c;
-launchpadKeyboard(apc1, rowCount+2, rowCount+3, Scales.MinorNatural.size()) => rowCol.keysIn.to("pitchOffset").c;
+launchpadKeyboard(launchpad, 0, 8, Scales.MinorNatural.size()) => rowCol.keysIn.to("trigpitch").c;
+/* 
+ rowCol.rows.size() => int rowCount;
+ launchpadKeyboard(apc1, rowCount, rowCount+1, Scales.MinorNatural.size()) => mk(Offset, 7).c => rowCol.keysIn.to("trigpitch").c;
+ launchpadKeyboard(apc1, rowCount+1, rowCount+2, Scales.MinorNatural.size()) => mk(Offset, 3*7).c => rowCol.keysIn.to("pitch").c;
+ launchpadKeyboard(apc1, rowCount+2, rowCount+3, Scales.MinorNatural.size()) => rowCol.keysIn.to("pitchOffset").c;
+ */
 
 /* 
  launchpadKeyboard(launchpad, 6, 8, 8) @=> ModuckP ritmoKeyboard;
@@ -391,7 +400,6 @@ launchpadKeyboard(apc1, rowCount+2, rowCount+3, Scales.MinorNatural.size()) => r
  }
  */
 
-launchpad => mk(Printer, "ouaa").from("note").c;
 
 for(0=>int i;i<8;++i){
   launchpad
@@ -515,7 +523,7 @@ fun ModuckP apcToLaunchadAdapterIn(ModuckP apcInstance){
 
 // Use one button to start/stop both trig and pitch buffer
 def(trigAndPitchBufRouter, mk(Router, 0));
-launchpad
+apc2
   => frm("cc104").c
   => trigAndPitchBufRouter.c;
 // Match index of row
@@ -534,35 +542,35 @@ for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
 
 function void setuBufferUIs(ModuckP trigPitchTriggerRouter, int rowId){
   def(bufUI, rowCol.rows[rowId].bufUI);
-  launchpad
+  apc2
     .b(frm("cc105").to(mk(Bigger, 0) => bufUI.to(P_ClearAll).c))
     .b(frm("note"+(rowId*16)).to(bufUI, P_Trigger));
 
-  bufUI => lpOut.to("note"+(16*rowId)).c;
+  bufUI => apc2.to("note"+(16*rowId)).c;
 
 
   def(pitchLockUI, rowCol.rows[rowId].pitchLockUI);
-  launchpad
+  apc2
     .b(frm("cc105").to(mk(Bigger, 0) => pitchLockUI.to(P_ClearAll).c))
     .b(frm("note"+(rowId*16+1)).to(pitchLockUI, P_Trigger));
 
-  pitchLockUI => lpOut.to("note"+(16*rowId+1)).c;
+  pitchLockUI => apc2.to("note"+(16*rowId+1)).c;
 
 
   def(pitchShiftUI, rowCol.rows[rowId].pitchShiftUI);
-  launchpad
+  apc2
     .b(frm("cc105").to(mk(Bigger, 0) => pitchShiftUI.to(P_ClearAll).c))
     .b(frm("note"+(rowId*16+2)).to(pitchShiftUI, P_Trigger));
 
-  pitchShiftUI => lpOut.to("note"+(16*rowId+2)).c;
+  pitchShiftUI => apc2.to("note"+(16*rowId+2)).c;
 
 
   def(beatRitmoUI, rowCol.rows[rowId].beatRitmoUI);
-  launchpad
+  apc2
     .b(frm("cc105").to(mk(Bigger, 0) => beatRitmoUI.to(P_ClearAll).c))
     .b(frm("note"+(rowId*16+3)).to(beatRitmoUI, P_Trigger));
 
-  beatRitmoUI => lpOut.to("note"+(16*rowId+3)).c;
+  beatRitmoUI => apc2.to("note"+(16*rowId+3)).c;
 
 
   (trigPitchTriggerRouter => frm(rowId).c)
@@ -620,7 +628,7 @@ function void setupOutputSelection(){
       => mk(TrigValue, rowInd).c
       => LP.red().c
       => mk(Printer, "ind out, "+rowInd).c
-      => apcOut1.to("note"+ind).c;
+      => apc1.to("note"+ind).c;
   }
 }
 
@@ -636,7 +644,7 @@ function void makeOutsUIRow(int rowId){
     outs
       => frm("outActive"+outputId).c
       => LP.red().c
-      => apcOut1.to("note"+(rowId*16+outputId)).c;
+      => apc1.to("note"+(rowId*16+outputId)).c;
   }
 }
 
