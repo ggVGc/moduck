@@ -24,6 +24,12 @@ public class Util{
     return Util.range(start, end, 1);
   }
 
+
+  fun static int[] range(int end){
+    return Util.range(0, end);
+  }
+
+
   fun static int[] range(int start, int end, int step){
     int smallest;
     int biggest;

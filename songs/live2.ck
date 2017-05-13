@@ -9,7 +9,7 @@ include(parts/multi_router.ck)
 include(parts/rhythms.ck)
 
 define(OUT_DEVICE_COUNT, 6);
-define(ROW_COUNT, 8);
+define(ROW_COUNT, 2);
 define(QUANTIZATION, B)
 
 Runner.setPlaying(1);
@@ -190,11 +190,6 @@ fun Row makeRow(ModuckP clockIn){
     @=> ThingAndBuffer pitchLock;
   ThingAndBuffer.make(mk(Offset, 0), "offset", QUANTIZATION)
     @=> ThingAndBuffer pitchShift;
-
-  /* 
-   ThingAndBuffer.make(beatRitmoThing, null, mk(Repeater), QUANTIZATION, beatRitmoTags)
-     @=> ThingAndBuffer beatRitmoSrc;
-   */
   ThingAndBuffer.make(mk(Repeater), P_Trigger, QUANTIZATION)
     @=> ThingAndBuffer beatRitmoSrc;
 
@@ -277,6 +272,7 @@ fun Row makeRow(ModuckP clockIn){
   pitchShift.bufUI @=> ret.pitchShiftUI;
   beatRitmoSrc.bufUI @=> ret.beatRitmoUI;
 
+  def(bufClock, mk(PulseDiv, 2));
 
   def(backNudgeVal, mk(TrigValue, 90));
   def(forwardNudgeVal, mk(TrigValue, 110));
@@ -295,8 +291,6 @@ fun Row makeRow(ModuckP clockIn){
     => backNudgeVal.c
     => scalingProxy.to(1).c;
 
-  def(bufClock, mk(PulseDiv, 2));
-
   scalingProxy => bufClock.to("scaling").c;
 
   clockIn
@@ -311,6 +305,7 @@ fun Row makeRow(ModuckP clockIn){
 
   return ret;
 }
+
 
 class RowCollection{
   Row rows[0];
@@ -396,7 +391,7 @@ for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
   10::ms => now;
   rowCol.rows[rowId] @=> Row row;
   setupRowOutputs(row);
-  setupSpeedControls(row, rowId);
+  /* setupSpeedControls(row, rowId); */ // TODO: Enable speed controls again
   makeOutsUIRow(rowId);
   setuBufferUIs(trigAndPitchBufRouter, rowId);
 }
@@ -408,11 +403,19 @@ launchpad => frm("cc104").c => mk(Bigger, 0).c => trigPitchToggle.to(P_Toggle).c
 
 
 Scales.MinorNatural.size() => int scaleNoteCount;
-launchpadKeyboard(launchpad, 0, 5, scaleNoteCount)
+launchpadKeyboard(launchpad, 0, 5, scaleNoteCount) @=> ModuckP triggerKeyboard;
+triggerKeyboard
   => iff(trigPitchToggle, P_Trigger)
     .then(rowCol.keysIn.to("pitch"))
     .els(rowCol.keysIn.to("trigpitch")).c;
 launchpadKeyboard(launchpad, 5, 8, scaleNoteCount) => mk(Offset, -7).c => rowCol.keysIn.to("pitchOffset").c;
+
+
+(rowCol.rows[0].outs
+    => frm(recv(P_Trigger)).c
+    => mk(NumToOut, Util.range(127)).c
+) => triggerKeyboard.listen(Util.genStringNums(127)).c;
+
 
 /* 
  rowCol.rows.size() => int rowCount;
@@ -620,7 +623,7 @@ function ModuckP outPitchQuant(){
 function void setupRowOutputs(Row row){
   row.outs
     .b(frm(0).to(outPitchQuant()
- => mk(Printer, "Out0").c         
+      => mk(Printer, "Out0").c         
           => mk(NoteOut,circuit,0).c))
     .b(frm(1).to(outPitchQuant() => mk(NoteOut,circuit,1).c))
     .b(frm(2).to(outPitchQuant() => mk(NoteOut,nocoast,0).c))
@@ -649,7 +652,6 @@ function void setupOutputSelection(){
       => mk(Processor, Eq.make(rowInd)).c
       => mk(TrigValue, rowInd).c
       => LP.red().c
-      => mk(Printer, "ind out, "+rowInd).c
       => apc1.to("note"+ind).c;
   }
 }
@@ -673,6 +675,8 @@ function void makeOutsUIRow(int rowId){
 
 function ModuckP launchpadKeyboard(ModuckP launchpadInstance, int startRow, int endRow, int width){
   endRow-startRow => int maxInd;
+  def(in, mk(Repeater, Util.numberedStrings("", Util.range(0,width*(endRow-startRow)))));
+
   def(out, mk(Repeater, Util.concatStrings([
     ["note"]
     ,Util.numberedStrings("", Util.range(0,width*(endRow-startRow)))
@@ -684,9 +688,16 @@ function ModuckP launchpadKeyboard(ModuckP launchpadInstance, int startRow, int 
       (launchpadInstance => frm("note"+((startRow + (maxInd-rowInd-1))*16+i)).c => mk(TrigValue, ind).c)
         .b(out.to("note"))
         .b(out.to(ind));
+      10::ms => now;
+      in
+        => frm(ind).c
+        => mk(Printer, "from "+ind).c
+        => LP.red().c
+        => launchpadInstance.to("note"+((startRow + (maxInd-rowInd-1))*16+i)).c;
     }
   }
-  return out;
+
+  return mk(Wrapper, in, out);
 }
 
 

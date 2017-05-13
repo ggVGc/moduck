@@ -29,6 +29,7 @@ Machine.add("simple_moducks/counter.ck");
 Machine.add("simple_moducks/prio.ck");
 Machine.add("simple_moducks/stacker.ck");
 Machine.add("simple_moducks/delta_counter.ck");
+Machine.add("simple_moducks/num_to_out.ck");
 /* Machine.add("simple_moducks/trigger.ck"); */
 /* Machine.add("simple_moducks/clamper.ck"); */
 /* Machine.add("simple_moducks/persistent_base.ck"); */
