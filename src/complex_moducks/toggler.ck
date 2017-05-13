@@ -1,4 +1,3 @@
-include(macros.m4)
 include(song_macros.m4)
 include(funcs.m4)
 
