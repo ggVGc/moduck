@@ -10,8 +10,8 @@ include(parts/rhythms.ck)
 include(instruments/ritmo.ck)
 
 define(OUT_DEVICE_COUNT, 6);
-define(ROW_COUNT, 8);
-define(QUANTIZATION, B)
+define(ROW_COUNT, 4);
+define(QUANTIZATION, Bar)
 
 Runner.setPlaying(1);
 
@@ -356,12 +356,13 @@ def(apc2, mk(Wrapper,
     apcToLaunchadAdapterOut(mk(NoteOut, openOut(MIDI_OUT_APC1), 0, true))
     ,apcToLaunchadAdapterIn(mk(MidInp, MIDI_IN_APC1, 0))
 ));
-<<<"Opening keyboard in">>>;
+
+def(keyboard, mk(MidInp, MIDI_IN_K49, 0));
+
 /* def(keyboard, mk(MidInp, MIDI_IN_CIRCUIT, 0)); */
 /* def(nanoK, mk(MidInp, MIDI_IN_NANO_KTRL, 0)); */
 def(nanoK, mk(Repeater));
 /* def(keyboard, mk(MidInp, MIDI_IN_OXYGEN, 0)); */
-/* def(keyboard, mk(MidInp, MIDI_IN_K49, 0)); */
 /* def(circuitIn, mk(MidInp, MIDI_IN_CIRCUIT, 9)); */
 
 // OUTPUTS
@@ -397,6 +398,8 @@ for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
   setuBufferUIs(trigAndPitchBufRouter, rowId);
 }
 
+keyboard => frm("note").c => rowCol.keysIn.to("trigpitch").c;
+
 def(trigPitchToggle, mk(Toggler, false));
 
 trigPitchToggle => LP.green().c => launchpad.to("cc104").c;
@@ -421,7 +424,6 @@ for(0=>int rowInd;rowInd<ROW_COUNT;++rowInd){
 }
 
 rowCol.rowIndexSelector => multiSwitcher(rowOutputs, Util.genStringNums(127), triggerKeyboard).c;
-/* rowOutputs[0] => triggerKeyboard.listen(Util.genStringNums(127)).c; */
 
 /* 
  (rowCol.rows[0].outs

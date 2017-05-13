@@ -56,7 +56,7 @@ def findDevicePorts(hintName, fullString, minCount):
     (outAdd, outPort) = findPort(fullString[curOutStart:])
     curOutStart += outAdd
     if x>=minCount:
-      if type(outPort) is str or(inPort == -1 and outPort == -1):
+      if type(outPort) is str or type(inPort) is str or (inPort == -1 and outPort == -1):
         break
     x+=1
     yield (inPort, outPort)
