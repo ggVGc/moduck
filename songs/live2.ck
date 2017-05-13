@@ -10,7 +10,7 @@ include(parts/multi_switcher.ck)
 include(parts/rhythms.ck)
 
 define(OUT_DEVICE_COUNT, 6);
-define(ROW_COUNT, 2);
+define(ROW_COUNT, 8);
 define(QUANTIZATION, B)
 
 Runner.setPlaying(1);
