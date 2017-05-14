@@ -642,9 +642,7 @@ function ModuckP outPitchQuant(){
 
 function void setupRowOutputs(Row row){
   row.outs
-    .b(frm(0).to(outPitchQuant()
-      => mk(Printer, "Out0").c         
-          => mk(NoteOut,circuit,0).c))
+    .b(frm(0).to(outPitchQuant() => mk(NoteOut,circuit,0).c))
     .b(frm(1).to(outPitchQuant() => mk(NoteOut,circuit,1).c))
     .b(frm(2).to(outPitchQuant() => mk(NoteOut,nocoast,0).c))
     .b(frm(3).to(outPitchQuant() => mk(NoteOut,brute,0).c))
@@ -711,7 +709,7 @@ function ModuckP launchpadKeyboard(ModuckP launchpadInstance, int startRow, int 
       10::ms => now;
       in
         => frm(ind).c
-        => mk(Printer, "from "+ind).c
+        //=> mk(Printer, "from "+ind).c
         => LP.red().c
         => launchpadInstance.to("note"+((startRow + (maxInd-rowInd-1))*16+i)).c;
     }

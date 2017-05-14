@@ -9,7 +9,6 @@ genTagHandler(InputTagHandler,
     HANDLE{
       V(index);
 
-      <<<"Recv: "+index>>>;
       if(tag == ""+index){
         parent.send(P_Trigger, v);
       }
