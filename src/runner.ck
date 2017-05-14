@@ -78,18 +78,23 @@ public class Runner extends RunnerBase{
     samp => now;
     true => NoteOut.enabled;
     _startBang.broadcast();
-    Runner._masterClockGen.doHandle("run", IntRef.make(1));
+     Runner._masterClockGen.doHandle(P_Gate, IntRef.yes());
     true => isPlaying;
     <<< "Runner: Playing">>>;
     return true;
   }
 
   fun static void setBpm(int bpm){
-    bpm => _masterClockGen.bpm.i;
+    _masterClockGen.setBpm(bpm);
   }
 
+  fun static int getBpm(){
+    return _masterClockGen.getBpm();
+  }
+
+
   fun static dur timePerTick(){
-    return Util.bpmToDur(_masterClockGen.bpm.i);
+    return Util.bpmToDur(_masterClockGen.getBpm());
   }
   fun static int samplesPerTick(){
     return Util.toSamples(timePerTick());
@@ -103,15 +108,12 @@ public class Runner extends RunnerBase{
     return Util.toSamples(timePerBeat());
   }
 
-  fun static int getBpm(){
-    return _masterClockGen.bpm.i;
-  }
 
   fun static int stop(){
     if(!isPlaying){
       return false;
     }
-    _masterClockGen.stop();
+    _masterClockGen.doHandle(P_Gate, null);
     false => isPlaying;
     <<< "Runner: Stopped ">>>;
     return true;
@@ -130,17 +132,18 @@ public class Runner extends RunnerBase{
   }
 }
 
+<<<"INIT">>>;
+
 false => Runner.isPlaying;
-
 // 96 => Runner.ticksPerBeat;
-96/4 => Runner.ticksPerBeat;
-
+2 => Runner.ticksPerBeat;
 
 ClockGen.make(120*Runner.ticksPerBeat) @=> Runner._masterClockGen;
 Repeater.make(P_Clock) @=> Runner.masterClock;
-
-
 Patch.connect(Runner._masterClockGen, Runner.masterClock);
+samp => now;
+
+
 
 // 0 => Runner.tickCount;
 // spork ~ Runner.tickCountLoop();
