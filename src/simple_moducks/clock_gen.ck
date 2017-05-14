@@ -6,8 +6,8 @@ class Shared{
 }
 fun void loop(ModuckBase parent, Shared shared){
   while(true){
-    parent.sendPulse(P_Clock, 0);
     if(shared.running){
+      parent.sendPulse(P_Clock, 0);
       minute / shared.bpm => now;
     }else{
       break;

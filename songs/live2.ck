@@ -7,10 +7,10 @@ include(parts/rec_buf_ui.ck)
 include(parts/multi_router.ck)
 include(parts/multi_switcher.ck)
 include(parts/rhythms.ck)
-include(instruments/ritmo2.ck)
+// # include(instruments/ritmo2.ck)
 
 define(OUT_DEVICE_COUNT, 6);
-define(ROW_COUNT, 1)
+define(ROW_COUNT, 8)
 define(QUANTIZATION, Bar)
 
 Runner.setPlaying(1);
@@ -178,7 +178,37 @@ fun ModuckP numToTag(ModuckP m, int maxNum){
 }
 
 fun ModuckP makeBeatRitmo(){
-  return ritmo2(beatRitmoParts);
+  Runner.getBpm() => int b;
+  [
+    mk(ClockGen, b+b/2)
+    ,mk(ClockGen, b/2+b/4)
+    ,mk(ClockGen, b/3)
+    ,mk(ClockGen, b)
+    ,mk(ClockGen, b*2)
+    ,mk(ClockGen, b*4)
+    ,mk(ClockGen, b*8)
+    ,mk(ClockGen, b*16)
+  ] @=> ModuckP parts[];
+
+  Util.genStringNums(parts.size()-1) @=> string tags[];
+
+  def(root, mk(Repeater, tags));
+  def(out, mk(Repeater));
+
+
+  out => mk(Printer, "ritmo out").c;
+
+
+  for(0=>int ind;ind<parts.size();++ind){
+    parts[ind] @=> ModuckP part;
+      root => frm(ind).c
+        => part.to(P_Gate).c
+        => out.c;
+  }
+
+  return mk(Wrapper, root, out);
+
+  /* return ritmo2(beatRitmoParts); */
 }
 
 fun Row makeRow(ModuckP clockIn){
