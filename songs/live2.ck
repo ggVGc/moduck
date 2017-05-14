@@ -180,9 +180,10 @@ fun ModuckP numToTag(ModuckP m, int maxNum){
 fun ModuckP makeBeatRitmo(){
   ((Runner.getBpm()*2)/Runner.ticksPerBeat) => int b;
   [
-    mk(ClockGen, b+b/2)
+    mk(ClockGen, b/3)
+    ,mk(ClockGen, (b*2)/3)
     ,mk(ClockGen, b/2+b/4)
-    ,mk(ClockGen, b/3)
+    ,mk(ClockGen, b+b/2)
     ,mk(ClockGen, b/2)
     ,mk(ClockGen, b)
     ,mk(ClockGen, b*2)
