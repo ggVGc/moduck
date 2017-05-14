@@ -362,12 +362,7 @@ def(apc2, mk(Wrapper,
 ));
 
 def(keyboard, mk(MidInp, MIDI_IN_K49, 0));
-
-/* def(keyboard, mk(MidInp, MIDI_IN_CIRCUIT, 0)); */
-/* def(nanoK, mk(MidInp, MIDI_IN_NANO_KTRL, 0)); */
-def(nanoK, mk(Repeater));
-/* def(keyboard, mk(MidInp, MIDI_IN_OXYGEN, 0)); */
-/* def(circuitIn, mk(MidInp, MIDI_IN_CIRCUIT, 9)); */
+def(circuitKeyboard, mk(MidInp, MIDI_IN_CIRCUIT, 1) );
 
 // OUTPUTS
 
@@ -403,6 +398,9 @@ for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
 }
 
 keyboard => frm("note").c => rowCol.keysIn.to("trigpitch").c;
+circuitKeyboard => frm("note").c
+  => mk(Offset, -4*12).c
+  => rowCol.keysIn.to("trigpitch").c;
 
 def(trigPitchToggle, mk(Toggler, false));
 
@@ -623,15 +621,17 @@ function void setuBufferUIs(ModuckP trigPitchTriggerRouter, int rowId){
 }
 
 
-function void setupSpeedControls(Row row, int rowId){
-  // Make it easier to go to center by splitting into 3 intervals
-  (nanoK => frm("cc"+(14+rowId)).c)
-    .b(mk(RangeMapper, 0, 55, 0, 99) => row.playbackRate.c)
-    .b(mk(RangeMapper, 56, 73, 100, 100) => row.playbackRate.c)
-    .b(mk(RangeMapper, 74, 127, 101, 200) => row.playbackRate.c);
-  nanoK => frm("cc"+(23+rowId)).c => row.nudgeForward.c;
-  nanoK => frm("cc"+(33+rowId)).c => row.nudgeBack.c;
-}
+/* 
+ function void setupSpeedControls(Row row, int rowId){
+   // Make it easier to go to center by splitting into 3 intervals
+   (nanoK => frm("cc"+(14+rowId)).c)
+     .b(mk(RangeMapper, 0, 55, 0, 99) => row.playbackRate.c)
+     .b(mk(RangeMapper, 56, 73, 100, 100) => row.playbackRate.c)
+     .b(mk(RangeMapper, 74, 127, 101, 200) => row.playbackRate.c);
+   nanoK => frm("cc"+(23+rowId)).c => row.nudgeForward.c;
+   nanoK => frm("cc"+(33+rowId)).c => row.nudgeBack.c;
+ }
+ */
 
 
 function ModuckP outPitchQuant(){
@@ -642,13 +642,12 @@ function ModuckP outPitchQuant(){
 
 function void setupRowOutputs(Row row){
   row.outs
-    .b(frm(0).to(outPitchQuant() => mk(NoteOut,circuit,0).c))
-    .b(frm(1).to(outPitchQuant() => mk(NoteOut,circuit,1).c))
+    .b(frm(0).to(mk(Offset, 60) => mk(NoteOut,circuit,9).c)) // Drums
+    .b(frm(1).to(outPitchQuant() => mk(NoteOut,circuit,0).c))
     .b(frm(2).to(outPitchQuant() => mk(NoteOut,nocoast,0).c))
     .b(frm(3).to(outPitchQuant() => mk(NoteOut,brute,0).c))
     .b(frm(4).to(outPitchQuant() => mk(NoteOut,ms20,0).c))
     .b(frm(5).to(outPitchQuant() => mk(NoteOut,sys1,0).c))
-    /* .b(frm(5).to(outPitchQuant() => mk(NoteOut,circuit,10).c)) */ // Drums
   ;
 }
 
