@@ -10,7 +10,7 @@ include(parts/rhythms.ck)
 // # include(instruments/ritmo2.ck)
 
 define(OUT_DEVICE_COUNT, 6);
-define(ROW_COUNT, 8)
+define(ROW_COUNT, 4)
 define(QUANTIZATION, Bar)
 
 Runner.setPlaying(1);
@@ -178,16 +178,16 @@ fun ModuckP numToTag(ModuckP m, int maxNum){
 }
 
 fun ModuckP makeBeatRitmo(){
-  Runner.getBpm() => int b;
+  ((Runner.getBpm()*2)/Runner.ticksPerBeat) => int b;
   [
     mk(ClockGen, b+b/2)
     ,mk(ClockGen, b/2+b/4)
     ,mk(ClockGen, b/3)
+    ,mk(ClockGen, b/2)
     ,mk(ClockGen, b)
     ,mk(ClockGen, b*2)
     ,mk(ClockGen, b*4)
     ,mk(ClockGen, b*8)
-    ,mk(ClockGen, b*16)
   ] @=> ModuckP parts[];
 
   Util.genStringNums(parts.size()-1) @=> string tags[];
