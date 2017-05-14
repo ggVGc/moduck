@@ -424,7 +424,7 @@ for(0=>int rowInd;rowInd<ROW_COUNT;++rowInd){
   rowOutputs <<
     (rowCol.rows[rowInd].outs
     => frm(recv(P_Trigger)).c
-    => mk(NumToOut, Util.range(127)).c);
+    => mk(NumToOut, Util.range(7*5)).c);
 }
 
 rowCol.rowIndexSelector => multiSwitcher(rowOutputs, Util.genStringNums(7*5), triggerKeyboard).c;
@@ -709,7 +709,7 @@ function ModuckP launchpadKeyboard(ModuckP launchpadInstance, int startRow, int 
       10::ms => now;
       in
         => frm(ind).c
-        //=> mk(Printer, "from "+ind).c
+        /* => mk(Printer, "from "+ind).c */
         => LP.red().c
         => launchpadInstance.to("note"+((startRow + (maxInd-rowInd-1))*16+i)).c;
     }
