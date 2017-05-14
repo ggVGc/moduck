@@ -273,36 +273,40 @@ fun Row makeRow(ModuckP clockIn){
   pitchShift.bufUI @=> ret.pitchShiftUI;
   beatRitmoSrc.bufUI @=> ret.beatRitmoUI;
 
-  def(bufClock, mk(PulseDiv, 2));
+  /* def(bufClock, mk(PulseDiv, 2)); */
 
-  def(backNudgeVal, mk(TrigValue, 90));
-  def(forwardNudgeVal, mk(TrigValue, 110));
-  def(scalingProxy, mk(Prio));
+  /* def(backNudgeVal, mk(TrigValue, 90)); */
+  /* def(forwardNudgeVal, mk(TrigValue, 110)); */
+  /* def(scalingProxy, mk(Prio)); */
 
-  ret.playbackRate
-    .b(scalingProxy.to(0))
-    .b(mk(Add, 15) => forwardNudgeVal.to(P_Set).c)
-    .b(mk(Add, -15) => backNudgeVal.to(P_Set).c) ;
+  /* 
+   ret.playbackRate
+     .b(scalingProxy.to(0))
+     .b(mk(Add, 15) => forwardNudgeVal.to(P_Set).c)
+     .b(mk(Add, -15) => backNudgeVal.to(P_Set).c) ;
 
-  ret.nudgeForward
-    => forwardNudgeVal.c
-    => scalingProxy.to(1).c;
+   ret.nudgeForward
+     => forwardNudgeVal.c
+     => scalingProxy.to(1).c;
 
-  ret.nudgeBack
-    => backNudgeVal.c
-    => scalingProxy.to(1).c;
+   ret.nudgeBack
+     => backNudgeVal.c
+     => scalingProxy.to(1).c;
 
-  scalingProxy => bufClock.to("scaling").c;
+   scalingProxy => bufClock.to("scaling").c;
+   */
 
+  /* clockIn */
+    /* .b(mk(PulseGen, 2, Runner.timePerTick()/2) => bufClock.c) */
+    /* .b(bufClock) */
+
+  /* bufClock */
   clockIn
-    .b(mk(PulseGen, 2, Runner.timePerTick()/2) => bufClock.c)
-    .b(beatRitmo.to(P_Clock));
-
-  bufClock
     .b(notes.connector.to(P_Clock))
     .b(pitchLock.connector.to(P_Clock))
     .b(pitchShift.connector.to(P_Clock))
-    .b(beatRitmoSrc.connector.to(P_Clock));
+    .b(beatRitmoSrc.connector.to(P_Clock))
+    .b(beatRitmo.to(P_Clock));
 
   return ret;
 }
