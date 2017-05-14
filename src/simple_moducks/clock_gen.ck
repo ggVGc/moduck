@@ -1,33 +1,35 @@
 include(moduck_macros.m4)
 
-
-// TODO: This should use a gate signal instead
-genHandler(RunHandler, "run",
-  Shred @ looper;
-
-  fun void loop(){
-    while(true){
-      /* parent.getVal("delta")::samp => now; */
-      minute / bpm.i => now;
-      parent.sendPulse(P_Clock, 0);
+class Shared{
+  int bpm;
+  false => int running;
+}
+fun void loop(ModuckBase parent, Shared shared){
+  while(true){
+    parent.sendPulse(P_Clock, 0);
+    if(shared.running){
+      minute / shared.bpm => now;
+    }else{
+      break;
     }
   }
+}
+genHandler(GateHandler, P_Gate, 
+    Shred @ looper;
 
-  fun void stop(){
-    if(looper != null){
-      looper.exit();
-      null @=> looper;
-    }
-  }
-
-  HANDLE{
-    stop();
-    if(null != v && v.i){
-      spork ~ loop() @=> looper;
-    }
-  },
-  IntRef bpm;
+    HANDLE{
+      if(looper != null){
+        looper.exit();
+        null @=> looper;
+      }
+      (v != null) => shared.running;
+      if(shared.running){
+        spork ~ loop(parent, shared) @=> looper;
+      }
+    },
+  Shared shared;
 )
+
 
 
 /* 
@@ -41,30 +43,23 @@ genHandler(RunHandler, "run",
  */
 
 public class ClockGen extends Moduck{
-  RunHandler @ runHandler;
-  IntRef bpm;
+  Shared shared;
 
-  fun void stop(){
-    runHandler.stop();
+  fun void setBpm(int bpm){
+    bpm => shared.bpm;
   }
 
+  fun int getBpm(){
+    return shared.bpm;
+  }
+    
 
-  /* 
-   fun static ClockGen make(int bpm){
-     return make(Util.bpmToDur(bpm));
-   }
-   */
 
-  
   fun static ClockGen make(int bpm){
     ClockGen ret;
-    bpm => ret.bpm.i;
+    bpm => ret.shared.bpm;
     OUT(P_Clock);
-    IN(RunHandler, (ret.bpm)) @=> ret.runHandler;
-    /* IN(BpmHandler, ()); */
-    /* Util.toSamples(d) => int xxx; */
-    /* ret.addVal("delta", xxx); */
-    /* <<<xxx>>>; */
+    IN(GateHandler, (ret.shared));
     return ret;
   }
 }
