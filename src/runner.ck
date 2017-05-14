@@ -4,20 +4,8 @@ include(pulses.m4)
 public class Runner extends RunnerBase{
   static Repeater @ masterClock;
   static ClockGen @ _masterClockGen;
-  // static int tickCount;
-
   static int ticksPerBeat;
-
   static int isPlaying;
-
-  /*
-    fun static void tickCountLoop(){
-      while(true){
-        masterClock._outs[P_Clock] => now;
-        1 +=> tickCount;
-      }
-    }
-   */
 
   fun static int setPlaying(int v){
     if(v){
