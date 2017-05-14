@@ -7,10 +7,10 @@ include(parts/rec_buf_ui.ck)
 include(parts/multi_router.ck)
 include(parts/multi_switcher.ck)
 include(parts/rhythms.ck)
-include(instruments/ritmo.ck)
+include(instruments/ritmo2.ck)
 
 define(OUT_DEVICE_COUNT, 6);
-define(ROW_COUNT, 4);
+define(ROW_COUNT, 1)
 define(QUANTIZATION, Bar)
 
 Runner.setPlaying(1);
@@ -123,7 +123,6 @@ class ThingAndBuffer{
   }
 }
 
-<<<B8+B16>>>;
 
 [
     /* fourFour(B*2) */
@@ -146,10 +145,10 @@ class ThingAndBuffer{
 ] @=> ModuckP beatRitmoParts[];
 
 
-Util.genStringNums(beatRitmoParts.size()-1) @=> string beatRitmoTags[];
+/* Util.genStringNums(beatRitmoParts.size()-1) @=> string beatRitmoTags[]; */
 Util.concatStrings([
     ["trig", "trigpitch", "pitch", "pitchOffset"]
-    ,Util.prefixStrings("beatRitmo", beatRitmoTags)
+    /* ,Util.prefixStrings("beatRitmo", beatRitmoTags) */
 ])
   @=> string rowTags[];
 
@@ -159,7 +158,7 @@ class Row{
   ModuckP bufUI;
   ModuckP pitchLockUI;
   ModuckP pitchShiftUI;
-  ModuckP beatRitmoUI;
+  /* ModuckP beatRitmoUI; */
   def(input, mk(Repeater, rowTags));
   def(playbackRate, mk(Repeater));
   def(nudgeForward, mk(Repeater));
@@ -179,7 +178,7 @@ fun ModuckP numToTag(ModuckP m, int maxNum){
 }
 
 fun ModuckP makeBeatRitmo(){
-  return ritmo(true, beatRitmoParts);
+  return ritmo2(beatRitmoParts);
 }
 
 fun Row makeRow(ModuckP clockIn){
@@ -191,38 +190,48 @@ fun Row makeRow(ModuckP clockIn){
     @=> ThingAndBuffer pitchLock;
   ThingAndBuffer.make(mk(Offset, 0), "offset", QUANTIZATION)
     @=> ThingAndBuffer pitchShift;
-  ThingAndBuffer.make(mk(Repeater), P_Trigger, QUANTIZATION)
-    @=> ThingAndBuffer beatRitmoSrc;
+  /* 
+   ThingAndBuffer.make(mk(Repeater), P_Trigger, QUANTIZATION)
+     @=> ThingAndBuffer beatRitmoSrc;
+   */
 
-  def(beatRitmo, makeBeatRitmo());
-  def(beatRitmoStacker, mk(Stacker));
-  def(beatRitmoRouter, mk(Router, 0));
+  /* 
+   def(beatRitmo, makeBeatRitmo());
+   def(beatRitmoStacker, mk(Stacker));
+   def(beatRitmoRouter, mk(Router, 0));
+   */
 
-  for(0=>int tagInd;tagInd<beatRitmoTags.size();++tagInd){
-    10::ms => now;
-    beatRitmoTags[tagInd] @=> string tag;
-    ret.input
-      => frm("beatRitmo"+tagInd).c
-      => beatRitmoStacker.to(tagInd).c;
-    
-    beatRitmoRouter
-      => frm(tagInd).c
-      => beatRitmo.to(tagInd).c;
-  }
+  /* 
+   for(0=>int tagInd;tagInd<beatRitmoTags.size();++tagInd){
+     10::ms => now;
+     beatRitmoTags[tagInd] @=> string tag;
+     ret.input
+       => frm("beatRitmo"+tagInd).c
+       => beatRitmoStacker.to(tagInd).c;
+     
+     beatRitmoRouter
+       => frm(tagInd).c
+       => beatRitmo.to(tagInd).c;
+   }
+   */
 
-  beatRitmoStacker
-    => frm(P_Source).c
-    => beatRitmoSrc.connector.c
-    => beatRitmoRouter.to("index").c;
-  beatRitmoSrc.connector => beatRitmoRouter.to(P_Trigger).c;
-  beatRitmoStacker
-    => MBUtil.onlyLow().c
-    => beatRitmoSrc.connector.c;
+  /* 
+   beatRitmoStacker
+     => frm(P_Source).c
+     => beatRitmoSrc.connector.c
+     => beatRitmoRouter.to("index").c;
+   beatRitmoSrc.connector => beatRitmoRouter.to(P_Trigger).c;
+   beatRitmoStacker
+     => MBUtil.onlyLow().c
+     => beatRitmoSrc.connector.c;
+   */
 
 
-  beatRitmo
-    => mk(SampleHold, D16).c
-    => notes.connector.c;
+  /* 
+   beatRitmo
+     => mk(SampleHold, D16).c
+     => notes.connector.c;
+   */
 
 
   ret.input => frm("trig").c => mk(TrigValue, 0).c => notes.connector.c;
@@ -271,7 +280,7 @@ fun Row makeRow(ModuckP clockIn){
   notes.bufUI @=> ret.bufUI;
   pitchLock.bufUI @=> ret.pitchLockUI;
   pitchShift.bufUI @=> ret.pitchShiftUI;
-  beatRitmoSrc.bufUI @=> ret.beatRitmoUI;
+  /* beatRitmoSrc.bufUI @=> ret.beatRitmoUI; */
 
   /* def(bufClock, mk(PulseDiv, 2)); */
 
@@ -304,9 +313,9 @@ fun Row makeRow(ModuckP clockIn){
   clockIn
     .b(notes.connector.to(P_Clock))
     .b(pitchLock.connector.to(P_Clock))
-    .b(pitchShift.connector.to(P_Clock))
-    .b(beatRitmoSrc.connector.to(P_Clock))
-    .b(beatRitmo.to(P_Clock));
+    /* .b(beatRitmoSrc.connector.to(P_Clock)) */
+    /* .b(beatRitmo.to(P_Clock)); */
+    .b(pitchShift.connector.to(P_Clock));
 
   return ret;
 }
@@ -364,6 +373,13 @@ def(apc2, mk(Wrapper,
 def(keyboard, mk(MidInp, MIDI_IN_K49, 0));
 def(circuitKeyboard, mk(MidInp, MIDI_IN_CIRCUIT, 1) );
 
+def(beatRitmo, makeBeatRitmo());
+
+beatRitmo 
+  => mk(SampleHold, D16).c
+  => rowCol.keysIn.to("trig").c;
+
+
 // OUTPUTS
 
 
@@ -377,7 +393,7 @@ openOut(MIDI_OUT_CIRCUIT) @=> MidiOut circuit;
 // MAPPINGS
 
 setupOutputSelection();
-setupBeatRitmoUI();
+setupBeatRitmoUI(launchpad, beatRitmo);
 
 // Use one button to start/stop both trig and pitch buffer
 def(trigAndPitchBufRouter, mk(Router, 0));
@@ -457,11 +473,12 @@ rowCol.rowIndexSelector => multiSwitcher(rowOutputs, Util.genStringNums(7*5), tr
 
 
 
-fun void setupBeatRitmoUI(){
+fun void setupBeatRitmoUI(ModuckP controllerSrc, ModuckP ritmo){
   for(0=>int i;i<8;++i){
-    launchpad
+    controllerSrc
       => frm("note"+(7+(7-i)*16)).c
-      => rowCol.keysIn.to("beatRitmo"+i).c;
+      => ritmo.to(i).c;
+      /* => rowCol.keysIn.to("beatRitmo"+i).c; */
   }
 }
 
@@ -606,12 +623,14 @@ function void setuBufferUIs(ModuckP trigPitchTriggerRouter, int rowId){
   pitchShiftUI => apc2.to("note"+(16*rowId+2)).c;
 
 
-  def(beatRitmoUI, rowCol.rows[rowId].beatRitmoUI);
-  apc2
-    .b(frm("cc105").to(mk(Bigger, 0) => beatRitmoUI.to(P_ClearAll).c))
-    .b(frm("note"+(rowId*16+3)).to(beatRitmoUI, P_Trigger));
+  /* 
+   def(beatRitmoUI, rowCol.rows[rowId].beatRitmoUI);
+   apc2
+     .b(frm("cc105").to(mk(Bigger, 0) => beatRitmoUI.to(P_ClearAll).c))
+     .b(frm("note"+(rowId*16+3)).to(beatRitmoUI, P_Trigger));
 
-  beatRitmoUI => apc2.to("note"+(16*rowId+3)).c;
+   beatRitmoUI => apc2.to("note"+(16*rowId+3)).c;
+   */
 
 
   (trigPitchTriggerRouter => frm(rowId).c)
