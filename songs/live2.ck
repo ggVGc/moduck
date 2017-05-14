@@ -427,7 +427,7 @@ for(0=>int rowInd;rowInd<ROW_COUNT;++rowInd){
     => mk(NumToOut, Util.range(127)).c);
 }
 
-rowCol.rowIndexSelector => multiSwitcher(rowOutputs, Util.genStringNums(127), triggerKeyboard).c;
+rowCol.rowIndexSelector => multiSwitcher(rowOutputs, Util.genStringNums(7*5), triggerKeyboard).c;
 
 /* 
  (rowCol.rows[0].outs
