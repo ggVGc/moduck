@@ -3,23 +3,25 @@ include(song_macros.m4)
 include(funcs.m4)
 
 
-define(QUANTIZATION, 4)
+define(QUANTIZATION, 16)
 
 
-0 => int NoArm;
+0 => int Idle;
 1 => int RecOffArmed;
 2 => int RecOnArmed;
-3 => int PlayArmed;
-4 => int Recording;
+3 => int PlayOnArmed;
+4 => int PlayOffArmed;
+5 => int Recording;
+6 => int Playing;
 
 class Shared{
   ModuckP @ buffer;
   ModuckP @ out;
   ModuckP @ player;
-  SampleHold @ playing;
   SampleHold @ hasData;
-  NoArm => int state;
+  Idle => int state;
   0 => int clockCount;
+  0 => int quantCounter;
   0 => int bufLenTicks;
 }
 
@@ -36,6 +38,7 @@ genHandler(SetHandler, P_Set,
 
 genHandler(ClearAllHandler, P_ClearAll,
   HANDLE{
+    Idle => shared.state;
     shared.buffer.doHandle(P_ClearAll, v);
     shared.player.doHandle(P_Gate, null);
   },
@@ -55,23 +58,19 @@ genHandler(ClearHandler, P_Clear,
 genHandler(ToggleHandler, P_Toggle,
   HANDLE{
     if(v != null){
-      <<<"TOGGLE">>>;
-      
       if(Recording == shared.state){
         RecOffArmed => shared.state;
-      <<<"Rec arm OFF">>>;
       }else{ 
         if(shared.hasData.get() != null){
-          <<<"Play arm On">>>;
-          PlayArmed => shared.state;
+          if(Playing == shared.state){
+            PlayOffArmed => shared.state;
+          }else{
+            PlayOnArmed => shared.state;
+          }
         }else{
-          <<<"Rec arm On">>>;
           RecOnArmed => shared.state;
         }
       }
-
-      shared.player.doHandle(P_Gate, null);
-      shared.buffer.doHandle(P_GoTo, 0);
     }
   },
   Shared shared;
@@ -81,38 +80,41 @@ genHandler(ToggleHandler, P_Toggle,
 genHandler(ClockHandler, P_Clock,
   HANDLE{
 
-    1 +=> shared.clockCount;
-
-    if(Math.fmod(shared.clockCount, QUANTIZATION) $ int == 0){
+    if(Math.fmod(shared.quantCounter, QUANTIZATION) $ int == 0){
       if(RecOffArmed == shared.state){
-        NoArm => shared.state;
-        shared.player.doHandle(P_Gate, IntRef.yes());
-        shared.out.send(P_Recording, null);
+        Playing => shared.state;
+        shared.buffer.doHandle(P_GoTo, 0);
+        /* shared.player.doHandle(P_Gate, IntRef.yes()); */
         shared.clockCount => shared.bufLenTicks;
+        <<<shared.bufLenTicks>>>;
+        shared.out.send(P_Recording, null);
         0 => shared.clockCount;
-      }else if(RecOnArmed == shared.state){
+      }else if(RecOnArmed == shared.state){ shared.buffer.doHandle(P_GoTo, 0);
         Recording => shared.state;
-        shared.out.send(P_Recording, IntRef.yes());
         shared.player.doHandle(P_Gate, IntRef.yes());
         0 => shared.clockCount;
-      }else if(PlayArmed == shared.state){
+        shared.out.send(P_Recording, IntRef.yes());
+      }else if(PlayOnArmed == shared.state){
         0 => shared.clockCount;
-        if(shared.playing.get() != null){
-          shared.player.doHandle(P_Gate, null);
-        }else{
-          shared.player.doHandle(P_Gate, IntRef.yes());
-        }
+        shared.buffer.doHandle(P_GoTo, 0);
+        Playing => shared.state;
+        shared.player.doHandle(P_Gate, IntRef.yes());
+      }else if(PlayOffArmed == shared.state){
+        Idle => shared.state;
+        shared.player.doHandle(P_Gate, null);
       }
-      NoArm => shared.state;
     }
 
-    if(NoArm == shared.state && shared.playing.get() != null){
-      if(shared.clockCount >= shared.bufLenTicks-1){
+    if(Playing == shared.state){
+      if(shared.clockCount >= shared.bufLenTicks){
         0 => shared.clockCount;
         shared.buffer.doHandle(P_GoTo, 0);
         shared.out.doHandle(P_Looped, 0);
       }
     }
+
+    1 +=> shared.clockCount;
+    1 +=> shared.quantCounter;
   },
   Shared shared;
 )
@@ -129,9 +131,7 @@ public class RecBuf{
     P(buf) @=> shared.buffer;
     mk(BufPlayer, buf) @=> shared.player;
     shared.buffer.doHandle("timeBased", true);
-    Value.make(null) @=> shared.playing;
     Value.make(null) @=> shared.hasData;
-    shared.playing.doHandle("triggerOnSet", IntRef.yes());
     shared.hasData.doHandle("triggerOnSet", IntRef.yes());
 
     P(Repeater.make([
@@ -151,17 +151,13 @@ public class RecBuf{
     Patch.connect(shared.buffer, "hasData", shared.hasData, P_Set);
 
    shared.player => shared.out.fromTo(recv(P_Gate), P_Playing).c;
-   Patch.connect(shared.player, recv(P_Gate), shared.playing, P_Set);
 
-   samp => now;
-   shared.playing.doHandle(P_Set, null);
    shared.hasData.doHandle(P_Set, null);
 
 
    shared.player => frm(recv(P_Gate)).c => mk(Printer, "Player gate").c;
-   shared.hasData => mk(Printer, "hasData").c;
-   shared.buffer => frm("hasData").c => mk(Printer, "buf hasData").c;
-   shared.playing => mk(Printer, "playing").c;
+   /* shared.hasData => mk(Printer, "hasData").c; */
+   /* shared.buffer => frm("hasData").c => mk(Printer, "buf hasData").c; */
 
     return mk(Wrapper, ret, shared.out);
   }

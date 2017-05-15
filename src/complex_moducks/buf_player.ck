@@ -8,32 +8,33 @@ include(funcs.m4)
 // Use timeToNext for waits between entries
 
 
-fun void runLoop(IntRef running, Buffer buf){
+fun void runLoop(Event startBang, IntRef running, Buffer buf){
   while(true){
     if(running.i){
       buf.timeToNext() => now;
-      samp => now;
       buf.doHandle(P_Clock, IntRef.yes());
     }else{
-      break;
+      <<<"Player: Waiting">>>;
+      startBang => now;
+      <<<"Player: Running">>>;
+      buf.doHandle(P_Clock, IntRef.yes());
     }
   }
 }
 
 
 genHandler(GateHandler, P_Gate,
-  Shred @ looper;
   IntRef.make(false) @=> IntRef running;
-  
+  Event startBang;
+
+  fun void init(){
+    spork ~ runLoop(startBang, running, buf) @=> Shred looper;
+  }
   HANDLE{
-    if(looper != null){
-      looper.exit();
-      null @=> looper;
-    }
+    running.i => int wasRunning;
     v != null => running.i;
-    if(running.i){
-      buf.doHandle(P_Clock, IntRef.yes());
-      spork ~ runLoop(running, buf) @=> looper;
+    if(running.i && !wasRunning){
+      startBang.broadcast();
     }
   },
   Buffer buf;
