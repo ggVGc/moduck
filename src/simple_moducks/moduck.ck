@@ -10,7 +10,7 @@ public class Moduck extends ModuckBase {
   string _valHandlerKeys[0];
   false => int persisting;
 
-  IntRef outCache[0];
+  /* IntRef outCache[0]; */
   string persistFileName;
 
   "-" @=> string name;

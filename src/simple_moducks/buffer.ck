@@ -173,6 +173,13 @@ genTagHandler(TagSetHandler,
 
 
 public class Buffer extends Moduck{
+
+  fun dur timeToNext(){
+    // TODO: implement
+    
+  }
+
+
   fun static Buffer make(){
     string tags[0];
     return make(tags);

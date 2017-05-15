@@ -32,6 +32,7 @@ Machine.add("complex_moducks/probably.ck");
 Machine.add("complex_moducks/gate_switch.ck");
 Machine.add("complex_moducks/toggler.ck");
 Machine.add("complex_moducks/once_trigger.ck");
+Machine.add("complex_moducks/buf_player.ck");
 Machine.add("complex_moducks/rec_buf.ck");
 Machine.add("scales.ck");
 Machine.add("moduck_util.ck");
