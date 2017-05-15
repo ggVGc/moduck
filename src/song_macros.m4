@@ -2,7 +2,7 @@
 include(pulses.m4)
 include(midiPorts.m4)
 include(aliases.m4)
-include(moduck_macros.m4)
+include(macros.m4)
 
 
 define(B, Runner.ticksPerBeat)

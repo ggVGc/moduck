@@ -1,7 +1,7 @@
 
-include(macros.m4)
 
 ifdef(`MODUCK_MACROS_INCLUDED',,`define(MODUCK_MACROS_INCLUDED,1)dnl
+include(macros.m4)
 
 define(genHandler,
   class $1 extends EventHandler{

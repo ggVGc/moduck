@@ -1,4 +1,5 @@
 include(song_macros.m4)
+include(moduck_macros.m4)
 include(funcs.m4)
 
 public class Toggler{
