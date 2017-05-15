@@ -23,13 +23,13 @@ class Shared{
 genHandler(ClockHandler, P_Clock,
   HANDLE{
     if(null != v){
-      now - shared.startTime => dur delta;
+      now - shared.startTime => dur passedTimeSinceStart;
       for(0=>int i;i<shared.entries.size();++i){
         shared.entries[i] @=> BufEntry e;
         false => int shouldTrigger;
         if(e!=null){
           if(parent.getVal("timeBased")){
-            (e.timeStamp <= delta) => shouldTrigger;
+            (e.timeStamp <= passedTimeSinceStart) => shouldTrigger;
           }else{
             (e.index <= shared.accum) => shouldTrigger;
           }
@@ -174,9 +174,30 @@ genTagHandler(TagSetHandler,
 
 public class Buffer extends Moduck{
 
+  Shared shared;
+
   fun dur timeToNext(){
-    // TODO: implement
-    
+    false => BOOL found;
+    dur smallest;
+    now - shared.startTime => dur passedTimeSinceStart;
+    for(0=>int entInd;entInd<shared.entries.size();++entInd){
+      shared.entries[entInd] @=> BufEntry e;
+      if(!e.triggered){
+        if(!found){
+          e.timeStamp - passedTimeSinceStart => smallest;
+        }else{
+          e.timeStamp - passedTimeSinceStart => dur d;
+          if(d < smallest){
+            d => smallest;
+          }
+        }
+      }
+    }
+    if(found){
+      return smallest;
+    }else{
+      return 1::ms;
+    }
   }
 
 
@@ -187,20 +208,19 @@ public class Buffer extends Moduck{
 
   fun static Buffer make(string tags[]){
     Buffer ret;
-    Shared shared;
     OUT(P_Trigger);
     OUT("hasData");
     for(0=>int tagInd;tagInd<tags.size();++tagInd){
       tags[tagInd] @=> string tag;
-      IN(TagSetHandler, (tag, shared));
+      IN(TagSetHandler, (tag, ret.shared));
       OUT(tag);
     }
-    IN(ClockHandler,(shared));
-    IN(SetHandler,(shared));
-    IN(ClearAllHandler,(shared));
-    IN(ClearHandler,(shared));
-    IN(GoToHandler,(shared));
-    IN(ResetHandler,(shared));
+    IN(ClockHandler,(ret.shared));
+    IN(SetHandler,(ret.shared));
+    IN(ClearAllHandler,(ret.shared));
+    IN(ClearHandler,(ret.shared));
+    IN(GoToHandler,(ret.shared));
+    IN(ResetHandler,(ret.shared));
     ret.addVal("timeBased", false);
     return ret;
   }

@@ -8,12 +8,49 @@ include(funcs.m4)
 // Use timeToNext for waits between entries
 
 
+fun void runLoop(IntRef running, Buffer buf){
+  while(true){
+    if(running.i){
+      buf.timeToNext() => now;
+      samp => now;
+      buf.doHandle(P_Clock, IntRef.yes());
+    }else{
+      break;
+    }
+  }
+}
+
+
+genHandler(GateHandler, P_Gate,
+  Shred @ looper;
+  IntRef.make(false) @=> IntRef running;
+  
+  HANDLE{
+    if(looper != null){
+      looper.exit();
+      null @=> looper;
+    }
+    v != null => running.i;
+    if(running.i){
+      buf.doHandle(P_Clock, IntRef.yes());
+      spork ~ runLoop(running, buf) @=> looper;
+    }
+  },
+  Buffer buf;
+)
+
+
+
 public class BufPlayer extends Moduck{
   fun static Moduck make(Buffer buf){
-    def(in, mk(Repeater, [P_Gate, P_Reset]));
-    def(out, mk(Repeater, [P_Looped]));
+    Moduck ret;
 
-    return mk(Wrapper, in, out);
+    OUT(P_Trigger);
+    IN(GateHandler, (buf));
+    /* IN(ResetHandler, ()); */
+    /* OUT(P_Looped); */
+
+    return ret;
   }
 }
 

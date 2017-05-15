@@ -9,6 +9,6 @@ public class IntRef{
   }
 
   fun static IntRef yes(){
-    return make(0);
+    return make(1);
   }
 }
