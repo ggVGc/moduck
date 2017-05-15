@@ -23,13 +23,24 @@ class Shared{
   0 => int clockCount;
   0 => int quantCounter;
   0 => int bufLenTicks;
+  now => time lastTickTime;
+  0::ms => dur tickOffset;
 }
 
 
 genHandler(SetHandler, P_Set,
   HANDLE{
+    if(RecOnArmed == shared.state){
+      shared.buffer.doHandle(P_GoTo, 0);
+      Recording => shared.state;
+      shared.player.doHandle(P_Gate, IntRef.yes());
+      1 => shared.clockCount;
+      1 => shared.quantCounter;
+      shared.out.send(P_Recording, IntRef.yes());
+      now - shared.lastTickTime => shared.tickOffset;
+    }
     if(Recording == shared.state){
-        shared.buffer.doHandle(P_Set, v);
+      shared.buffer.doHandle(P_Set, v);
     }
   },
   Shared shared;
@@ -41,6 +52,7 @@ genHandler(ClearAllHandler, P_ClearAll,
     Idle => shared.state;
     shared.buffer.doHandle(P_ClearAll, v);
     shared.player.doHandle(P_Gate, null);
+    0::ms => shared.tickOffset;
   },
   Shared shared;
 )
@@ -49,6 +61,7 @@ genHandler(ClearAllHandler, P_ClearAll,
 genHandler(ClearHandler, P_Clear,
   HANDLE{
     shared.buffer.doHandle(P_Clear, v);
+    0::ms => shared.tickOffset;
   },
   Shared shared;
 )
@@ -77,44 +90,54 @@ genHandler(ToggleHandler, P_Toggle,
 )
 
 
+fun void stopRec(Shared shared){
+  shared.tickOffset => now;
+  shared.buffer.doHandle(P_GoTo, 0);
+  /* shared.player.doHandle(P_Gate, IntRef.yes()); */
+  shared.out.send(P_Recording, null);
+}
+
+
+fun void reset(Shared shared){
+  shared.tickOffset => now;
+  shared.buffer.doHandle(P_GoTo, 0);
+  /* shared.player.doHandle(P_Gate, IntRef.yes()); */
+  shared.out.doHandle(P_Looped, 0);
+}
+
+
 genHandler(ClockHandler, P_Clock,
   HANDLE{
+    now => shared.lastTickTime;
+  if(Math.fmod(shared.quantCounter, QUANTIZATION) $ int == 0){
+    if(RecOffArmed == shared.state){
+      shared.clockCount => shared.bufLenTicks;
+      0 => shared.clockCount;
+      Playing => shared.state;
+      spork ~ stopRec(shared);
+      // TODO: Enable playback control again
+    /* 
+     }else if(PlayOnArmed == shared.state){
+       0 => shared.clockCount;
+       shared.buffer.doHandle(P_GoTo, 0);
+       Playing => shared.state;
+       shared.player.doHandle(P_Gate, IntRef.yes());
+     }else if(PlayOffArmed == shared.state){
+       Idle => shared.state;
+       shared.player.doHandle(P_Gate, null);
+     */
+     }
+  }
 
-    if(Math.fmod(shared.quantCounter, QUANTIZATION) $ int == 0){
-      if(RecOffArmed == shared.state){
-        Playing => shared.state;
-        shared.buffer.doHandle(P_GoTo, 0);
-        /* shared.player.doHandle(P_Gate, IntRef.yes()); */
-        shared.clockCount => shared.bufLenTicks;
-        <<<shared.bufLenTicks>>>;
-        shared.out.send(P_Recording, null);
-        0 => shared.clockCount;
-      }else if(RecOnArmed == shared.state){ shared.buffer.doHandle(P_GoTo, 0);
-        Recording => shared.state;
-        shared.player.doHandle(P_Gate, IntRef.yes());
-        0 => shared.clockCount;
-        shared.out.send(P_Recording, IntRef.yes());
-      }else if(PlayOnArmed == shared.state){
-        0 => shared.clockCount;
-        shared.buffer.doHandle(P_GoTo, 0);
-        Playing => shared.state;
-        shared.player.doHandle(P_Gate, IntRef.yes());
-      }else if(PlayOffArmed == shared.state){
-        Idle => shared.state;
-        shared.player.doHandle(P_Gate, null);
-      }
+  if(Playing == shared.state){
+    if(shared.clockCount >= shared.bufLenTicks){
+      0 => shared.clockCount;
+      spork ~ reset(shared);
     }
+  }
 
-    if(Playing == shared.state){
-      if(shared.clockCount >= shared.bufLenTicks){
-        0 => shared.clockCount;
-        shared.buffer.doHandle(P_GoTo, 0);
-        shared.out.doHandle(P_Looped, 0);
-      }
-    }
-
-    1 +=> shared.clockCount;
-    1 +=> shared.quantCounter;
+  1 +=> shared.clockCount;
+  1 +=> shared.quantCounter;
   },
   Shared shared;
 )

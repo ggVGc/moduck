@@ -10,7 +10,7 @@ include(parts/rhythms.ck)
 // # include(instruments/ritmo2.ck)
 
 define(OUT_DEVICE_COUNT, 6);
-define(ROW_COUNT, 1)
+define(ROW_COUNT, 4)
 define(QUANTIZATION, Bar)
 
 Runner.setPlaying(1);
