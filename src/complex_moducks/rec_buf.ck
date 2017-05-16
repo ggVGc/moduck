@@ -94,17 +94,15 @@ genHandler(ClockHandler, P_Clock,
     if(RecBuf.RecOffArmed == shared.state){
       shared.clockCount => shared.bufLenTicks;
       0 => shared.clockCount;
-      changeState(RecBuf.Playing, shared);
       shared.tickOffset => now;
+      changeState(RecBuf.Playing, shared);
       shared.buffer.doHandle(P_GoTo, 0);
-      /* shared.player.doHandle(P_Gate, IntRef.yes()); */
-      /* shared.out.send(P_Recording, null); */
     }else if(RecBuf.PlayOnArmed == shared.state){
       0 => shared.clockCount;
+      shared.tickOffset => now;
       changeState(RecBuf.Playing, shared);
-        shared.tickOffset => now;
-        shared.buffer.doHandle(P_GoTo, 0);
-        shared.player.doHandle(P_Gate, IntRef.yes());
+      shared.buffer.doHandle(P_GoTo, 0);
+      shared.player.doHandle(P_Gate, IntRef.yes());
     }else if(RecBuf.PlayOffArmed == shared.state){
       shared.tickOffset => now;
       changeState(RecBuf.Idle, shared);

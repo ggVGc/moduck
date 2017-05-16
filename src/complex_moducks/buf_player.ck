@@ -26,8 +26,10 @@ genHandler(GateHandler, P_Gate,
   Event startBang;
 
   fun void init(){
-    spork ~ runLoop(startBang, running, buf) @=> Shred looper;
+    spork ~ runLoop(startBang, running, buf);
   }
+
+
   HANDLE{
     running.i => int wasRunning;
     v != null => running.i;
