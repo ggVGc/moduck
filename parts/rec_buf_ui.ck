@@ -1,4 +1,5 @@
 
+
 fun ModuckP recBufUI(ModuckP recBuf){
   def(in, mk(Repeater, [
     P_Trigger
@@ -18,14 +19,16 @@ fun ModuckP recBufUI(ModuckP recBuf){
 
   // Indicators
   def(trigOut, mk(Prio) => out.c);
-  def(trigCol, iff(recBuf, P_Recording).then(LP.red2()).els(LP.green()));
+
+  MUtil.sigEq(recBuf, "state", RecBuf.Playing) => LP.green().c => trigOut.to(1).c;
+  MUtil.sigEq(recBuf, "state", RecBuf.Recording) => LP.red().c => trigOut.to(2).c;
+  MUtil.sigEq(recBuf, "state", RecBuf.RecOnArmed) => LP.red().c => trigOut.to(3).c;
   recBuf
-    /* .b("hasData", LP.green() => trigOut.to(0).c) */
-    .b(P_Playing, LP.orange() => trigOut.to(1).c)
-    .b(P_Recording, LP.red() => trigOut.to(2).c)
-    .b(P_Trigger, trigCol => trigOut.to(3).c)
+    .b("hasData", LP.orange() => trigOut.to(0).c)
+    .b(P_Trigger, LP.orange() => trigOut.to(4).c)
     /* .b(P_Looped, LP.green2() => mk(SampleHold, 200::ms).to(P_Set).to(P_Trigger).c => trigOut.to(4).c); */
-    .b(P_Looped, LP.red() => mk(SampleHold, 150::ms).to(P_Set).to(P_Trigger).c => trigOut.to(4).c);
+    .b(P_Looped, LP.red() => mk(SampleHold, 150::ms).to(P_Set).to(P_Trigger).c => trigOut.to(5).c);
 
   return mk(Wrapper, in, out);
 }
+

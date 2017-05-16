@@ -76,7 +76,14 @@ public class MUtil{
     return ret;
   }
 
+  fun static ModuckP sigEq(ModuckP m, string tag, int v){
+    return sigEq(m, tag, IntRef.make(v));
+  }
 
+
+  fun static ModuckP sigEq(ModuckP m, string tag, IntRef v){
+    return ModuckP.make(Processor.make(Eq.make(v))).from(tag).c(m);
+  }
 
 }
 

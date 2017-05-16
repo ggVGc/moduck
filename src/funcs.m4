@@ -1,4 +1,7 @@
 
+ifdef(`FUNCS_MACROS_INCLUDED',,`define(FUNCS_MACROS_INCLUDED,1)dnl
+
+
 class Eq extends IntRefFun{
   IntRef compareVal;
   fun IntRef call(IntRef v){
@@ -64,3 +67,6 @@ class Not extends IntRefFun{
     return ret;
   }
 }
+
+
+')

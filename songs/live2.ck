@@ -270,9 +270,9 @@ fun Row makeRow(ModuckP clockIn){
 
   ret.input => frm("trigpitch").c => mk(TrigValue, 0).c => notes.connector.c;
   ret.input => frm("trigpitch").c
-    => iff(pitchLock.buf, P_Playing) // This could all be avoided with a better RecBuf implementation
+    => iff(MUtil.sigEq(pitchLock.buf, "state", RecBuf.Playing)) // This could all be avoided with a better RecBuf implementation
       .then(iff(pitchLock.buf, "hasData")
-            .then( iff(pitchLock.buf, P_Recording)
+            .then( iff(MUtil.sigEq(pitchLock.buf, "state", RecBuf.Recording))
               .then(pitchLock.connector)
               .els(mk(Blackhole))
             )
@@ -282,9 +282,9 @@ fun Row makeRow(ModuckP clockIn){
 
   def(tmpPitchOverride, mk(TrigValue, null));
   ret.input => frm("pitch").c
-    => iff(pitchLock.buf, P_Playing) // This could all be avoided with a better RecBuf implementation
+    => iff(MUtil.sigEq(pitchLock.buf, "state", RecBuf.Playing)) // This could all be avoided with a better RecBuf implementation
       .then(iff(pitchLock.buf, "hasData")
-            .then( iff(pitchLock.buf, P_Recording)
+            .then( iff(MUtil.sigEq(pitchLock.buf, "state", RecBuf.Recording))
               .then(pitchLock.connector)
               .els(tmpPitchOverride.to(P_Set))
             )

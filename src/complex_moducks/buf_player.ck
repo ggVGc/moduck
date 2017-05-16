@@ -14,9 +14,7 @@ fun void runLoop(Event startBang, IntRef running, Buffer buf){
       buf.timeToNext() => now;
       buf.doHandle(P_Clock, IntRef.yes());
     }else{
-      <<<"Player: Waiting">>>;
       startBang => now;
-      <<<"Player: Running">>>;
       buf.doHandle(P_Clock, IntRef.yes());
     }
   }

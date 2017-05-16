@@ -95,6 +95,8 @@ class Connector{
   }
 
 
+
+
   fun static Connector make(Moduck m, string fromTags[], string dstTags[]){
     Connector ret;
     ChainData.make(fromTags, m, dstTags) @=> ret.data;
@@ -116,6 +118,11 @@ class ToConnector{
   fun ModuckP c(Moduck m){
     return m => ModuckP.make(Repeater.make()).from(srcTag).c;
   }
+
+  fun ModuckP b(Moduck m){
+    return c(Repeater.make()).b(m);
+  }
+
 }
 
 
