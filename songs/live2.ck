@@ -10,7 +10,7 @@ include(parts/rhythms.ck)
 // # include(instruments/ritmo2.ck)
 
 define(OUT_DEVICE_COUNT, 6);
-define(ROW_COUNT, 4)
+define(ROW_COUNT, 8)
 define(QUANTIZATION, Bar)
 
 Runner.setPlaying(1);
@@ -117,8 +117,16 @@ class ThingAndBuffer{
       thing => frm(recv(targetTag)).c => ret.activity.c;
     }
 
+
     mk(Wrapper, root, thing) @=> ret.connector;
     recBufUI(ret.buf) @=> ret.bufUI;
+
+    // Kill input when playback starts
+    MUtil.sigEq(ret.buf, "state", RecBuf.Playing)
+      => mk(TrigValue, null).c
+      => mk(SampleHold, samp).c
+      => ret.connector.c;
+
     return ret;
   }
 }
@@ -265,44 +273,19 @@ fun Row makeRow(ModuckP clockIn){
    */
 
 
+  ret.input => frm("trigpitch").c => pitchLock.connector.c;
+  ret.input => frm("pitch").c => pitchLock.connector.c;
   ret.input => frm("trig").c => mk(TrigValue, 0).c => notes.connector.c;
   ret.input => frm("pitchOffset").c => pitchShift.connector.c;
-
   ret.input => frm("trigpitch").c => mk(TrigValue, 0).c => notes.connector.c;
-  ret.input => frm("trigpitch").c
-    => iff(MUtil.sigEq(pitchLock.buf, "state", RecBuf.Playing)) // This could all be avoided with a better RecBuf implementation
-      .then(iff(pitchLock.buf, "hasData")
-            .then( iff(MUtil.sigEq(pitchLock.buf, "state", RecBuf.Recording))
-              .then(pitchLock.connector)
-              .els(mk(Blackhole))
-            )
-            .els(pitchLock.connector)
-        )
-      .els(pitchLock.connector).c;
-
-  def(tmpPitchOverride, mk(TrigValue, null));
-  ret.input => frm("pitch").c
-    => iff(MUtil.sigEq(pitchLock.buf, "state", RecBuf.Playing)) // This could all be avoided with a better RecBuf implementation
-      .then(iff(pitchLock.buf, "hasData")
-            .then( iff(MUtil.sigEq(pitchLock.buf, "state", RecBuf.Recording))
-              .then(pitchLock.connector)
-              .els(tmpPitchOverride.to(P_Set))
-            )
-            .els(pitchLock.connector)
-        )
-      .els(pitchLock.connector).c;
-
-
 
   makeTogglingOuts(OUT_DEVICE_COUNT) @=> ret.outs;
 
   notes.connector => MBUtil.onlyLow().c => ret.outs.c;
   notes.connector
-    => mk(Delay, samp).c // Basically a hack, but needed until I have a better RecBuf implementation
+    /* => mk(Delay, samp).c // Basically a hack, but needed until I have a better RecBuf implementation */
     => MBUtil.onlyHigh().c
-    => iff(tmpPitchOverride, recv(P_Set))
-      .then(tmpPitchOverride)
-      .els(pitchLock.thing).c
+    => pitchLock.thing.c
     => iff(pitchShift.activity)
         .then(pitchShift.thing)
         .els(mk(Repeater)).c
