@@ -105,6 +105,16 @@ fun void reset(Shared shared){
   shared.out.doHandle(P_Looped, 0);
 }
 
+fun void setPlaying(int playing){
+  shared.tickOffset => now;
+  if(playing){
+    shared.buffer.doHandle(P_GoTo, 0);
+    shared.player.doHandle(P_Gate, IntRef.yes());
+  }else{
+    shared.player.doHandle(P_Gate, null);
+  }
+}
+
 
 genHandler(ClockHandler, P_Clock,
   HANDLE{
@@ -115,18 +125,14 @@ genHandler(ClockHandler, P_Clock,
       0 => shared.clockCount;
       Playing => shared.state;
       spork ~ stopRec(shared);
-      // TODO: Enable playback control again
-    /* 
-     }else if(PlayOnArmed == shared.state){
-       0 => shared.clockCount;
-       shared.buffer.doHandle(P_GoTo, 0);
-       Playing => shared.state;
-       shared.player.doHandle(P_Gate, IntRef.yes());
-     }else if(PlayOffArmed == shared.state){
-       Idle => shared.state;
-       shared.player.doHandle(P_Gate, null);
-     */
-     }
+    }else if(PlayOnArmed == shared.state){
+      0 => shared.clockCount;
+      Playing => shared.state;
+      spork ~ setPlaying(true);
+    }else if(PlayOffArmed == shared.state){
+      Idle => shared.state;
+      spork ~ setPlaying(false);
+    }
   }
 
   if(Playing == shared.state){
