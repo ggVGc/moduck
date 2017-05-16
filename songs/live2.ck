@@ -205,7 +205,7 @@ fun ModuckP makeBeatRitmo(){
   def(out, mk(Repeater));
 
 
-  out => mk(Printer, "ritmo out").c;
+  /* out => mk(Printer, "ritmo out").c; */
 
 
   for(0=>int ind;ind<parts.size();++ind){
@@ -488,14 +488,19 @@ rowCol.rowIndexSelector => multiSwitcher(rowOutputs, Util.genStringNums(7*5), tr
 
 
 fun void setupBeatRitmoUI(ModuckP clockIn, ModuckP controllerSrc, ModuckP ritmo){
-  def(onceTrig, mk(OnceTrigger));
-  clockIn => onceTrig.to(P_Trigger).c;
   for(0=>int i;i<8;++i){
-    controllerSrc
-      => frm("note"+(7+(7-i)*16)).c
-      => onceTrig.to(P_Set).c
-      => ritmo.to(i).c;
-      /* => rowCol.keysIn.to("beatRitmo"+i).c; */
+    def(onceTrig, mk(OnceTrigger));
+    clockIn => onceTrig.to(P_Trigger).c;
+    (controllerSrc => frm("note"+(7+(7-i)*16)).c)
+      .b(
+          mk(Repeater)
+          => onceTrig.to(P_Set).c
+          => MBUtil.onlyHigh().c
+          => ritmo.to(i).c
+        )
+      .b( MBUtil.onlyLow() => ritmo.to(i).c);
+
+
   }
 }
 

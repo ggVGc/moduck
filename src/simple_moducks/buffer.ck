@@ -2,6 +2,9 @@
 include(moduck_macros.m4)
 
 
+minute / (120*2) => dur quantizeStep;
+
+
 class BufEntry{
   dur timeStamp;
   IntRef val;
@@ -124,6 +127,20 @@ function void set(IntRef v, ModuckBase parent, Shared shared, string tag){
     tag => e.tag;
 
     now - shared.startTime => e.timeStamp;
+
+    Util.toSamples(minute / (120*16))=> float quantizeStep;
+    Util.toSamples(e.timeStamp) / quantizeStep => float steps;
+    <<<"Steps: "+steps>>>;
+    Math.floor(steps) $ int => int whole;
+    if(steps-whole < 0.5){
+      (whole * quantizeStep)::samp => e.timeStamp;
+    }else{
+      ((whole+1)* quantizeStep)::samp => e.timeStamp;
+    }
+
+
+
+
     shared.accum => e.index;
     parent.send("hasData", IntRef.yes());
 }
