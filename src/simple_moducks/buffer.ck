@@ -2,7 +2,8 @@
 include(moduck_macros.m4)
 
 
-minute / (120*2) => dur quantizeStep;
+define(quantStepsPerBeat, 16);
+
 
 
 class BufEntry{
@@ -128,7 +129,7 @@ function void set(IntRef v, ModuckBase parent, Shared shared, string tag){
 
     now - shared.startTime => e.timeStamp;
 
-    Util.toSamples(minute / (120*16))=> float quantizeStep;
+    Util.toSamples(minute / (Runner.getBpm()*quantStepsPerBeat)) => float quantizeStep;
     Util.toSamples(e.timeStamp) / quantizeStep => float steps;
     <<<"Steps: "+steps>>>;
     Math.floor(steps) $ int => int whole;
@@ -186,6 +187,7 @@ genTagHandler(TagSetHandler,
     },
   Shared shared;
 )
+
 
 
 

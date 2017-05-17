@@ -7,6 +7,8 @@ public class Runner extends RunnerBase{
   static int ticksPerBeat;
   static int isPlaying;
 
+  static Event @ bpmChanged;
+
   fun static int setPlaying(int v){
     if(v){
       return start();
@@ -32,22 +34,24 @@ public class Runner extends RunnerBase{
 
   fun static void setBpm(int bpm){
     _masterClockGen.setBpm(bpm);
+    bpmChanged.broadcast();
   }
 
   fun static int getBpm(){
-    return _masterClockGen.getBpm();
+    return _masterClockGen.getBpm()/Runner.ticksPerBeat;
   }
 
 
   fun static dur timePerTick(){
-    return Util.bpmToDur(_masterClockGen.getBpm());
+    return minute/_masterClockGen.getBpm();
   }
+
   fun static int samplesPerTick(){
     return Util.toSamples(timePerTick());
   }
 
   fun static dur timePerBeat(){
-    return timePerTick()*ticksPerBeat;
+    return minute/getBpm();
   }
 
   fun static int samplesPerBeat(){
@@ -78,6 +82,10 @@ public class Runner extends RunnerBase{
   }
 }
 
+
+Event xxx;
+xxx @=> Runner.bpmChanged;
+
 false => Runner.isPlaying;
 4 => Runner.ticksPerBeat;
 
@@ -85,5 +93,6 @@ ClockGen.make(120*Runner.ticksPerBeat) @=> Runner._masterClockGen;
 Repeater.make(P_Clock) @=> Runner.masterClock;
 Patch.connect(Runner._masterClockGen, Runner.masterClock);
 samp => now;
+Runner.bpmChanged.broadcast();
 
 Util.runForever(); // Keep connection alive

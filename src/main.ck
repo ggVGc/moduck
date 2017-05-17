@@ -23,6 +23,10 @@ Machine.add("simple_moducks/inverter.ck");
 Machine.add("simple_moducks/blocker.ck");
 
 Machine.add("moduck_patcher.ck");
+Machine.add("simple_moducks/clock_gen.ck");
+Machine.add("simple_moducks/note_out.ck");
+Machine.add("simple_moducks/printer.ck");
+Machine.add("runner.ck");
 Machine.add("moducks.ck");
 samp => now;
 Machine.add("moduck_util_base.ck");
@@ -36,7 +40,6 @@ Machine.add("complex_moducks/buf_player.ck");
 Machine.add("complex_moducks/rec_buf.ck");
 Machine.add("scales.ck");
 Machine.add("moduck_util.ck");
-Machine.add("runner.ck");
 Machine.add("launchpad.ck");
 samp => now;
 Machine.add("_cur_song");
