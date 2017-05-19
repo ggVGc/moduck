@@ -389,8 +389,18 @@ def(circuitKeyboard, mk(MidInp, MIDI_IN_CIRCUIT, 1) );
 
 def(beatRitmo, makeBeatRitmo());
 
+
+def(beatRitmoHolder, mk(SampleHold, D16));
+def(beatRitmoTimeSrc, mk(Repeater));
+
+beatRitmoTimeSrc
+  => mk(RangeMapper, 0, 127, 1, Util.toSamples(D2)).c
+  => mk(Printer, "diddles").c
+  => beatRitmoHolder.to("holdTime").c;
+
 beatRitmo 
-  => mk(SampleHold, D16).c
+  => beatRitmoHolder.c
+  => mk(Printer, "Ritmo out").c
   => rowCol.keysIn.to("trig").c;
 
 
@@ -405,6 +415,9 @@ openOut(MIDI_OUT_CIRCUIT) @=> MidiOut circuit;
 
 
 // MAPPINGS
+
+circuitKeyboard => frm("cc80").c => beatRitmoTimeSrc.c;
+/* circuitKeyboard => frm("cc").c => mk(Printer, "circ cc").c; */
 
 setupOutputSelection();
 setupBeatRitmoUI(clock, launchpad, beatRitmo);

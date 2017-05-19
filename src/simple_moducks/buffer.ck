@@ -108,6 +108,17 @@ genHandler(GoToHandler, P_GoTo,
 )
 
 
+fun dur lastOnEventTimeBefore(dur end, Shared shared){
+  0::ms => dur ret;
+  for(0=>int elemInd;elemInd<shared.entries.size();++elemInd){
+    shared.entries[elemInd] @=> BufEntry e;
+    if(e.val != null && e.timeStamp < end && e.timeStamp > ret){
+      e.timeStamp => ret;
+    }
+  }
+  return ret;
+}
+
 
 function void set(IntRef v, ModuckBase parent, Shared shared, string tag){
     -1 => int ind;
@@ -129,15 +140,25 @@ function void set(IntRef v, ModuckBase parent, Shared shared, string tag){
 
     now - shared.startTime => e.timeStamp;
 
-    Util.toSamples(minute / (Runner.getBpm()*quantStepsPerBeat)) => float quantizeStep;
-    Util.toSamples(e.timeStamp) / quantizeStep => float steps;
-    <<<"Steps: "+steps>>>;
-    Math.floor(steps) $ int => int whole;
-    if(steps-whole < 0.5){
-      (whole * quantizeStep)::samp => e.timeStamp;
-    }else{
-      ((whole+1)* quantizeStep)::samp => e.timeStamp;
+    if(v != null){
+      Util.toSamples(minute / (Runner.getBpm()*quantStepsPerBeat)) => float quantizeStep;
+      Util.toSamples(e.timeStamp) / quantizeStep => float steps;
+      Math.floor(steps) $ int => int whole;
+      if(steps-whole < 0.5 && v != null){
+        (whole * quantizeStep)::samp => e.timeStamp;
+      }else{
+        ((whole+1)* quantizeStep)::samp => e.timeStamp;
+      }
     }
+    
+    /* 
+     if(v != null){ // off event
+       lastOnEventTimeBefore(e.timeStamp, shared) => dur last;
+       if(last != 0::ms && last == e.timeStamp){
+         e.timeStamp + (quantizeStep)::samp => e.timeStamp;
+       }
+     }
+     */
 
 
 

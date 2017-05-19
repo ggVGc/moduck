@@ -128,13 +128,15 @@ genHandler(ClockHandler, P_Clock,
 
 
 public class RecBuf{
-  0 => static int Idle;
-  1 => static int RecOffArmed;
-  2 => static int RecOnArmed;
-  3 => static int PlayOnArmed;
-  4 => static int PlayOffArmed;
-  5 => static int Recording;
-  6 => static int Playing;
+  static int Idle;
+  static int RecOffArmed;
+  static int RecOnArmed;
+  static int PlayOnArmed;
+  static int PlayOffArmed;
+  static int Recording;
+  static int Playing;
+
+
   fun static Moduck make(int quantization){
     Moduck ret;
 
