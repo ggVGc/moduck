@@ -155,7 +155,7 @@ class ThingAndBuffer{
 
 /* Util.genStringNums(beatRitmoParts.size()-1) @=> string beatRitmoTags[]; */
 Util.concatStrings([
-    ["trig", "trigpitch", "pitch", "pitchOffset"]
+    ["trig", "trigpitch", "pitch", "pitchOffset", "noteLengthMultiplier"]
     /* ,Util.prefixStrings("beatRitmo", beatRitmoTags) */
 ])
   @=> string rowTags[];
@@ -278,6 +278,7 @@ fun Row makeRow(ModuckP clockIn){
   ret.input => frm("trig").c => mk(TrigValue, 0).c => notes.connector.c;
   ret.input => frm("pitchOffset").c => pitchShift.connector.c;
   ret.input => frm("trigpitch").c => mk(TrigValue, 0).c => notes.connector.c;
+  ret.input => frm("noteLengthMultiplier").c => notes.buf.to("lengthMultiplier").c;
 
   makeTogglingOuts(OUT_DEVICE_COUNT) @=> ret.outs;
 
@@ -417,6 +418,9 @@ openOut(MIDI_OUT_CIRCUIT) @=> MidiOut circuit;
 // MAPPINGS
 
 circuitKeyboard => frm("cc80").c => beatRitmoTimeSrc.c;
+circuitKeyboard => frm("cc81").c
+  => mk(RangeMapper, 0, 127, 1, 300).c
+  => rowCol.keysIn.to("noteLengthMultiplier").c;
 /* circuitKeyboard => frm("cc").c => mk(Printer, "circ cc").c; */
 
 setupOutputSelection();

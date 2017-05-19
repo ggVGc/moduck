@@ -15,12 +15,55 @@ class BufEntry{
 }
 
 
+// TODO: Cache this and only recalculate if lengthMultiplier changed
+fun dur getTime(BufEntry e, BufEntry allEntries[], int lengthRatio){
+  if(e.val != null){
+    return e.timeStamp;
+  }else{
+    if(lengthRatio != 100){
+      lastOnEventTimeBefore(e.timeStamp, allEntries) =>  dur onTime;
+      e.timeStamp - onTime => dur delta;
+      return onTime + ((lengthRatio $ float)/100.0)*delta;
+    }else{
+      return e.timeStamp;
+    }
+  }
+}
+
+
 class Shared{
   BufEntry entries[0];
   false => int clearing;
   time startTime; // gets reset on loop
   now => time lastTime;
   int accum;
+}
+
+
+
+
+fun dur lastOnEventTimeBefore(dur end, BufEntry entries[]){
+  0::ms => dur ret;
+  for(0=>int elemInd;elemInd<entries.size();++elemInd){
+    entries[elemInd] @=> BufEntry e;
+    if(e.val != null && e.timeStamp < end && e.timeStamp > ret){
+      e.timeStamp => ret;
+    }
+  }
+  return ret;
+}
+
+
+fun BOOL allEmpty(Shared shared){
+  true => int ret;
+  for(0=>int entInd;entInd<shared.entries.size();++entInd){
+    shared.entries[entInd] @=> BufEntry e;
+    if(e != null){
+      false => ret;
+      break;
+    }
+  }
+  return ret;
 }
 
 
@@ -33,7 +76,7 @@ genHandler(ClockHandler, P_Clock,
         false => int shouldTrigger;
         if(e!=null){
           if(parent.getVal("timeBased")){
-            (e.timeStamp <= passedTimeSinceStart) => shouldTrigger;
+            (getTime(e, shared.entries, parent.getVal("lengthMultiplier")) <= passedTimeSinceStart) => shouldTrigger;
           }else{
             (e.index <= shared.accum) => shouldTrigger;
           }
@@ -50,21 +93,12 @@ genHandler(ClockHandler, P_Clock,
           }
         }
       }
+
       now => shared.lastTime;
       ++shared.accum;
 
-      if(shared.clearing){
-        true => int allEmpty;
-        for(0=>int entInd;entInd<shared.entries.size();++entInd){
-          shared.entries[entInd] @=> BufEntry e;
-          if(e != null){
-            false => allEmpty;
-            break;
-          }
-        }
-        if(allEmpty){
-          parent.send("hasData", null);
-        }
+      if(shared.clearing && allEmpty(shared)){
+        parent.send("hasData", null);
       }
     }
   },
@@ -108,17 +142,6 @@ genHandler(GoToHandler, P_GoTo,
 )
 
 
-fun dur lastOnEventTimeBefore(dur end, Shared shared){
-  0::ms => dur ret;
-  for(0=>int elemInd;elemInd<shared.entries.size();++elemInd){
-    shared.entries[elemInd] @=> BufEntry e;
-    if(e.val != null && e.timeStamp < end && e.timeStamp > ret){
-      e.timeStamp => ret;
-    }
-  }
-  return ret;
-}
-
 
 function void set(IntRef v, ModuckBase parent, Shared shared, string tag){
     -1 => int ind;
@@ -142,7 +165,7 @@ function void set(IntRef v, ModuckBase parent, Shared shared, string tag){
 
     if(v != null){
       Util.toSamples(minute / (Runner.getBpm()*quantStepsPerBeat)) => float quantizeStep;
-      Util.toSamples(e.timeStamp) / quantizeStep => float steps;
+      Util.toSamples(getTime(e, shared.entries, parent.getVal("lengthMultiplier"))) / quantizeStep => float steps;
       Math.floor(steps) $ int => int whole;
       if(steps-whole < 0.5 && v != null){
         (whole * quantizeStep)::samp => e.timeStamp;
@@ -153,9 +176,9 @@ function void set(IntRef v, ModuckBase parent, Shared shared, string tag){
     
     /* 
      if(v != null){ // off event
-       lastOnEventTimeBefore(e.timeStamp, shared) => dur last;
-       if(last != 0::ms && last == e.timeStamp){
-         e.timeStamp + (quantizeStep)::samp => e.timeStamp;
+       lastOnEventTimeBefore(getTime(e, shared.entries), shared) => dur last;
+       if(last != 0::ms && last == getTime(e, shared.entries)){
+         getTime(e, shared.entries) + (quantizeStep)::samp => e.timeStamp;
        }
      }
      */
@@ -224,9 +247,9 @@ public class Buffer extends Moduck{
       shared.entries[entInd] @=> BufEntry e;
       if(!e.triggered){
         if(!found){
-          e.timeStamp - passedTimeSinceStart => smallest;
+          getTime(e, shared.entries, getVal("lengthMultiplier")) - passedTimeSinceStart => smallest;
         }else{
-          e.timeStamp - passedTimeSinceStart => dur d;
+          getTime(e, shared.entries, getVal("lengthMultiplier")) - passedTimeSinceStart => dur d;
           if(d < smallest){
             d => smallest;
           }
@@ -262,6 +285,7 @@ public class Buffer extends Moduck{
     IN(GoToHandler,(ret.shared));
     IN(ResetHandler,(ret.shared));
     ret.addVal("timeBased", false);
+    ret.addVal("lengthMultiplier", 100);
     return ret;
   }
 }

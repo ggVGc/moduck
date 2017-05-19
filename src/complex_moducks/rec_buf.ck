@@ -19,7 +19,6 @@ class Shared{
 }
 
 fun void changeState(int newState, Shared shared){
-  <<<"New State"+newState>>>;
   newState => shared.state;
   shared.out.send("state", IntRef.make(newState));
 }
@@ -162,6 +161,10 @@ public class RecBuf{
     IN(ClearHandler, (shared));
     IN(ClockHandler, (shared));
 
+    ret.addVal("lengthMultiplier", 100);
+
+    ret => shared.buffer.listen("lengthMultiplier").c;
+
     shared.buffer => shared.out.listen([P_Trigger, "hasData"]).c;
     Patch.connect(shared.buffer, "hasData", shared.hasData, P_Set);
 
@@ -170,7 +173,6 @@ public class RecBuf{
    shared.hasData.doHandle(P_Set, null);
 
 
-   shared.player => frm(recv(P_Gate)).c => mk(Printer, "Player gate").c;
    /* shared.hasData => mk(Printer, "hasData").c; */
    /* shared.buffer => frm("hasData").c => mk(Printer, "buf hasData").c; */
 
