@@ -2,7 +2,7 @@
 include(moduck_macros.m4)
 
 
-define(quantStepsPerBeat, 16);
+define(quantStepsPerBeat, 8);
 
 
 

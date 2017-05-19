@@ -35,7 +35,7 @@ genHandler(SetHandler, P_Set,
       1 => shared.quantCounter;
       now - shared.lastTickTime => shared.tickOffset;
     }
-    if(RecBuf.Recording == shared.state || RecBuf.RecOffArmed){
+    if(RecBuf.Recording == shared.state || RecBuf.RecOffArmed == shared.state){
       shared.buffer.doHandle(P_Set, v);
     }
   },
