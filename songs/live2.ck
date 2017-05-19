@@ -555,8 +555,12 @@ fun ModuckP apcToLaunchadAdapterOut(ModuckP apcInstance){
       => apcInstance.fromTo("note"+((i-82)*16 + 8), "note"+i).c;
   }
   
-  rep => frm("note").c => apcInstance.to("note").c; // TODO: Need to actually transform this value
-  rep => frm("cc").c => apcInstance.to("cc").c; // TODO: Need to actually transform this value
+  rep => frm("note").c
+    => mk(Printer, "Warning - Not implemented: FILIN").c
+    => apcInstance.to("note").c; // TODO: Need to actually transform this value
+  rep => frm("cc").c
+    => mk(Printer, "Warning - Not implemented: FILIN").c
+    => apcInstance.to("cc").c; // TODO: Need to actually transform this value
 
 
 
