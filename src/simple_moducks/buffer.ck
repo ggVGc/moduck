@@ -7,7 +7,8 @@ define(quantStepsPerBeat, 8);
 
 
 class BufEntry{
-  dur timeStamp;
+  dur recordedTimestamp;
+  dur cachedTimestamp;
   IntRef val;
   false => int triggered;
   0 => int index;
@@ -15,17 +16,18 @@ class BufEntry{
 }
 
 
+
 // TODO: Cache this and only recalculate if lengthMultiplier changed
-fun dur getTime(BufEntry e, BufEntry allEntries[], int lengthRatio){
+fun dur calcEntryTime(BufEntry e, BufEntry allEntries[], int lengthRatio){
   if(e.val != null){
-    return e.timeStamp;
+    return e.recordedTimestamp;
   }else{
     if(lengthRatio != 100){
-      lastOnEventTimeBefore(e.timeStamp, allEntries) =>  dur onTime;
-      e.timeStamp - onTime => dur delta;
+      lastOnEventTimeBefore(e.recordedTimestamp, allEntries) =>  dur onTime;
+      e.recordedTimestamp - onTime => dur delta;
       return onTime + ((lengthRatio $ float)/100.0)*delta;
     }else{
-      return e.timeStamp;
+      return e.recordedTimestamp;
     }
   }
 }
@@ -37,6 +39,7 @@ class Shared{
   time startTime; // gets reset on loop
   now => time lastTime;
   int accum;
+  false => BOOL lenMultiplierChanged;
 }
 
 
@@ -46,8 +49,8 @@ fun dur lastOnEventTimeBefore(dur end, BufEntry entries[]){
   0::ms => dur ret;
   for(0=>int elemInd;elemInd<entries.size();++elemInd){
     entries[elemInd] @=> BufEntry e;
-    if(e.val != null && e.timeStamp < end && e.timeStamp > ret){
-      e.timeStamp => ret;
+    if(e.val != null && e.recordedTimestamp < end && e.recordedTimestamp > ret){
+      e.recordedTimestamp => ret;
     }
   }
   return ret;
@@ -67,8 +70,23 @@ fun BOOL allEmpty(Shared shared){
 }
 
 
+fun void recalculateLengths(BufEntry entries[], int lengthRatio){
+  for(0=>int elemInd;elemInd<entries.size();++elemInd){
+    entries[elemInd] @=> BufEntry e;
+    calcEntryTime(e, entries, lengthRatio) => e.cachedTimestamp;
+  }
+}
+
+
+
 genHandler(ClockHandler, P_Clock,
   HANDLE{
+    if(shared.lenMultiplierChanged){
+      false => shared.lenMultiplierChanged;
+      recalculateLengths(shared.entries, parent.getVal("lengthMultiplier"));
+    }
+
+
     if(null != v){
       now - shared.startTime => dur passedTimeSinceStart;
       for(0=>int i;i<shared.entries.size();++i){
@@ -76,7 +94,7 @@ genHandler(ClockHandler, P_Clock,
         false => int shouldTrigger;
         if(e!=null){
           if(parent.getVal("timeBased")){
-            (getTime(e, shared.entries, parent.getVal("lengthMultiplier")) <= passedTimeSinceStart) => shouldTrigger;
+            (e.cachedTimestamp <= passedTimeSinceStart) => shouldTrigger;
           }else{
             (e.index <= shared.accum) => shouldTrigger;
           }
@@ -161,30 +179,20 @@ function void set(IntRef v, ModuckBase parent, Shared shared, string tag){
     v @=> e.val;
     tag => e.tag;
 
-    now - shared.startTime => e.timeStamp;
+    now - shared.startTime => e.recordedTimestamp;
+
+    calcEntryTime(e, shared.entries, parent.getVal("lengthMultiplier")) => e.cachedTimestamp;
 
     if(v != null){
       Util.toSamples(minute / (Runner.getBpm()*quantStepsPerBeat)) => float quantizeStep;
-      Util.toSamples(getTime(e, shared.entries, parent.getVal("lengthMultiplier"))) / quantizeStep => float steps;
+      Util.toSamples(e.cachedTimestamp) / quantizeStep => float steps;
       Math.floor(steps) $ int => int whole;
       if(steps-whole < 0.5 && v != null){
-        (whole * quantizeStep)::samp => e.timeStamp;
+        (whole * quantizeStep)::samp => e.recordedTimestamp;
       }else{
-        ((whole+1)* quantizeStep)::samp => e.timeStamp;
+        ((whole+1)* quantizeStep)::samp => e.recordedTimestamp;
       }
     }
-    
-    /* 
-     if(v != null){ // off event
-       lastOnEventTimeBefore(getTime(e, shared.entries), shared) => dur last;
-       if(last != 0::ms && last == getTime(e, shared.entries)){
-         getTime(e, shared.entries) + (quantizeStep)::samp => e.timeStamp;
-       }
-     }
-     */
-
-
-
 
     shared.accum => e.index;
     parent.send("hasData", IntRef.yes());
@@ -222,11 +230,6 @@ genHandler(ClearHandler, P_Clear,
 
 genTagHandler(TagSetHandler, 
     HANDLE{
-    if(v != null){
-        <<<"Set: "+tag+":"+v.i>>>;
-    }else{
-        <<<"Set: "+tag+":null">>>;
-    }
       set(v, parent, shared, tag);
     },
   Shared shared;
@@ -240,6 +243,12 @@ public class Buffer extends Moduck{
   Shared shared;
 
   fun dur timeToNext(){
+
+    if(shared.lenMultiplierChanged){
+      false => shared.lenMultiplierChanged;
+      recalculateLengths(shared.entries, getVal("lengthMultiplier"));
+    }
+
     false => BOOL found;
     dur smallest;
     now - shared.startTime => dur passedTimeSinceStart;
@@ -247,9 +256,9 @@ public class Buffer extends Moduck{
       shared.entries[entInd] @=> BufEntry e;
       if(!e.triggered){
         if(!found){
-          getTime(e, shared.entries, getVal("lengthMultiplier")) - passedTimeSinceStart => smallest;
+          e.cachedTimestamp - passedTimeSinceStart => smallest;
         }else{
-          getTime(e, shared.entries, getVal("lengthMultiplier")) - passedTimeSinceStart => dur d;
+          e.cachedTimestamp - passedTimeSinceStart => dur d;
           if(d < smallest){
             d => smallest;
           }
@@ -260,6 +269,12 @@ public class Buffer extends Moduck{
       return smallest;
     }else{
       return 1::ms;
+    }
+  }
+
+  fun void onValueChange(string key, int oldVal, int newVal){
+    if(key == "lengthMultiplier"){
+      true => shared.lenMultiplierChanged;
     }
   }
 
