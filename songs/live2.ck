@@ -354,7 +354,7 @@ fun RowCollection makeRowCollection(ModuckP clockIn){
     ret.rows << row;
   }
 
-  ret.rowIndexSelector => multiRouter(ret.keysIn, rowTags, rowInputs).c;
+  ret.rowIndexSelector => multiRouter(ret.keysIn, rowTags, rowInputs, false).c;
 
   return ret;
 }
@@ -386,7 +386,13 @@ def(apc2, mk(Wrapper,
 ));
 
 def(keyboard, mk(MidInp, MIDI_IN_K49, 0));
-def(circuitKeyboard, mk(MidInp, MIDI_IN_CIRCUIT, 1) );
+
+openOut(MIDI_OUT_CIRCUIT) @=> MidiOut circuitDeviceOut;
+
+def(circuitKeyboard, mk(Wrapper, 
+    mk(NoteOut, circuitDeviceOut, 1)
+    ,mk(MidInp, MIDI_IN_CIRCUIT, 1)
+));
 
 def(beatRitmo, makeBeatRitmo());
 
@@ -395,7 +401,7 @@ def(beatRitmoHolder, mk(SampleHold, D16));
 def(beatRitmoTimeSrc, mk(Repeater));
 
 beatRitmoTimeSrc
-  => mk(RangeMapper, 0, 127, 1, Util.toSamples(D2)).c
+  => mk(RangeMapper, 0, 127, 1, Util.toSamples(D)).c
   => mk(Printer, "diddles").c
   => beatRitmoHolder.to("holdTime").c;
 
@@ -412,7 +418,6 @@ openOut(MIDI_OUT_MICROBRUTE) @=> MidiOut brute;
 openOut(MIDI_OUT_MS_20) @=>  MidiOut ms20;
 openOut(MIDI_OUT_USB_MIDI) @=> MidiOut nocoast;
 openOut(MIDI_OUT_SYS1) @=> MidiOut sys1;
-openOut(MIDI_OUT_CIRCUIT) @=> MidiOut circuit;
 
 
 // MAPPINGS
@@ -421,7 +426,27 @@ circuitKeyboard => frm("cc80").c => beatRitmoTimeSrc.c;
 circuitKeyboard => frm("cc81").c
   => mk(RangeMapper, 0, 127, 1, 300).c
   => rowCol.keysIn.to("noteLengthMultiplier").c;
-/* circuitKeyboard => frm("cc").c => mk(Printer, "circ cc").c; */
+
+
+
+
+ModuckP noteLenMuls[0];
+for(0=>int rowInd;rowInd<ROW_COUNT;++rowInd){
+  noteLenMuls <<
+    (rowCol.rows[rowInd].input
+    => frm(recv("noteLengthMultiplier")).c
+    => MBUtil.onlyHigh().c
+  );
+}
+rowCol.rowIndexSelector => multiSwitcher(true, noteLenMuls, [P_Trigger], 
+  mk(RangeMapper, 1, 300, 0, 127)
+  => circuitKeyboard.to("cc81").c
+).c;
+
+for(0=>int i;i<ROW_COUNT;++i){
+  rowCol.rows[i].input.doHandle("noteLengthMultiplier", 100);
+}
+
 
 setupOutputSelection();
 setupBeatRitmoUI(clock, launchpad, beatRitmo);
@@ -433,6 +458,13 @@ apc2
   => trigAndPitchBufRouter.c;
 // Match index of row
 rowCol.rowIndexSelector => trigAndPitchBufRouter.to("index").c;
+
+
+apc2
+  => frm("cc104").c
+  => mk(Value, 50).c
+  => mk(Printer, "kjg").c
+  => circuitKeyboard.to("cc81").c;
 
 
 for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
@@ -704,8 +736,8 @@ function ModuckP outPitchQuant(){
 
 function void setupRowOutputs(Row row){
   row.outs
-    .b(frm(0).to(mk(Offset, 60) => mk(NoteOut,circuit,9).c)) // Drums
-    .b(frm(1).to(outPitchQuant() => mk(NoteOut,circuit,0).c))
+    .b(frm(0).to(mk(Offset, 60) => mk(NoteOut,circuitDeviceOut,9).c)) // Drums
+    .b(frm(1).to(outPitchQuant() => mk(NoteOut,circuitDeviceOut,0).c))
     .b(frm(2).to(outPitchQuant() => mk(NoteOut,nocoast,0).c))
     .b(frm(3).to(outPitchQuant() => mk(NoteOut,brute,0).c))
     .b(frm(4).to(outPitchQuant() => mk(NoteOut,ms20,0).c))

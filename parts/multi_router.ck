@@ -1,8 +1,13 @@
 fun ModuckP multiRouter(ModuckP src, string tags[], ModuckP dests[]){
+  return multiRouter(src, tags, dests, true);
+}
+
+
+fun ModuckP multiRouter(ModuckP src, string tags[], ModuckP dests[], int outOnChange){
   def(indexChooser, mk(Repeater));
   for(0=>int tagInd;tagInd<tags.size();++tagInd){
     tags[tagInd] @=> string tag;
-    def(router, mk(Router, 0));
+    def(router, mk(Router, 0, outOnChange));
 
     indexChooser => router.to("index").c;
     src => frm(tag).c => router.c; 

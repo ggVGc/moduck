@@ -7,12 +7,17 @@ include(constants.m4)
 
 genTagHandler(InputTagHandler,
     HANDLE{
+      v @=> lastVals[tag];
+
+      if(parent.getVal("onlyOutOnNewIndex")){
+        return;
+      }
+
       V(index);
 
       if(tag == ""+index){
         parent.send(P_Trigger, v);
       }
-      v @=> lastVals[tag];
     },
   IntRef lastVals[];
 )
@@ -38,7 +43,7 @@ public class Switcher extends Moduck{
   }
 
 
-  fun static Switcher make(int count, int startIndex, int outOnChange){
+  fun static Switcher make(int count, int startIndex, int onlyOutOnNewIndex){
     Switcher ret;
     OUT(P_Trigger);
     for(0 => int i;i<count;++i){
@@ -47,19 +52,15 @@ public class Switcher extends Moduck{
     }
     IN(ResetHandler, (startIndex));
     ret.addVal("index", startIndex);
-
-    ret.addVal("outOnChange", outOnChange);
-     // If Gate is high and index is changed,
-     // output the last trigger value on the new indexed port
+    ret.addVal("onlyOutOnNewIndex", onlyOutOnNewIndex);
 
     return ret;
   }
 
 
   fun static Switcher make(int count, int startIndex){
-    return make(count, startIndex, true);
+    return make(count, startIndex, false);
   }
-
 
   fun static Switcher make(int count){
     return make(count, 0);
