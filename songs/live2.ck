@@ -378,23 +378,72 @@ openOut(MIDI_OUT_SYS1) @=> MidiOut sys1;
 // MAPPINGS
 
 
+fun ModuckP absoluteToRelative(ModuckP m){
+  def(out, mk(Repeater));
+
+  m
+  .b(mk(Bigger, 63) => mk(Value, 1).c => out.c)
+  .b(mk(Smaller, 63) => mk(Value, -1).c => out.c)
+  .b(mk(Value, 63) => m.c);
+
+  return out;
+}
+
+
+fun ModuckP twoWay(ModuckP m, string tag){
+  return mk(Wrapper, mk(Repeater) => m.to(tag).c, m => frm(tag).c);
+}
+
+
+fun ModuckP relativeValue(int min, int max){
+  def(root, mk(Repeater, [P_Trigger, P_Set, "inc", "dec"]));
+  def(val, mk(Value, min));
+
+  root => val.listen([P_Trigger, P_Set]).c;
+
+  root => frm("inc").c
+    => mk(Value, min).hook(val.from(recv(P_Set)).to(P_Set)).c
+    => mk(Add, 1).c => val.to(P_Set).c;
+
+  root => frm("dec").c 
+    => mk(Value, min).hook(val.from(recv(P_Set)).to(P_Set)).c
+    => mk(Add, -1).c => val.to(P_Set).c;
+
+  (val => frm(recv(P_Set)).c)
+    .b(mk(Smaller, min) => mk(Value, min).c => val.to(P_Set).c)
+    .b(mk(Bigger, max) => mk(Value, max).c => val.to(P_Set).c);
+
+
+  val => mk(Printer, "REL VAL").c;
+
+  return mk(Wrapper, root, val);
+
+}
+
+
+
 circuitKeyboard => frm("cc80").c => beatRitmoTimeSrc.c;
 
-def(controlsResetOut, mk(Repeater));
-controlsResetOut => rowMultiControl("noteLengthMultiplier", circuitKeyboard, "cc81", 1, 300, 100).c;
-controlsResetOut => rowMultiControl("noteTimeMul", circuitKeyboard, "cc82", 1, 300, 100).c;
+rowMultiControl("noteLengthMultiplier", twoWay(circuitKeyboard, "cc81"), 1, 1000, 100);
+rowMultiControl("noteTimeMul", twoWay(circuitKeyboard, "cc82"), 1, 1000, 100);
 
 // Reset controller values
 (apc1 => frm("cc104").c)
   .b(mk(TrigValue, 100) => rowCol.keysIn.to("noteLengthMultiplier").c)
-  .b(mk(TrigValue, 100) => rowCol.keysIn.to("noteTimeMul").c)
-  .b(controlsResetOut);
+  .b(mk(TrigValue, 100) => rowCol.keysIn.to("noteTimeMul").c);
 
 
-fun ModuckP rowMultiControl(string rowInputTag, ModuckP src, string keyTag, int minVal, int maxVal, int startVal){
-  src => frm(keyTag).c
-    => mk(RangeMapper, 0, 127, 1, 300).c
-    => rowCol.keysIn.to(rowInputTag).c;
+fun void rowMultiControl(string rowInputTag, ModuckP m, int minVal, int maxVal, int startVal){
+  def(absRelInput, absoluteToRelative(m));
+  def(relVal, relativeValue(minVal, maxVal));
+  absRelInput => mk(Bigger, 0).c => relVal.to("inc").c;
+  absRelInput => mk(Smaller, 0).c => relVal.to("dec").c;
+
+  absRelInput
+    => mk(Delay, samp).c
+    => relVal.c;
+
+  relVal => rowCol.keysIn.to(rowInputTag).c;
 
   ModuckP sources[0];
   for(0=>int rowInd;rowInd<ROW_COUNT;++rowInd){
@@ -405,18 +454,14 @@ fun ModuckP rowMultiControl(string rowInputTag, ModuckP src, string keyTag, int 
     );
   }
 
-  def(val, mk(Value, 0).set("triggerOnSet", true));
-
-  rowCol.rowIndexSelector => multiSwitcher(true, sources, [P_Trigger], 
-    mk(RangeMapper, minVal, maxVal, 0, 127)
-    => val.to(P_Set).c
-    => src.to(keyTag).c
+  rowCol.rowIndexSelector => multiSwitcher(false, sources, [P_Trigger], 
+    mk(Repeater)
+    => relVal.to(P_Set).c
   ).c;
 
   for(0=>int i;i<ROW_COUNT;++i){
     rowCol.rows[i].input.doHandle(rowInputTag, startVal);
   }
-  return val;
 }
 
 

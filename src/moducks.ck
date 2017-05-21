@@ -22,6 +22,7 @@ Machine.add("simple_moducks/multiply.ck");
 Machine.add("simple_moducks/divide.ck");
 Machine.add("simple_moducks/add.ck");
 Machine.add("simple_moducks/bigger.ck");
+Machine.add("simple_moducks/smaller.ck");
 Machine.add("simple_moducks/pulse_gen.ck");
 Machine.add("simple_moducks/counter.ck");
 Machine.add("simple_moducks/prio.ck");
