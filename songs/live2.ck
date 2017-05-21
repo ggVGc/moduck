@@ -567,6 +567,9 @@ fun void setupBeatRitmoUI(ModuckP clockIn, ModuckP controllerSrc, ModuckP ritmo)
           => MBUtil.onlyHigh().c
           => ritmo.to(i).c
         )
+      .b( MBUtil.onlyLow()
+          => mk(Inverter, 1).c
+          => onceTrig.to(P_Clear).c)
       .b( MBUtil.onlyLow() => ritmo.to(i).c);
 
 
