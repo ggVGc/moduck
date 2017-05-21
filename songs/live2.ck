@@ -125,6 +125,7 @@ class ThingAndBuffer{
     MUtil.sigEq(ret.buf, "state", RecBuf.Playing)
       => mk(TrigValue, null).c
       => mk(SampleHold, samp).c
+      => MBUtil.onlyLow().c
       => ret.connector.c;
 
     return ret;
@@ -205,9 +206,6 @@ fun ModuckP makeBeatRitmo(){
   def(out, mk(Repeater));
 
 
-  /* out => mk(Printer, "ritmo out").c; */
-
-
   for(0=>int ind;ind<parts.size();++ind){
     parts[ind] @=> ModuckP part;
       root => frm(ind).c
@@ -217,7 +215,6 @@ fun ModuckP makeBeatRitmo(){
 
   return mk(Wrapper, root, out);
 
-  /* return ritmo2(beatRitmoParts); */
 }
 
 fun Row makeRow(ModuckP clockIn){
@@ -404,12 +401,10 @@ def(beatRitmoTimeSrc, mk(Repeater));
 
 beatRitmoTimeSrc
   => mk(RangeMapper, 0, 127, 1, Util.toSamples(D)).c
-  => mk(Printer, "diddles").c
   => beatRitmoHolder.to("holdTime").c;
 
 beatRitmo 
   => beatRitmoHolder.c
-  => mk(Printer, "Ritmo out").c
   => rowCol.keysIn.to("trig").c;
 
 
@@ -431,7 +426,6 @@ circuitKeyboard => frm("cc81").c
 
 circuitKeyboard => frm("cc82").c
   => mk(RangeMapper, 0, 127, 1, 300).c
-  => mk(Printer, "asd").c
   => rowCol.keysIn.to("noteTimeMul").c;
 
 
@@ -490,7 +484,6 @@ rowCol.rowIndexSelector => trigAndPitchBufRouter.to("index").c;
 apc2
   => frm("cc104").c
   => mk(Value, 50).c
-  => mk(Printer, "kjg").c
   => circuitKeyboard.to("cc81").c;
 
 

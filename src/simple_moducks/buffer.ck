@@ -168,7 +168,7 @@ genHandler(ClockHandler, P_Clock,
             true => e.triggered;
             e @=> trigEntry;
             t => latestTrigTime;
-          }else if(!e.endTriggered && e == shared.lastTriggeredEntry && endTime <= passedTimeSinceStart){
+          }else if(!e.endTriggered && e == shared.lastTriggeredEntry && e.length != 0::ms && endTime <= passedTimeSinceStart){
             true => shouldTrigger;
             true => e.endTriggered;
           }

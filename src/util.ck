@@ -222,5 +222,11 @@ public class Util{
     return b > a-0.0001 && b < a+0.0001;
   }
 
+
+  fun static void log(string msg){
+    <<< Math.floor(now/samp) $ int , " - "+ msg >>>;
+  }
+
+
 }
 
