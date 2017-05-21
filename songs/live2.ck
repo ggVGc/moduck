@@ -18,6 +18,38 @@ Runner.setPlaying(1);
 
 
 
+fun ModuckP makeBeatRitmo(){
+  Runner.getBpm()*2 => int b;
+  [
+    mk(ClockGen, b/3)
+    ,mk(ClockGen, (b*2)/3)
+    ,mk(ClockGen, b/2+b/4)
+    ,mk(ClockGen, b+b/2)
+    ,mk(ClockGen, b/2)
+    ,mk(ClockGen, b)
+    ,mk(ClockGen, b*2)
+    ,mk(ClockGen, b*4)
+    ,mk(ClockGen, b*8)
+  ] @=> ModuckP parts[];
+
+  Util.genStringNums(parts.size()-1) @=> string tags[];
+
+  def(root, mk(Repeater, tags));
+  def(out, mk(Repeater));
+
+
+  for(0=>int ind;ind<parts.size();++ind){
+    parts[ind] @=> ModuckP part;
+      root => frm(ind).c
+        => part.to(P_Gate).c
+        => out.c;
+  }
+
+  return mk(Wrapper, root, out);
+
+}
+
+
 class ThingAndBuffer{
   ModuckP connector;
   ModuckP bufUI;
@@ -142,48 +174,6 @@ class Row{
   def(nudgeBack, mk(Repeater));
 }
 
-
-fun ModuckP numToTag(ModuckP m, int maxNum){
-  def(root, mk(Repeater));
-  for(0=>int i;i<maxNum;++i){
-    root
-      => mk(Processor, Eq.make(i)).c
-      => m.to(i).c;
-  }
-
-  return mk(Wrapper, root, m);
-}
-
-fun ModuckP makeBeatRitmo(){
-  Runner.getBpm()*2 => int b;
-  [
-    mk(ClockGen, b/3)
-    ,mk(ClockGen, (b*2)/3)
-    ,mk(ClockGen, b/2+b/4)
-    ,mk(ClockGen, b+b/2)
-    ,mk(ClockGen, b/2)
-    ,mk(ClockGen, b)
-    ,mk(ClockGen, b*2)
-    ,mk(ClockGen, b*4)
-    ,mk(ClockGen, b*8)
-  ] @=> ModuckP parts[];
-
-  Util.genStringNums(parts.size()-1) @=> string tags[];
-
-  def(root, mk(Repeater, tags));
-  def(out, mk(Repeater));
-
-
-  for(0=>int ind;ind<parts.size();++ind){
-    parts[ind] @=> ModuckP part;
-      root => frm(ind).c
-        => part.to(P_Gate).c
-        => out.c;
-  }
-
-  return mk(Wrapper, root, out);
-
-}
 
 fun Row makeRow(ModuckP clockIn){
   Row ret;
@@ -326,6 +316,8 @@ fun RowCollection makeRowCollection(ModuckP clockIn){
 }
 
 
+
+
 def(clock, mk(Repeater));
 
 makeRowCollection(clock) @=> RowCollection rowCol;
@@ -335,7 +327,6 @@ makeRowCollection(clock) @=> RowCollection rowCol;
 
 Runner.masterClock => clock.c;
 
-<<<"Opening launchpad in">>>;
 openOut(MIDI_OUT_LAUNCHPAD) @=> MidiOut launchpadDeviceOut;
 def(launchpad, mk(Wrapper, 
     mk(NoteOut, launchpadDeviceOut, 0)
@@ -441,7 +432,7 @@ for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
   setupRowOutputs(row);
   /* setupSpeedControls(row, rowId); */ // TODO: Enable speed controls again
   makeOutsUIRow(rowId);
-  setuBufferUIs(trigAndPitchBufRouter, rowId);
+  setupBufferUIs(trigAndPitchBufRouter, rowId);
 }
 
 keyboard => frm("note").c => rowCol.keysIn.to("trigpitch").c;
@@ -474,36 +465,6 @@ for(0=>int rowInd;rowInd<ROW_COUNT;++rowInd){
 
 rowCol.rowIndexSelector => multiSwitcher(rowOutputs, Util.genStringNums(7*5), triggerKeyboard).c;
 
-/* 
- (rowCol.rows[0].outs
-     => frm(recv(P_Trigger)).c
-     => mk(NumToOut, Util.range(127)).c
- ) => triggerKeyboard.listen(Util.genStringNums(127)).c;
- */
-
-
-/* 
- rowCol.rows.size() => int rowCount;
- launchpadKeyboard(apc1, rowCount, rowCount+1, Scales.MinorNatural.size()) => mk(Offset, 7).c => rowCol.keysIn.to("trigpitch").c;
- launchpadKeyboard(apc1, rowCount+1, rowCount+2, Scales.MinorNatural.size()) => mk(Offset, 3*7).c => rowCol.keysIn.to("pitch").c;
- launchpadKeyboard(apc1, rowCount+2, rowCount+3, Scales.MinorNatural.size()) => rowCol.keysIn.to("pitchOffset").c;
- */
-
-/* 
- launchpadKeyboard(launchpad, 6, 8, 8) @=> ModuckP ritmoKeyboard;
- 
- for(0=>int keyInd;keyInd<beatRitmoTags.size();++keyInd){
-   ritmoKeyboard
-     => frm(keyInd).c
-     => rowCol.keysIn.to("beatRitmo"+keyInd).c;
- }
- */
-
-
-
-
-
-
 fun void setupBeatRitmoUI(ModuckP clockIn, ModuckP controllerSrc, ModuckP ritmo){
   for(0=>int i;i<8;++i){
     def(onceTrig, mk(OnceTrigger));
@@ -519,17 +480,6 @@ fun void setupBeatRitmoUI(ModuckP clockIn, ModuckP controllerSrc, ModuckP ritmo)
           => mk(Inverter, 1).c
           => onceTrig.to(P_Clear).c)
       .b( MBUtil.onlyLow() => ritmo.to(i).c);
-
-
-  }
-}
-
-fun void numberedConnect(ModuckP src, ModuckP dst, int count){
-  for(0=>int i;i<count;++i){
-    src
-      => frm(i).c
-      => mk(TrigValue, i).c
-      => dst.c;
   }
 }
 
@@ -644,7 +594,7 @@ fun ModuckP apcToLaunchadAdapterIn(ModuckP apcInstance){
 
 
 
-function void setuBufferUIs(ModuckP trigPitchTriggerRouter, int rowId){
+function void setupBufferUIs(ModuckP trigPitchTriggerRouter, int rowId){
   def(bufUI, rowCol.rows[rowId].bufUI);
   apc2
     .b(frm("cc105").to(mk(Bigger, 0) => bufUI.to(P_ClearAll).c))
@@ -668,21 +618,9 @@ function void setuBufferUIs(ModuckP trigPitchTriggerRouter, int rowId){
 
   pitchShiftUI => apc2.to("note"+(16*rowId+2)).c;
 
-
-  /* 
-   def(beatRitmoUI, rowCol.rows[rowId].beatRitmoUI);
-   apc2
-     .b(frm("cc105").to(mk(Bigger, 0) => beatRitmoUI.to(P_ClearAll).c))
-     .b(frm("note"+(rowId*16+3)).to(beatRitmoUI, P_Trigger));
-
-   beatRitmoUI => apc2.to("note"+(16*rowId+3)).c;
-   */
-
-
   (trigPitchTriggerRouter => frm(rowId).c)
     .b(bufUI)
     .b(pitchLockUI);
-
 }
 
 
@@ -717,8 +655,6 @@ function void setupRowOutputs(Row row){
 }
 
 
-
-
 function void setupOutputSelection(){
   for(0=>int rowInd;rowInd<rowCol.rows.size();++rowInd){
     // Select outputs with side buttons
@@ -737,7 +673,6 @@ function void setupOutputSelection(){
       => apc1.to("note"+ind).c;
   }
 }
-
 
 
 function void makeOutsUIRow(int rowId){

@@ -85,5 +85,28 @@ public class MUtil{
     return ModuckP.make(Processor.make(Eq.make(v))).from(tag).c(m);
   }
 
+
+  fun static ModuckP numToTag(ModuckP m, int maxNum){
+    ModuckP.make(Repeater.make()) @=> ModuckP root;
+    for(0=>int i;i<maxNum;++i){
+      root
+        => ModuckP.make(Processor.make(Eq.make(i))).c
+        => m.to(i).c;
+    }
+
+    return ModuckP.make(Wrapper.make(root, m));
+  }
+
+  
+  fun static ModuckP tagToNum(ModuckP src, int count){
+    ModuckP.make(Repeater.make()) @=> ModuckP out;
+    for(0=>int i;i<count;++i){
+      src
+        => ModuckP.make(TrigValue.make(i)).from(i).c
+        => out.c;
+    }
+    return out;
+  }
+
 }
 
