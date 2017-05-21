@@ -386,53 +386,34 @@ openOut(MIDI_OUT_SYS1) @=> MidiOut sys1;
 
 // MAPPINGS
 
+
 circuitKeyboard => frm("cc80").c => beatRitmoTimeSrc.c;
-circuitKeyboard => frm("cc81").c
-  => mk(RangeMapper, 0, 127, 1, 300).c
-  => rowCol.keysIn.to("noteLengthMultiplier").c;
+rowMultiControl("noteLengthMultiplier", circuitKeyboard, "cc81", 1, 300, 100);
+rowMultiControl("noteTimeMul", circuitKeyboard, "cc82", 1, 300, 100);
 
-circuitKeyboard => frm("cc82").c
-  => mk(RangeMapper, 0, 127, 1, 300).c
-  => rowCol.keysIn.to("noteTimeMul").c;
+fun void rowMultiControl(string rowInputTag, ModuckP src, string keyTag, int minVal, int maxVal, int startVal){
+  src => frm(keyTag).c
+    => mk(RangeMapper, 0, 127, 1, 300).c
+    => rowCol.keysIn.to(rowInputTag).c;
 
+  ModuckP sources[0];
+  for(0=>int rowInd;rowInd<ROW_COUNT;++rowInd){
+    sources <<
+      (rowCol.rows[rowInd].input
+      => frm(recv(rowInputTag)).c
+      => MBUtil.onlyHigh().c
+    );
+  }
+  rowCol.rowIndexSelector => multiSwitcher(true, sources, [P_Trigger], 
+    mk(RangeMapper, minVal, maxVal, 0, 127)
+    => src.to(keyTag).c
+  ).c;
 
+  for(0=>int i;i<ROW_COUNT;++i){
+    rowCol.rows[i].input.doHandle(rowInputTag, startVal);
+  }
 
-
-ModuckP noteLenMuls[0];
-for(0=>int rowInd;rowInd<ROW_COUNT;++rowInd){
-  noteLenMuls <<
-    (rowCol.rows[rowInd].input
-    => frm(recv("noteLengthMultiplier")).c
-    => MBUtil.onlyHigh().c
-  );
 }
-rowCol.rowIndexSelector => multiSwitcher(true, noteLenMuls, [P_Trigger], 
-  mk(RangeMapper, 1, 300, 0, 127)
-  => circuitKeyboard.to("cc81").c
-).c;
-
-for(0=>int i;i<ROW_COUNT;++i){
-  rowCol.rows[i].input.doHandle("noteLengthMultiplier", 100);
-}
-
-
-ModuckP noteTimeMuls[0];
-for(0=>int rowInd;rowInd<ROW_COUNT;++rowInd){
-  noteTimeMuls <<
-    (rowCol.rows[rowInd].input
-    => frm(recv("noteTimeMul")).c
-    => MBUtil.onlyHigh().c
-  );
-}
-rowCol.rowIndexSelector => multiSwitcher(true, noteTimeMuls, [P_Trigger], 
-  mk(RangeMapper, 1, 300, 0, 127)
-  => circuitKeyboard.to("cc82").c
-).c;
-
-for(0=>int i;i<ROW_COUNT;++i){
-  rowCol.rows[i].input.doHandle("noteTimeMul", 100);
-}
-
 
 
 
