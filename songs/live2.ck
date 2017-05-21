@@ -283,7 +283,6 @@ fun Row makeRow(ModuckP clockIn){
 
   notes.connector => MBUtil.onlyLow().c => ret.outs.c;
   notes.connector
-    /* => mk(Delay, samp).c // Basically a hack, but needed until I have a better RecBuf implementation */
     => MBUtil.onlyHigh().c
     => pitchLock.thing.c
     => iff(pitchShift.activity)

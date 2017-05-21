@@ -308,7 +308,6 @@ genHandler(SetHandler, P_Set,
     findLastEntry(shared.entries) @=> BufEntry last;
     if(last != null && last.length == 0::ms){
       (now - shared.startTime) - last.timeStamp => last.length;
-      <<<Util.toSamples(last.length)>>>;
     }
     if(v != null){
       set(v.i, parent, shared, null);
