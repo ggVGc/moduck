@@ -379,17 +379,19 @@ openOut(MIDI_OUT_SYS1) @=> MidiOut sys1;
 
 
 circuitKeyboard => frm("cc80").c => beatRitmoTimeSrc.c;
-rowMultiControl("noteLengthMultiplier", circuitKeyboard, "cc81", 1, 300, 100);
-rowMultiControl("noteTimeMul", circuitKeyboard, "cc82", 1, 300, 100);
+
+def(controlsResetOut, mk(Repeater));
+controlsResetOut => rowMultiControl("noteLengthMultiplier", circuitKeyboard, "cc81", 1, 300, 100).c;
+controlsResetOut => rowMultiControl("noteTimeMul", circuitKeyboard, "cc82", 1, 300, 100).c;
 
 // Reset controller values
 (apc1 => frm("cc104").c)
   .b(mk(TrigValue, 100) => rowCol.keysIn.to("noteLengthMultiplier").c)
   .b(mk(TrigValue, 100) => rowCol.keysIn.to("noteTimeMul").c)
-  .b( mk(Delay, samp) => rowCol.rowIndexSelector.c); // Re-trigger index selection to update controller values
+  .b(controlsResetOut);
 
 
-fun void rowMultiControl(string rowInputTag, ModuckP src, string keyTag, int minVal, int maxVal, int startVal){
+fun ModuckP rowMultiControl(string rowInputTag, ModuckP src, string keyTag, int minVal, int maxVal, int startVal){
   src => frm(keyTag).c
     => mk(RangeMapper, 0, 127, 1, 300).c
     => rowCol.keysIn.to(rowInputTag).c;
@@ -402,15 +404,19 @@ fun void rowMultiControl(string rowInputTag, ModuckP src, string keyTag, int min
       => MBUtil.onlyHigh().c
     );
   }
+
+  def(val, mk(Value, 0).set("triggerOnSet", true));
+
   rowCol.rowIndexSelector => multiSwitcher(true, sources, [P_Trigger], 
     mk(RangeMapper, minVal, maxVal, 0, 127)
+    => val.to(P_Set).c
     => src.to(keyTag).c
   ).c;
 
   for(0=>int i;i<ROW_COUNT;++i){
     rowCol.rows[i].input.doHandle(rowInputTag, startVal);
   }
-
+  return val;
 }
 
 
