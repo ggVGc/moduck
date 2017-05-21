@@ -162,8 +162,10 @@ public class RecBuf{
     IN(ClockHandler, (shared));
 
     ret.addVal("lengthMultiplier", 100);
+    ret.addVal("timeMul", 100);
 
     ret => shared.buffer.listen("lengthMultiplier").c;
+    ret => shared.buffer.listen("timeMul").c;
 
     shared.buffer => shared.out.listen([P_Trigger, "hasData"]).c;
     Patch.connect(shared.buffer, "hasData", shared.hasData, P_Set);

@@ -160,12 +160,14 @@ genHandler(ClockHandler, P_Clock,
       for(0=>int i;i<shared.entries.size();++i){
         shared.entries[i] @=> BufEntry e;
         if(e != null){
-          e.timeStamp + (e.length*(parent.getVal("lengthMultiplier")$float)/100.0)=> dur endTime;
-          if(!e.triggered && e.timeStamp <= passedTimeSinceStart && e.timeStamp >= latestTrigTime){
+          (parent.getVal("timeMul") $ float )/100.0 => float timeMul;
+          e.timeStamp * timeMul => dur t;
+          (t + (e.length*(parent.getVal("lengthMultiplier") $ float)/100.0)) => dur endTime;
+          if(!e.triggered && t <= passedTimeSinceStart && t >= latestTrigTime){
             true => shouldTrigger;
             true => e.triggered;
             e @=> trigEntry;
-            e.timeStamp => latestTrigTime;
+            t => latestTrigTime;
           }else if(!e.endTriggered && e == shared.lastTriggeredEntry && endTime <= passedTimeSinceStart){
             true => shouldTrigger;
             true => e.endTriggered;
@@ -389,6 +391,7 @@ public class Buffer extends Moduck{
     IN(ResetHandler,(ret.shared));
     /* ret.addVal("timeBased", false); */
     ret.addVal("lengthMultiplier", 100);
+    ret.addVal("timeMul", 100);
     return ret;
   }
 }

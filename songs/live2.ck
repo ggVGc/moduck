@@ -155,7 +155,7 @@ class ThingAndBuffer{
 
 /* Util.genStringNums(beatRitmoParts.size()-1) @=> string beatRitmoTags[]; */
 Util.concatStrings([
-    ["trig", "trigpitch", "pitch", "pitchOffset", "noteLengthMultiplier"]
+    ["trig", "trigpitch", "pitch", "pitchOffset", "noteLengthMultiplier", "noteTimeMul"]
     /* ,Util.prefixStrings("beatRitmo", beatRitmoTags) */
 ])
   @=> string rowTags[];
@@ -279,6 +279,8 @@ fun Row makeRow(ModuckP clockIn){
   ret.input => frm("pitchOffset").c => pitchShift.connector.c;
   ret.input => frm("trigpitch").c => mk(TrigValue, 0).c => notes.connector.c;
   ret.input => frm("noteLengthMultiplier").c => notes.buf.to("lengthMultiplier").c;
+  ret.input => frm("noteTimeMul").c => notes.buf.to("timeMul").c;
+  ret.input => frm("noteTimeMul").c => pitchLock.buf.to("timeMul").c;
 
   makeTogglingOuts(OUT_DEVICE_COUNT) @=> ret.outs;
 
@@ -427,6 +429,11 @@ circuitKeyboard => frm("cc81").c
   => mk(RangeMapper, 0, 127, 1, 300).c
   => rowCol.keysIn.to("noteLengthMultiplier").c;
 
+circuitKeyboard => frm("cc82").c
+  => mk(RangeMapper, 0, 127, 1, 300).c
+  => mk(Printer, "asd").c
+  => rowCol.keysIn.to("noteTimeMul").c;
+
 
 
 
@@ -446,6 +453,26 @@ rowCol.rowIndexSelector => multiSwitcher(true, noteLenMuls, [P_Trigger],
 for(0=>int i;i<ROW_COUNT;++i){
   rowCol.rows[i].input.doHandle("noteLengthMultiplier", 100);
 }
+
+
+ModuckP noteTimeMuls[0];
+for(0=>int rowInd;rowInd<ROW_COUNT;++rowInd){
+  noteTimeMuls <<
+    (rowCol.rows[rowInd].input
+    => frm(recv("noteTimeMul")).c
+    => MBUtil.onlyHigh().c
+  );
+}
+rowCol.rowIndexSelector => multiSwitcher(true, noteTimeMuls, [P_Trigger], 
+  mk(RangeMapper, 1, 300, 0, 127)
+  => circuitKeyboard.to("cc82").c
+).c;
+
+for(0=>int i;i<ROW_COUNT;++i){
+  rowCol.rows[i].input.doHandle("noteTimeMul", 100);
+}
+
+
 
 
 setupOutputSelection();
