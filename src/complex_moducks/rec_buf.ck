@@ -145,7 +145,7 @@ public class RecBuf{
     Buffer.make() @=> Buffer buf;
     P(buf) @=> shared.buffer;
     mk(BufPlayer, buf) @=> shared.player;
-    shared.buffer.doHandle("timeBased", true);
+    /* shared.buffer.doHandle("timeBased", true); */
     Value.make(null) @=> shared.hasData;
     shared.hasData.doHandle("triggerOnSet", IntRef.yes());
 
