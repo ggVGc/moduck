@@ -294,7 +294,7 @@ fun Row makeRow(ModuckP clockIn){
 
 class RowCollection{
   Row rows[0];
-  def(rowIndexSelector, mk(Repeater));
+  def(rowIndexSelector, mk(Value, 0).set("triggerOnSet", true));
   def(keysIn, mk(Repeater, rowTags));
 }
 
@@ -381,6 +381,13 @@ openOut(MIDI_OUT_SYS1) @=> MidiOut sys1;
 circuitKeyboard => frm("cc80").c => beatRitmoTimeSrc.c;
 rowMultiControl("noteLengthMultiplier", circuitKeyboard, "cc81", 1, 300, 100);
 rowMultiControl("noteTimeMul", circuitKeyboard, "cc82", 1, 300, 100);
+
+// Reset controller values
+(apc1 => frm("cc104").c)
+  .b(mk(TrigValue, 100) => rowCol.keysIn.to("noteLengthMultiplier").c)
+  .b(mk(TrigValue, 100) => rowCol.keysIn.to("noteTimeMul").c)
+  .b( mk(Delay, samp) => rowCol.rowIndexSelector.c); // Re-trigger index selection to update controller values
+
 
 fun void rowMultiControl(string rowInputTag, ModuckP src, string keyTag, int minVal, int maxVal, int startVal){
   src => frm(keyTag).c
@@ -662,7 +669,7 @@ function void setupOutputSelection(){
     apc1
       => mk(Bigger,0).from("note"+ind).c
       => mk(TrigValue,rowInd).c
-      => rowCol.rowIndexSelector.c
+      => rowCol.rowIndexSelector.to(P_Set).c
     ;
 
     rowCol.rowIndexSelector
@@ -725,7 +732,7 @@ MidiMsg msg;
 launchpadDeviceOut.send(msg);
 
 samp =>  now;
-rowCol.rowIndexSelector.set(0);
+rowCol.rowIndexSelector.set(P_Set, 0);
 
 Util.runForever();
 
