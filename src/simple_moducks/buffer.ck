@@ -1,17 +1,12 @@
-
+include(moduck_macros.m4)
 
 // TODO: Lots of functioknality is scrapped/broken/commented out
 // Fix up when/if needed. Multiple inputs(tags) is disabled. 
 // Same for on the fly clearing and index-based sequencing.
 
-include(moduck_macros.m4)
-
-
 define(quantStepsPerBeat, 16);
 
-
-
-class BufEntry{
+class BufEntry extends Object{
   dur timeStamp;
   int val;
   0::ms => dur length;
@@ -68,31 +63,6 @@ fun dur calcTimeToNext(dur start, BufEntry entries[], int useCached, int include
 
 
 
-/* fun dur calcEntryTime(BufEntry e, BufEntry allEntries[], int lengthRatio){ */
-/*   if(e.val != null){ */
-/*     return e.timeStamp; */
-/*   }else{ */
-/*     if(lengthRatio != 100){ */
-/*       lastOnEventTimeBefore(e.timeStamp, allEntries) =>  dur onTime; */
-/*       e.timeStamp - onTime => dur delta; */
-/*       onTime + ((lengthRatio $ float)/100.0)*delta => dur newTime; */
-/*       /*  */
-/*        calcTimeToNext(onTime, allEntries, false, true) => dur nextTime; */
-/*        if(nextTime < newTime){ */
-/*          nextTime=> newTime; */
-/*        } */
-/*        */ 
-/*       return newTime; */
-/*     }else{ */
-/*       return e.timeStamp; */
-/*     } */
-/*   } */
-/* } */
-
-
-
-
-
 /* 
  fun dur lastOnEventTimeBefore(dur end, BufEntry entries[]){
    0::ms => dur ret;
@@ -107,49 +77,13 @@ fun dur calcTimeToNext(dur start, BufEntry entries[], int useCached, int include
  */
 
 fun BOOL allEmpty(Shared shared){
-  true => int ret;
-  for(0=>int entInd;entInd<shared.entries.size();++entInd){
-    shared.entries[entInd] @=> BufEntry e;
-    if(e != null){
-      false => ret;
-      break;
-    }
-  }
+  allEquals(shared.entries, null, ret);
   return ret;
 }
 
 
-fun void recalculateLengths(BufEntry entries[], int lengthRatio){
-  for(0=>int elemInd;elemInd<entries.size();++elemInd){
-    entries[elemInd] @=> BufEntry e;
-    /* calcEntryTime(e, entries, lengthRatio) => e.cachedTimestamp; */
-  }
-}
-
-
-fun IntRef shouldTriggerEntry(BufEntry e, dur passedTimeSinceStart, Shared shared, ModuckBase parent){
-  //if(parent.getVal("timeBased")){
-
-  /* }else{ */
-    /* 
-     if(e.index <= shared.accum){
-       return IntRef.make(e.val);
-     }
-     */
-  /* } */
-}
-
-
-
 genHandler(ClockHandler, P_Clock,
   HANDLE{
-    /* 
-     if(shared.lenMultiplierChanged){
-       false => shared.lenMultiplierChanged;
-       recalculateLengths(shared.entries, parent.getVal("lengthMultiplier"));
-     }
-     */
-
 
     if(null != v){
       now - shared.startTime => dur passedTimeSinceStart;
@@ -284,8 +218,6 @@ function void set(int v, ModuckBase parent, Shared shared, string tag){
       ((whole+1)* quantizeStep)::samp => e.timeStamp;
     }
 
-    /* calcEntryTime(e, shared.entries, parent.getVal("lengthMultiplier")) => e.cachedTimestamp; */
-
     /* shared.accum => e.index; */
     parent.send("hasData", IntRef.yes());
 }
@@ -331,21 +263,25 @@ genHandler(ClearAllHandler, P_ClearAll,
 
 
 
-genHandler(ClearHandler, P_Clear,
-  HANDLE{
-    /* (v != null) => shared.clearing; */
-  },
-  Shared shared;
-)
+/* 
+ genHandler(ClearHandler, P_Clear,
+   HANDLE{
+     (v != null) => shared.clearing;
+   },
+   Shared shared;
+ )
+ */
 
 
 //TODO: Implement again, when multiple tags are needed
-genTagHandler(TagSetHandler, 
-    HANDLE{
-      /* set(v, parent, shared, tag); */
-    },
-  Shared shared;
-)
+/* 
+ genTagHandler(TagSetHandler, 
+     HANDLE{
+       set(v, parent, shared, tag);
+     },
+   Shared shared;
+ )
+ */
 
 
 
@@ -354,10 +290,6 @@ public class Buffer extends Moduck{
   Shared shared;
 
   fun dur timeToNext(){
-    if(shared.lenMultiplierChanged){
-      false => shared.lenMultiplierChanged;
-      recalculateLengths(shared.entries, getVal("lengthMultiplier"));
-    }
     return calcTimeToNext(now - shared.startTime, shared.entries, true, false);
   }
 
@@ -377,15 +309,17 @@ public class Buffer extends Moduck{
     Buffer ret;
     OUT(P_Trigger);
     OUT("hasData");
-    for(0=>int tagInd;tagInd<tags.size();++tagInd){
-      tags[tagInd] @=> string tag;
-      IN(TagSetHandler, (tag, ret.shared));
-      OUT(tag);
-    }
+    /* 
+     for(0=>int tagInd;tagInd<tags.size();++tagInd){
+       tags[tagInd] @=> string tag;
+       IN(TagSetHandler, (tag, ret.shared));
+       OUT(tag);
+     }
+     */
     IN(ClockHandler,(ret.shared));
     IN(SetHandler,(ret.shared));
     IN(ClearAllHandler,(ret.shared));
-    IN(ClearHandler,(ret.shared));
+    /* IN(ClearHandler,(ret.shared)); */
     IN(GoToHandler,(ret.shared));
     IN(ResetHandler,(ret.shared));
     /* ret.addVal("timeBased", false); */

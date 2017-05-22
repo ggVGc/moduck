@@ -19,4 +19,16 @@ define(ASSERT,
     if(!($1)){<<<"Assertion Failure: $1 -- `FILIN'">>>;})
 
 
+define(allEquals,
+    true => int $3;
+    for(0=>int __ind;__ind<$1.size();++__ind){
+      $1[__ind] @=> Object o;
+      if(o != $2){
+        false => $3;
+        break;
+      }
+    }
+  )
+
+
 ')
