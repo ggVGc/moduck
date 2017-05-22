@@ -3,14 +3,18 @@ include(moduck_macros.m4)
 include(constants.m4)
 
 class Shared{
-  null @=> IntRef lastVal;
+  MayInt lastVal;
 }
 
 
 genHandler(TrigHandler, P_Trigger,
   HANDLE{
     parent.send("" + parent.getVal("index"), v);
-    v @=> shared.lastVal;
+    if(v == null){
+      shared.lastVal.clear();
+    }else{
+      shared.lastVal.set(v.i);
+    }
   },
   Shared shared;
 )
@@ -25,12 +29,14 @@ genHandler(ResetHandler, P_Reset,
 
 public class Router extends Moduck{
   Shared shared;
+  IntRef tmpRef;
 
   fun void onValueChange(string tag, int old, int newVal){
-    if(shared.lastVal != null){
+    if(shared.lastVal.valid){
       send(""+old, null);
       if(getVal("outOnChange")){
-        send(""+newVal, shared.lastVal);
+        shared.lastVal.i => tmpRef.i;
+        send(""+newVal, tmpRef);
       }
     }
   }

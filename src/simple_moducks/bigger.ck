@@ -1,7 +1,9 @@
 class BiggerFun extends IntFun{
+  IntRef tmpVal;
   fun IntRef call(int v){
     if(v > parent.getVal("value")){
-      return IntRef.make(v);
+      v => tmpVal.i;
+      return tmpVal;
     }else{
       return null;
     }

@@ -362,7 +362,7 @@ beatRitmoTimeSrc
   => beatRitmoHolder.to("holdTime").c;
 
 beatRitmo 
-  => beatRitmoHolder.c
+  => beatRitmoHolder.to(P_Set).to(P_Trigger).c
   => rowCol.keysIn.to("trig").c;
 
 

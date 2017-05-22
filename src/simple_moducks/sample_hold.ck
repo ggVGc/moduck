@@ -3,51 +3,57 @@ include(moduck_macros.m4)
 
 
 class Shared{
-  IntRef val;
+  MayInt val;
 }
 
 genHandler(TrigHandler, P_Trigger, 
   Shred @ shred;
-  IntRef lastShouldTrigger;
 
-  fun void doWait(IntRef shouldTrigger){
+  0 => int curInd;
+
+  fun void doWait(int startInd){
     parent.getVal("holdTime")::samp => now;
-    if(shouldTrigger.i){
+    if(curInd == startInd){
       parent.send(P_Trigger, null);
     }
   }
 
 
+  IntRef tmpRef;
+
   HANDLE{
     if(null != v){
-      if(sharedVal.val == null){
+      if(!shared.val.valid){
         parent.send(P_Trigger, null);
       } else {
-        if(null != shred){
-          false => lastShouldTrigger.i;
-          null @=> lastShouldTrigger;
-          null @=> shred;
-        }
-        parent.send(P_Trigger, sharedVal.val);
-        IntRef.make(true) @=> lastShouldTrigger;
+        shared.val.i => tmpRef.i;
+        parent.send(P_Trigger, tmpRef);
         if(!parent.getVal("forever")){
-          spork ~ doWait(lastShouldTrigger) @=> shred;
+          curInd + 1 => curInd;
+          if(curInd > 999999){
+            0 => curInd;
+          }
+          spork ~ doWait(curInd) @=>  shred;
         }
       }
     }
   },
-  Shared sharedVal;
+  Shared shared;
 )
 
 
 genHandler(SetHandler, P_Set, 
   HANDLE{
-    v @=> sharedVal.val;
+    if(v == null){
+      shared.val.clear();
+    }else{
+      shared.val.set(v.i);
+    }
     if(parent.getVal("triggerOnSet")){
       parent.send(P_Trigger, v);
     }
   },
-  Shared sharedVal;
+  Shared shared;
 )
 
 
@@ -55,7 +61,7 @@ public class SampleHold extends Moduck{
   Shared shared;
 
   fun IntRef get(){
-    if(shared.val != null){
+    if(shared.val.valid){
       return IntRef.make(shared.val.i);
     }else{
       return null;

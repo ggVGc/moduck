@@ -24,10 +24,8 @@ class Shared{
   null @=> BufEntry lastTriggeredEntry;
   float timeMul;
   float lenMul;
-
   false => int hasCachedNextVal;
-  int cachedNextVal;
-  false => int nextValNull;
+  MayInt nextVal;
   /* false => int clearing; */
   /* now => time lastTime; */
   /* int accum; */
@@ -53,16 +51,16 @@ fun BOOL allEmpty(Shared shared){
 
 
 genHandler(ClockHandler, P_Clock,
-  IntRef tmp;
+  IntRef tmpRef;
   HANDLE{
     if(null != v){
       if(shared.hasCachedNextVal){
         false => shared.hasCachedNextVal;
-        if(shared.nextValNull){
+        if(!shared.nextVal.valid){
           parent.send(P_Trigger, null);
         }else{
-          shared.cachedNextVal => tmp.i;
-          parent.send(P_Trigger, tmp);
+          shared.nextVal.i => tmpRef.i;
+          parent.send(P_Trigger, tmpRef);
         }
         return;
       }
@@ -90,8 +88,8 @@ genHandler(ClockHandler, P_Clock,
 
       if(shouldTrigger){
         if(trigEntry != null){
-          trigEntry.val => tmp.i;
-          parent.send(P_Trigger, tmp);
+          trigEntry.val => tmpRef.i;
+          parent.send(P_Trigger, tmpRef);
           trigEntry @=> shared.lastTriggeredEntry;
         }else{
           parent.send(P_Trigger, null);
@@ -128,7 +126,8 @@ genHandler(ResetHandler, P_Reset,
   HANDLE{
     if(null != v){
       now => shared.startTime;
-      false => shared.cachedNextVal;
+      false => shared.hasCachedNextVal;
+      shared.nextVal.clear();
       null @=> shared.lastTriggeredEntry;
       /* now => shared.lastTime; */
       /* 0 => shared.accum; */
@@ -282,14 +281,12 @@ public class Buffer extends Moduck{
         if(t > curDur){
           if(!found){
             t - curDur => smallest;
-            e.val => shared.cachedNextVal;
-            false => shared.nextValNull;
+            shared.nextVal.set(e.val);
           }else{
             t - curDur => dur d;
             if(d < smallest){
               d => smallest;
-              e.val => shared.cachedNextVal;
-              false => shared.nextValNull;
+              shared.nextVal.set(e.val);
             }
           }
         }
@@ -298,12 +295,12 @@ public class Buffer extends Moduck{
         if(t > curDur){
           if(!found){
             t - curDur => smallest;
-            true => shared.nextValNull;
+            shared.nextVal.clear();
           }else{
             t - curDur => dur d;
             if(d < smallest){
               d => smallest;
-              true => shared.nextValNull;
+              shared.nextVal.clear();
             }
           }
         }

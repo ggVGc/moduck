@@ -2,7 +2,7 @@
 include(moduck_macros.m4)
 
 genHandler(TrigHandler, P_Trigger, 
-  IntRef lastVal;
+  MayInt lastVal;
   HANDLE{
     if(v != null){
       for(0=>int numInd;numInd<nums.size();++numInd){
@@ -10,19 +10,19 @@ genHandler(TrigHandler, P_Trigger,
         if(v.i == n){
           parent.send(""+n, IntRef.yes());
 
-          if(lastVal != null){
+          if(lastVal.valid){
             parent.send(""+lastVal.i, null);
           }
 
-          v @=> lastVal;
+          lastVal.set(v.i);
           return;
         }
 
       }
     }
-    if(lastVal != null){
+    if(lastVal.valid){
       parent.send(""+lastVal.i, null);
-      null @=> lastVal;
+      lastVal.clear();
     }
     parent.send(P_Trigger, null);
   },

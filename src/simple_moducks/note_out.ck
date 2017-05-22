@@ -30,15 +30,15 @@ fun void sendNoteOn(MidiOut device, MidiMsg @ msg, int n, int velocity, int chan
 
 
 genHandler(NoteHandler, "note", 
-    null @=> IntRef lastNote;
+    MayInt lastNote;
+    int lastNoteVal;
     HANDLE{
-      if(lastNote != null){
+      if(lastNote.valid){
         sendNoteOff(device, msg, lastNote.i, channel, false, zeroVelNoteOff);
-        null @=> lastNote;
       }
       if(v != null){
         sendNoteOn(device, msg, v.i, parent.getVal("velocity"), channel, false);
-        v @=> lastNote;
+        lastNote.set(v.i);
       }
     },
     MidiOut device;

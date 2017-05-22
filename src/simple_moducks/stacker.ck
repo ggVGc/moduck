@@ -14,6 +14,8 @@ class InHandler extends EventHandler{
   int handlerIndex;
   Shared shared;
 
+  IntRef.make(0) @=> IntRef tmpOutRef;
+
   fun void handle(IntRef v){
     v @=> shared.signals[handlerIndex];
     if(v != null){
@@ -44,7 +46,8 @@ class InHandler extends EventHandler{
     }
 
     if(shared.curStackIndex.i >= 0){
-      parent.send(P_Source, IntRef.make(shared.stack[shared.curStackIndex.i]));
+      shared.stack[shared.curStackIndex.i] => tmpOutRef.i;
+      parent.send(P_Source, IntRef.make(tmpOutRef.i));
     }
   }
 

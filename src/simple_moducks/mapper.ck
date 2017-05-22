@@ -2,6 +2,7 @@
 include(moduck_macros.m4)
 
 genHandler(TrigHandler, P_Trigger,
+  IntRef tmpRef;
   HANDLE{
     if(null != v){
       parent.getVal("offsetPerPeriod") => int offs;
@@ -19,7 +20,8 @@ genHandler(TrigHandler, P_Trigger,
           rest -1 => rest;
         }
       }
-      parent.send(P_Trigger, IntRef.make(entries[k] + rest*offs));
+      entries[k] + rest*offs => tmpRef.i;
+      parent.send(P_Trigger, tmpRef);
     }else{
       parent.send(P_Trigger, null);
     }
