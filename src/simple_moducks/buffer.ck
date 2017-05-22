@@ -19,49 +19,19 @@ class BufEntry extends Object{
 
 class Shared{
   BufEntry entries[0];
-  /* false => int clearing; */
-  time startTime; // gets reset on loop
-  /* now => time lastTime; */
-  /* int accum; */
+  time startTime;
   false => BOOL lenMultiplierChanged;
   null @=> BufEntry lastTriggeredEntry;
+  float timeMul;
+  float lenMul;
+
+  false => int hasCachedNextVal;
+  int cachedNextVal;
+  false => int nextValNull;
+  /* false => int clearing; */
+  /* now => time lastTime; */
+  /* int accum; */
 }
-
-
-
-fun dur calcTimeToNext(dur start, BufEntry entries[], int useCached, int includeTriggered){
-  return 1::ms;
-  /* false => BOOL found; */
-  /* dur smallest; */
-  /* for(0=>int entInd;entInd<entries.size();++entInd){ */
-  /*   entries[entInd] @=> BufEntry e; */
-  /*   if(includeTriggered || !e.triggered){ */
-  /*     dur t; */
-  /*     if(useCached){ */
-  /*       e.cachedTimestamp => t; */
-  /*     }else{ */
-  /*       e.timeStamp => t; */
-  /*     } */
-  /*     if(t > start){ */
-  /*       if(!found){ */
-  /*         t - start => smallest; */
-  /*       }else{ */
-  /*         t - start => dur d; */
-  /*         if(d < smallest){ */
-  /*           d => smallest; */
-  /*         } */
-  /*       } */
-  /*     } */
-  /*   } */
-  /* } */
-  /* if(found){ */
-  /*   return smallest; */
-  /* }else{ */
-  /*   return 1::ms; */
-  /* } */
-}
-
-
 
 /* 
  fun dur lastOnEventTimeBefore(dur end, BufEntry entries[]){
@@ -83,9 +53,19 @@ fun BOOL allEmpty(Shared shared){
 
 
 genHandler(ClockHandler, P_Clock,
+  IntRef tmp;
   HANDLE{
-
     if(null != v){
+      if(shared.hasCachedNextVal){
+        false => shared.hasCachedNextVal;
+        if(shared.nextValNull){
+          parent.send(P_Trigger, null);
+        }else{
+          shared.cachedNextVal => tmp.i;
+          parent.send(P_Trigger, tmp);
+        }
+        return;
+      }
       now - shared.startTime => dur passedTimeSinceStart;
 
       false => int shouldTrigger;
@@ -94,9 +74,8 @@ genHandler(ClockHandler, P_Clock,
       for(0=>int i;i<shared.entries.size();++i){
         shared.entries[i] @=> BufEntry e;
         if(e != null){
-          (parent.getVal("timeMul") $ float )/100.0 => float timeMul;
-          e.timeStamp * timeMul => dur t;
-          (t + (e.length*(parent.getVal("lengthMultiplier") $ float)/100.0)) => dur endTime;
+          e.timeStamp * shared.timeMul => dur t;
+          t + (e.length*shared.lenMul) => dur endTime;
           if(!e.triggered && t <= passedTimeSinceStart && t >= latestTrigTime){
             true => shouldTrigger;
             true => e.triggered;
@@ -111,7 +90,8 @@ genHandler(ClockHandler, P_Clock,
 
       if(shouldTrigger){
         if(trigEntry != null){
-          parent.send(P_Trigger, IntRef.make(trigEntry.val));
+          trigEntry.val => tmp.i;
+          parent.send(P_Trigger, tmp);
           trigEntry @=> shared.lastTriggeredEntry;
         }else{
           parent.send(P_Trigger, null);
@@ -148,6 +128,7 @@ genHandler(ResetHandler, P_Reset,
   HANDLE{
     if(null != v){
       now => shared.startTime;
+      false => shared.cachedNextVal;
       null @=> shared.lastTriggeredEntry;
       /* now => shared.lastTime; */
       /* 0 => shared.accum; */
@@ -289,13 +270,61 @@ public class Buffer extends Moduck{
 
   Shared shared;
 
+  // Complete bollocks, but I just want something working right now.
   fun dur timeToNext(){
-    return calcTimeToNext(now - shared.startTime, shared.entries, true, false);
+    false => BOOL found;
+    dur smallest;
+    now - shared.startTime => dur curDur;
+    for(0=>int entInd;entInd<shared.entries.size();++entInd){
+      shared.entries[entInd] @=> BufEntry e;
+      if(!e.triggered){
+        e.timeStamp * shared.timeMul => dur t;
+        if(t > curDur){
+          if(!found){
+            t - curDur => smallest;
+            e.val => shared.cachedNextVal;
+            false => shared.nextValNull;
+          }else{
+            t - curDur => dur d;
+            if(d < smallest){
+              d => smallest;
+              e.val => shared.cachedNextVal;
+              false => shared.nextValNull;
+            }
+          }
+        }
+
+        t + (e.length*shared.lenMul) => t;
+        if(t > curDur){
+          if(!found){
+            t - curDur => smallest;
+            true => shared.nextValNull;
+          }else{
+            t - curDur => dur d;
+            if(d < smallest){
+              d => smallest;
+              true => shared.nextValNull;
+            }
+          }
+        }
+
+      }
+    }
+    if(found){
+      true => shared.hasCachedNextVal;
+      return smallest;
+    }else{
+      false => shared.hasCachedNextVal;
+      return 1::ms;
+    }
+
   }
 
   fun void onValueChange(string key, int oldVal, int newVal){
     if(key == "lengthMultiplier"){
-      true => shared.lenMultiplierChanged;
+      (getVal("lengthMultiplier") $ float )/100.0 => shared.lenMul;
+    }else if(key == "timeMul"){
+      (getVal("timeMul") $ float )/100.0 => shared.timeMul;
     }
   }
 
