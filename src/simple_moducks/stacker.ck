@@ -4,7 +4,7 @@ include(constants.m4)
 
 
 class Shared{
-  MayInt signals[MAX_ROUTER_TARGETS];
+  IntRef signals[0];
   int stack[MAX_ROUTER_TARGETS];
   IntRef.make(-1) @=> IntRef curStackIndex;
 }
@@ -14,12 +14,10 @@ class InHandler extends EventHandler{
   int handlerIndex;
   Shared shared;
 
-  IntRef tmpRef;
-
   IntRef.make(0) @=> IntRef tmpOutRef;
 
   fun void handle(IntRef v){
-    shared.signals[handlerIndex].setFromRef(v);
+    v @=> shared.signals[handlerIndex];
     if(v != null){
       if(shared.curStackIndex.i < 0){
         0 => shared.curStackIndex.i;
@@ -34,10 +32,9 @@ class InHandler extends EventHandler{
           1 -=> shared.curStackIndex.i;
           if(shared.curStackIndex.i >= 0){
             shared.stack[shared.curStackIndex.i] => int sigInd;
-            shared.signals[sigInd] @=> MayInt sig;
-            if(sig.valid){
-              sig.i => tmpRef.i;
-              parent.send(P_Trigger, tmpRef);
+            shared.signals[sigInd] @=> IntRef sig;
+            if(sig != null){
+              parent.send(P_Trigger, sig);
               break;
             }
           }
@@ -71,6 +68,7 @@ public class Stacker extends Moduck{
     OUT(P_Source);
     for(0 => int i;i<MAX_ROUTER_TARGETS;++i){
       ret.addIn(""+i, InHandler.make(i, shared));
+      shared.signals << null;
     }
     return ret;
   }

@@ -5,22 +5,22 @@ include(constants.m4)
 
 class InHandler extends EventHandler{
   int handlerIndex;
-  MayInt signals[];
-
-  IntRef tmpRef;
+  IntRef signals[];
 
   fun void handle(IntRef v){
     -1 => int highestInd;
     -1 => int secondHighestInd;
-    int secondHighestVal;
+    IntRef highestVal;
+    IntRef secondHighestVal;
     for(signals.size()-1=>int sigInd;sigInd>=0;--sigInd){
-      signals[sigInd] @=> MayInt sig;
-      if(sig.valid){
+      signals[sigInd] @=> IntRef sig;
+      if(sig != null){
         if(highestInd == -1){
           sigInd => highestInd;
+          sig @=> highestVal;
         }else{
           sigInd => secondHighestInd;
-          sig.i => secondHighestVal;
+          sig @=> secondHighestVal;
           break;
         }
       }
@@ -29,22 +29,21 @@ class InHandler extends EventHandler{
     if(v == null){
       if(handlerIndex == highestInd){
         if(secondHighestInd != -1){
-          secondHighestVal => tmpRef.i;
-          parent.send(P_Trigger, tmpRef);
+          parent.send(P_Trigger, secondHighestVal);
         }else{
           parent.send(P_Trigger, null);
         }
       }
-      signals[handlerIndex].clear();
+      null @=> signals[handlerIndex];
     }else{
       if(handlerIndex >= highestInd){
         parent.send(P_Trigger, v);
       }
-      signals[handlerIndex].set(v.i);
+      v @=> signals[handlerIndex];
     }
   }
 
-  fun static InHandler make(int handlerIndex, MayInt signals[]){
+  fun static InHandler make(int handlerIndex, IntRef signals[]){
     InHandler ret;
     handlerIndex => ret.handlerIndex;
     signals @=> ret.signals;
@@ -55,10 +54,11 @@ class InHandler extends EventHandler{
 public class Prio extends Moduck{
   maker0(Prio){
     Prio ret;
-    MayInt signals[MAX_ROUTER_TARGETS];
+    IntRef signals[0];
     OUT(P_Trigger);
     for(0 => int i;i<MAX_ROUTER_TARGETS;++i){
       ret.addIn(""+i, InHandler.make(i, signals));
+      signals << null;
     }
     return ret;
   }
