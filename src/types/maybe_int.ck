@@ -12,26 +12,9 @@ public class MayInt{
     false => valid;
   }
 
-  fun MayInt setFromRef(IntRef ref){
-    if(ref == null){
-      clear();
-    }else{
-      set(ref.i);
-    }
-  }
-
   fun static MayInt make(int v){
     MayInt ret;
     v => ret.i;
     return ret;
-  }
-
-  fun static MayInt make(){
-    MayInt m;
-    return m;
-  }
-
-  fun static MayInt fromRef(IntRef ref){
-    return make().setFromRef(ref);
   }
 }
