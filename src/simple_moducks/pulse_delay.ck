@@ -2,7 +2,7 @@
 include(moduck_macros.m4)
 
 class BufStep{
-  null => IntRef val;
+  MayInt val;
   false => int hasValue;
 }
 
@@ -26,7 +26,7 @@ genHandler(TrigHandler, P_Trigger,
       return;
     }
     resizeBuf(buf, size);
-    v @=> buf[0].val;
+    buf[0].val.setFromRef(v);
     true @=> buf[0].hasValue;
   },
   BufStep buf[];
@@ -34,6 +34,9 @@ genHandler(TrigHandler, P_Trigger,
 
 
 genHandler(ClockHandler, P_Clock,
+
+  IntRef tmpRef;
+
   HANDLE{
     parent.getVal("size") @=> int size;
     if(size == 0){
@@ -42,16 +45,17 @@ genHandler(ClockHandler, P_Clock,
     resizeBuf(buf, size);
     for(size=>int i;i>0;i--){
       buf[i-1] @=> BufStep prev;
-      if(null != prev.val){
-        IntRef.make(prev.val.i) @=> buf[i].val;
+      if(prev.val.valid){
+        buf[i].val.set(prev.val.i);
       }else{
-        null @=> buf[i].val;
+        buf[i].val.clear();
       }
       prev.hasValue => buf[i].hasValue;
     }
-    buf[size] @=> BufStep curVal;
-    if(curVal.hasValue){
-      parent.send(P_Trigger, curVal.val);
+    buf[size] @=> BufStep curStep;
+    if(curStep.hasValue){
+      curStep.val.i => tmpRef.i;
+      parent.send(P_Trigger, tmpRef);
     }
     false @=> buf[0].hasValue;
   },
