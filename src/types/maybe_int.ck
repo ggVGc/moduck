@@ -34,6 +34,7 @@ public class MayInt{
 
   fun static MayInt make(){
     MayInt m;
+    false => m.valid;
     return m;
   }
 

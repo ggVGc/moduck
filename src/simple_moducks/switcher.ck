@@ -7,7 +7,7 @@ include(constants.m4)
 
 genTagHandler(InputTagHandler,
     HANDLE{
-      v @=> lastVals[tag];
+      lastVals[tag].setFromRef(v);
 
       if(parent.getVal("onlyOutOnNewIndex")){
         return;
@@ -19,7 +19,7 @@ genTagHandler(InputTagHandler,
         parent.send(P_Trigger, v);
       }
     },
-  IntRef lastVals[];
+  MayInt lastVals[];
 )
 
 
@@ -34,11 +34,18 @@ genHandler(ResetHandler, P_Reset,
 
 public class Switcher extends Moduck{
 
-  IntRef lastVals[0];
+  MayInt lastVals[0];
+
+  IntRef tmpRef;
 
   fun void onValueChange(string tag, int old, int newVal){
     if(tag == "index"){
-      send(P_Trigger, lastVals[""+newVal]);
+      if(lastVals[""+newVal].valid){
+        lastVals[""+newVal].i => tmpRef.i;
+        send(P_Trigger, tmpRef);
+      }else{
+        send(P_Trigger, null);
+      }
     }
   }
 
@@ -48,7 +55,7 @@ public class Switcher extends Moduck{
     OUT(P_Trigger);
     for(0 => int i;i<count;++i){
       IN(InputTagHandler, (""+i, ret.lastVals));
-      null @=> ret.lastVals[""+i];
+      MayInt.make() @=> ret.lastVals[""+i];
     }
     IN(ResetHandler, (startIndex));
     ret.addVal("index", startIndex);
