@@ -1,12 +1,13 @@
 include(aliases.m4)
 include(pulses.m4)
 
+
 public class Runner extends RunnerBase{
   static Repeater @ masterClock;
   static ClockGen @ _masterClockGen;
   static int ticksPerBeat;
   static int isPlaying;
-
+  static Event @ quitEvent;
   static Event @ bpmChanged;
 
   fun static int setPlaying(int v){
@@ -30,6 +31,10 @@ public class Runner extends RunnerBase{
     true => isPlaying;
     <<< "Runner: Playing">>>;
     return true;
+  }
+
+  fun static void quit(){
+    quitEvent.broadcast();
   }
 
   fun static void setBpm(int bpm){
@@ -86,6 +91,9 @@ public class Runner extends RunnerBase{
 Event xxx;
 xxx @=> Runner.bpmChanged;
 
+Event qe;
+qe @=> Runner.quitEvent;
+
 false => Runner.isPlaying;
 4 => Runner.ticksPerBeat;
 
@@ -95,4 +103,5 @@ Patch.connect(Runner._masterClockGen, Runner.masterClock);
 samp => now;
 Runner.bpmChanged.broadcast();
 
-Util.runForever(); // Keep connection alive
+Runner.quitEvent => now;
+<<<"Runner quit">>>;

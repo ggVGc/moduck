@@ -15,8 +15,8 @@ define(WARNING,
     <<< "Warning: "+$1+" - `FILIN'" >>>;)
 
 
-define(ASSERT,
-    if(!($1)){<<<"Assertion Failure: $1 -- `FILIN'">>>;})
+define(assert,
+    if(!($1)){<<<"Assertion Failure: $1 -- `FILIN'">>>;Machine.crash();})
 
 
 define(allEquals,
