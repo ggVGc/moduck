@@ -22,8 +22,8 @@ class Shared{
   time startTime;
   false => BOOL lenMultiplierChanged;
   null @=> BufEntry lastTriggeredEntry;
-  float timeMul;
-  float lenMul;
+  1.0 => float timeMul;
+  1.0 => float lenMul;
   false => int hasCachedNextVal;
   MayInt nextVal;
   /* false => int clearing; */
