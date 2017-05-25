@@ -21,15 +21,15 @@ Runner.setPlaying(1);
 fun ModuckP makeBeatRitmo(){
   Runner.getBpm()*2 => int b;
   [
-    mk(ClockGen, b/3)
-    ,mk(ClockGen, (b*2)/3)
-    ,mk(ClockGen, b/2+b/4)
-    ,mk(ClockGen, b+b/2)
-    ,mk(ClockGen, b/2)
-    ,mk(ClockGen, b)
-    ,mk(ClockGen, b*2)
-    ,mk(ClockGen, b*4)
-    ,mk(ClockGen, b*8)
+    mk(ClockGen, b/3, true)
+    ,mk(ClockGen, (b*2)/3, true)
+    ,mk(ClockGen, b/2+b/4, true)
+    ,mk(ClockGen, b+b/2, true)
+    ,mk(ClockGen, b/2, true)
+    ,mk(ClockGen, b, true)
+    ,mk(ClockGen, b*2, true)
+    ,mk(ClockGen, b*4, true)
+    ,mk(ClockGen, b*8, true)
   ] @=> ModuckP parts[];
 
   Util.genStringNums(parts.size()-1) @=> string tags[];
