@@ -5,34 +5,32 @@ class Shared{
   false => int running;
 }
 
-fun void runLoop(ModuckBase parent, Event startBang, IntRef running, Shared shared){
+fun void runLoop(ModuckBase parent, IntRef running, Shared shared){
   while(true){
     minute / shared.bpm => now;
     if(running.i){
       parent.sendPulse(P_Clock, 0);
     }else{
-      startBang => now;
-      parent.sendPulse(P_Clock, 0);
+      break;
     }
   }
 }
 
 
 genHandler(GateHandler, P_Gate, 
-    IntRef.make(false) @=> IntRef running;
-    Event startBang;
-    false => int started;
+    IntRef running;
+    Shred @ loopShred;
 
   HANDLE{
-    if(!started){
-      true => started;
-      spork ~ runLoop(parent, startBang, running, shared);
-      parent.sendPulse(P_Clock, 0);
+    if(loopShred != null){
+      false => running.i;
+      loopShred.exit();
+      null @=> loopShred;
     }
-    running.i => int wasRunning;
-    v != null => running.i;
-    if(running.i && !wasRunning){
-      startBang.broadcast();
+    if(v != null){
+      IntRef.make(true) @=> running;
+      parent.sendPulse(P_Clock, 0);
+      spork ~ runLoop(parent, running, shared) @=> loopShred;
     }
   },
   Shared shared;

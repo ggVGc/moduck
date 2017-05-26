@@ -21,15 +21,15 @@ Runner.setPlaying(1);
 fun ModuckP makeBeatRitmo(){
   Runner.getBpm()*2 => int b;
   [
-    mk(ClockGen, b/3, true)
-    ,mk(ClockGen, (b*2)/3, true)
-    ,mk(ClockGen, b/2+b/4, true)
-    ,mk(ClockGen, b+b/2, true)
-    ,mk(ClockGen, b/2, true)
-    ,mk(ClockGen, b, true)
-    ,mk(ClockGen, b*2, true)
-    ,mk(ClockGen, b*4, true)
-    ,mk(ClockGen, b*8, true)
+    mk(ClockGen, b/3)
+    ,mk(ClockGen, (b*2)/3)
+    ,mk(ClockGen, b/2+b/4)
+    ,mk(ClockGen, b+b/2)
+    ,mk(ClockGen, b/2)
+    ,mk(ClockGen, b)
+    ,mk(ClockGen, b*2)
+    ,mk(ClockGen, b*4)
+    ,mk(ClockGen, b*8)
   ] @=> ModuckP parts[];
 
   Util.genStringNums(parts.size()-1) @=> string tags[];
@@ -528,15 +528,12 @@ fun void setupBeatRitmoUI(ModuckP clockIn, ModuckP controllerSrc, ModuckP ritmo)
     def(onceTrig, mk(OnceTrigger));
     clockIn => onceTrig.to(P_Trigger).c;
     (controllerSrc => frm("note"+(7+(7-i)*16)).c)
+      .b( mk(Printer, "ritmo in "))
       .b(
           mk(Repeater)
           => onceTrig.to(P_Set).c
-          => MBUtil.onlyHigh().c
           => ritmo.to(i).c
         )
-      .b( MBUtil.onlyLow()
-          => mk(Inverter, 1).c
-          => onceTrig.to(P_Clear).c)
       .b( MBUtil.onlyLow() => ritmo.to(i).c);
   }
 }
