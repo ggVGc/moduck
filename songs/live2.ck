@@ -500,7 +500,12 @@ for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
   setupBufferUIs(trigAndPitchBufRouter, rowId);
 }
 
-keyboard => frm("note").c => rowCol.keysIn.to("trigpitch").c;
+keyboard
+  => frm("note").c
+  => mk(Printer, "kb note").c
+  => mk(Mapper, Scales.fromChromatic(Scales.MinorNatural), Scales.MinorNatural.size()).c
+  => mk(Printer, "kb ").c
+  => rowCol.keysIn.to("trigpitch").c;
 circuitKeyboard => frm("note").c
   => mk(Offset, -4*12).c
   => rowCol.keysIn.to("trigpitch").c;
@@ -514,6 +519,7 @@ launchpad => frm("cc104").c => mk(Bigger, 0).c => trigPitchToggle.to(P_Toggle).c
 Scales.MinorNatural.size() => int scaleNoteCount;
 launchpadKeyboard(launchpad, 0, 5, scaleNoteCount) @=> ModuckP triggerKeyboard;
 triggerKeyboard
+  => mk(Offset, 2*Scales.MinorNatural.size()).c
   => iff(trigPitchToggle, P_Trigger)
     .then(rowCol.keysIn.to("pitch"))
     .els(rowCol.keysIn.to("trigpitch")).c;
@@ -525,6 +531,7 @@ for(0=>int rowInd;rowInd<ROW_COUNT;++rowInd){
   rowOutputs <<
     (rowCol.rows[rowInd].outs
     => frm(recv(P_Trigger)).c
+    => mk(Offset, -2*Scales.MinorNatural.size()).c
     => mk(NumToOut, Util.range(7*5)).c);
 }
 
@@ -699,14 +706,12 @@ function void setupBufferUIs(ModuckP trigPitchTriggerRouter, int rowId){
 
 
 function ModuckP outPitchQuant(){
-    return mk(Repeater)
-      => mk(Mapper, Scales.MinorNatural, 12).c
-      => octaves(3).c;
+    return mk(Repeater) => mk(Mapper, Scales.MinorNatural, 12).c;
 }
 
 function void setupRowOutputs(Row row){
   row.outs
-    .b(frm(0).to(mk(Offset, 60) => mk(NoteOut,circuitDeviceOut,9).c)) // Drums
+    .b(frm(0).to(mk(Offset, 7*4-3) => mk(NoteOut,circuitDeviceOut,9).c)) // Drums
     .b(frm(1).to(outPitchQuant() => mk(NoteOut,circuitDeviceOut,0).c))
     .b(frm(2).to(outPitchQuant() => mk(NoteOut,nocoast,0).c))
     .b(frm(3).to(outPitchQuant() => mk(NoteOut,brute,0).c))
