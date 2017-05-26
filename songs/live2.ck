@@ -233,9 +233,14 @@ fun Row makeRow(ModuckP clockIn){
   ret.input => frm("trig").c => mk(TrigValue, 0).c => notes.connector.c;
   ret.input => frm("pitchOffset").c => pitchShift.connector.c;
   ret.input => frm("trigpitch").c => mk(TrigValue, 0).c => notes.connector.c;
-  ret.input => frm("noteLengthMultiplier").c => notes.buf.to("lengthMultiplier").c;
-  ret.input => frm("noteTimeMul").c => notes.buf.to("timeMul").c;
-  ret.input => frm("noteTimeMul").c => pitchLock.buf.to("timeMul").c;
+  (ret.input => frm("noteLengthMultiplier").c)
+    .b(notes.buf.to("lengthMultiplier"))
+    .b(pitchLock.buf.to("lengthMultiplier"))
+    .b(pitchShift.buf.to("lengthMultiplier"));
+  (ret.input => frm("noteTimeMul").c)
+    .b(notes.buf.to("timeMul"))
+    .b(pitchLock.buf.to("timeMul"))
+    .b(pitchShift.buf.to("timeMul"));
 
   togglingOuts(OUT_DEVICE_COUNT) @=> ret.outs;
 
@@ -342,6 +347,11 @@ def(apc2, mk(Wrapper,
     ,apcToLaunchadAdapterIn(mk(MidInp, MIDI_IN_APC1, 0))
 ));
 
+def(maschine, mk(Wrapper, 
+    mk(NoteOut, openOut(MIDI_IN_IAC_1), 0, true)
+    ,mk(MidInp, MIDI_OUT_IAC_1, 0)
+));
+
 def(keyboard, mk(MidInp, MIDI_IN_K49, 0));
 
 openOut(MIDI_OUT_CIRCUIT) @=> MidiOut circuitDeviceOut;
@@ -412,9 +422,6 @@ fun ModuckP relativeValue(int min, int max){
   (val => frm(recv(P_Set)).c)
     .b(mk(Smaller, min) => mk(Value, min).c => val.to(P_Set).c)
     .b(mk(Bigger, max) => mk(Value, max).c => val.to(P_Set).c);
-
-
-  val => mk(Printer, "REL VAL").c;
 
   return mk(Wrapper, root, val);
 
@@ -528,7 +535,6 @@ fun void setupBeatRitmoUI(ModuckP clockIn, ModuckP controllerSrc, ModuckP ritmo)
     def(onceTrig, mk(OnceTrigger));
     clockIn => onceTrig.to(P_Trigger).c;
     (controllerSrc => frm("note"+(7+(7-i)*16)).c)
-      .b( mk(Printer, "ritmo in "))
       .b(
           mk(Repeater)
           => onceTrig.to(P_Set).c
@@ -706,11 +712,12 @@ function void setupRowOutputs(Row row){
     .b(frm(3).to(outPitchQuant() => mk(NoteOut,brute,0).c))
     .b(frm(4).to(outPitchQuant() => mk(NoteOut,ms20,0).c))
     .b(frm(5).to(outPitchQuant() => mk(NoteOut,sys1,0).c))
-    .b(frm(6).to(outPitchQuant() => mk(NoteOut,nocoast,1).c))
+    .b(frm(6).to(outPitchQuant() => maschine.c))
+    .b(frm(7).to(outPitchQuant() => mk(NoteOut,nocoast,1).c))
   ;
 }
 
-circuitKeyboard => frm("cc83").c => mk(NoteOut, nocoast, 1).to("cc1").c;
+circuitKeyboard => frm("cc87").c => mk(NoteOut, nocoast, 1).to("cc1").c;
 
 
 

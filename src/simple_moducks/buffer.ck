@@ -318,10 +318,11 @@ public class Buffer extends Moduck{
   }
 
   fun void onValueChange(string key, int oldVal, int newVal){
+    (newVal $ float )/100.0 => float ratio;
     if(key == "lengthMultiplier"){
-      (getVal("lengthMultiplier") $ float )/100.0 => shared.lenMul;
+      ratio => shared.lenMul;
     }else if(key == "timeMul"){
-      (getVal("timeMul") $ float )/100.0 => shared.timeMul;
+      ratio => shared.timeMul;
     }
   }
 
