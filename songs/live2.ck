@@ -1,5 +1,3 @@
-
-
 include(song_macros.m4)
 include(time_macros.m4)
 include(funcs.m4)
@@ -8,14 +6,12 @@ include(parts/multi_router.ck)
 include(parts/multi_switcher.ck)
 include(parts/rhythms.ck)
 include(parts/toggling_outs.ck)
-// # include(instruments/ritmo2.ck)
 
 define(OUT_DEVICE_COUNT, 8);
 define(ROW_COUNT, 8)
 define(QUANTIZATION, Bar)
 
 Runner.setPlaying(1);
-
 
 
 fun ModuckP makeBeatRitmo(){
@@ -58,18 +54,8 @@ class ThingAndBuffer{
   def(activity, mk(Repeater));
 
   fun static ThingAndBuffer make(ModuckP thing, string targetTag, int bufQuantization){
-    /* string tags[0]; */
-    /* return make(thing, targetTag, mk(Repeater), bufQuantization, tags); */
     return make(thing, targetTag, mk(Repeater), bufQuantization);
   }
-
-
-  /* 
-   fun static ThingAndBuffer make(ModuckP thing, string targetTag, ModuckP insert, int bufQuantization){
-     string tags[0];
-     return make(thing, targetTag, insert, bufQuantization, tags);
-   }
-   */
 
   fun static ModuckP routeTag(string bufToTag, ModuckP root, ModuckP buf){
     def(proxy, mk(Prio));
@@ -82,33 +68,16 @@ class ThingAndBuffer{
   }
 
 
-  /* fun static ThingAndBuffer make(ModuckP thing, string targetTag, ModuckP insert, int bufQuantization, string recTags[]){ */
   fun static ThingAndBuffer make(ModuckP thing, string targetTag, ModuckP insert, int bufQuantization){
     ThingAndBuffer ret;
     thing @=> ret.thing;
-    /* mk(RecBuf, bufQuantization, recTags) @=> ret.buf; */
     mk(RecBuf, bufQuantization) @=> ret.buf;
     def(root, mk(Repeater,
           Util.concatStrings([
             [P_Trigger, P_Clock]
-            /* ,recTags */
       ])));
 
     root => ret.buf.listen(P_Clock).c;
-
-
-    /* 
-     for(0=>int tag;tag<recTags.size();++tag){
-       recTags[tag] @=> string tag;
-       routeTag(tag, root => frm(tag).c , ret.buf)
-         // => insert.c  // HACK: insert moduck isn't well defined, and has only one use case so far. And it's not used together with multiple rec tags
-                           // If needed, there needs to be one copy of the 'insert' for each tag. Alternatively an output router,
-                           // and set the index before sending the signal before routing through the 'insert' to the output.
-         => thing.to(tag).c;
-     }
-     */
-
-
 
     if(targetTag != null){
       routeTag(P_Set, root => frm(P_Trigger).c, ret.buf)
@@ -116,7 +85,6 @@ class ThingAndBuffer{
         => thing.to(targetTag).c;
       thing => frm(recv(targetTag)).c => ret.activity.c;
     }
-
 
     mk(Wrapper, root, thing) @=> ret.connector;
     recBufUI(ret.buf) @=> ret.bufUI;
@@ -133,33 +101,9 @@ class ThingAndBuffer{
 }
 
 
-[
-    /* fourFour(B*2) */
-    fourFour(B+B2)
-    ,fourFour(B2+B4)
-    ,fourFour(B/3)
-    ,fourFour(B)
-    ,fourFour(B2)
-    ,fourFour(B4)
-    ,fourFour(B8)
-    ,fourFour(B16)
-    /* ,fourFour(B32) */
-    /* ,mk(Blackhole) */
-
-    /* ,fourFour(B4+B8) */
-    /* ,fourFour(B16+B32) */
-    /* ,fourFour(B7, 0) */
-    /* ,fourFour(B5, 0) */
-    /* ,fourFour(B3, 0) */
-] @=> ModuckP beatRitmoParts[];
-
-
-/* Util.genStringNums(beatRitmoParts.size()-1) @=> string beatRitmoTags[]; */
 Util.concatStrings([
     ["trig", "trigpitch", "pitch", "pitchOffset", "noteLengthMultiplier", "noteTimeMul"]
-    /* ,Util.prefixStrings("beatRitmo", beatRitmoTags) */
-])
-  @=> string rowTags[];
+]) @=> string rowTags[];
 
 
 class Row{
@@ -184,48 +128,6 @@ fun Row makeRow(ModuckP clockIn){
     @=> ThingAndBuffer pitchLock;
   ThingAndBuffer.make(mk(Offset, 0), "offset", QUANTIZATION)
     @=> ThingAndBuffer pitchShift;
-  /* 
-   ThingAndBuffer.make(mk(Repeater), P_Trigger, QUANTIZATION)
-     @=> ThingAndBuffer beatRitmoSrc;
-   */
-
-  /* 
-   def(beatRitmo, makeBeatRitmo());
-   def(beatRitmoStacker, mk(Stacker));
-   def(beatRitmoRouter, mk(Router, 0));
-   */
-
-  /* 
-   for(0=>int tagInd;tagInd<beatRitmoTags.size();++tagInd){
-     10::ms => now;
-     beatRitmoTags[tagInd] @=> string tag;
-     ret.input
-       => frm("beatRitmo"+tagInd).c
-       => beatRitmoStacker.to(tagInd).c;
-     
-     beatRitmoRouter
-       => frm(tagInd).c
-       => beatRitmo.to(tagInd).c;
-   }
-   */
-
-  /* 
-   beatRitmoStacker
-     => frm(P_Source).c
-     => beatRitmoSrc.connector.c
-     => beatRitmoRouter.to("index").c;
-   beatRitmoSrc.connector => beatRitmoRouter.to(P_Trigger).c;
-   beatRitmoStacker
-     => MBUtil.onlyLow().c
-     => beatRitmoSrc.connector.c;
-   */
-
-
-  /* 
-   beatRitmo
-     => mk(SampleHold, D16).c
-     => notes.connector.c;
-   */
 
 
   ret.input => frm("trigpitch").c => pitchLock.connector.c;
@@ -256,41 +158,10 @@ fun Row makeRow(ModuckP clockIn){
   notes.bufUI @=> ret.bufUI;
   pitchLock.bufUI @=> ret.pitchLockUI;
   pitchShift.bufUI @=> ret.pitchShiftUI;
-  /* beatRitmoSrc.bufUI @=> ret.beatRitmoUI; */
 
-  /* def(bufClock, mk(PulseDiv, 2)); */
-
-  /* def(backNudgeVal, mk(TrigValue, 90)); */
-  /* def(forwardNudgeVal, mk(TrigValue, 110)); */
-  /* def(scalingProxy, mk(Prio)); */
-
-  /* 
-   ret.playbackRate
-     .b(scalingProxy.to(0))
-     .b(mk(Add, 15) => forwardNudgeVal.to(P_Set).c)
-     .b(mk(Add, -15) => backNudgeVal.to(P_Set).c) ;
-
-   ret.nudgeForward
-     => forwardNudgeVal.c
-     => scalingProxy.to(1).c;
-
-   ret.nudgeBack
-     => backNudgeVal.c
-     => scalingProxy.to(1).c;
-
-   scalingProxy => bufClock.to("scaling").c;
-   */
-
-  /* clockIn */
-    /* .b(mk(PulseGen, 2, Runner.timePerTick()/2) => bufClock.c) */
-    /* .b(bufClock) */
-
-  /* bufClock */
   clockIn
     .b(notes.connector.to(P_Clock))
     .b(pitchLock.connector.to(P_Clock))
-    /* .b(beatRitmoSrc.connector.to(P_Clock)) */
-    /* .b(beatRitmo.to(P_Clock)); */
     .b(pitchShift.connector.to(P_Clock));
 
   return ret;
@@ -309,7 +180,7 @@ fun RowCollection makeRowCollection(ModuckP clockIn){
 
   ModuckP rowInputs[0];
   for(0=>int i;i<ROW_COUNT;++i){
-    10::ms => now; // Keep JACK happy, prevents getting killed because of buffer underrun
+    10::ms => now;
     makeRow(clockIn) @=> Row row;
     rowInputs << row.input;
     ret.rows << row;
@@ -321,11 +192,9 @@ fun RowCollection makeRowCollection(ModuckP clockIn){
 }
 
 
-
-
 def(clock, mk(Repeater));
-
 makeRowCollection(clock) @=> RowCollection rowCol;
+
 
 // DEVICES
 
@@ -342,6 +211,7 @@ def(apc1, mk(Wrapper,
     apcToLaunchadAdapterOut(mk(NoteOut, openOut(MIDI_OUT_APC), 0, true))
     ,apcToLaunchadAdapterIn(mk(MidInp, MIDI_IN_APC, 0))
 ));
+
 def(apc2, mk(Wrapper, 
     apcToLaunchadAdapterOut(mk(NoteOut, openOut(MIDI_OUT_APC1), 0, true))
     ,apcToLaunchadAdapterIn(mk(MidInp, MIDI_IN_APC1, 0))
@@ -362,7 +232,6 @@ def(circuitKeyboard, mk(Wrapper,
 ));
 
 def(beatRitmo, makeBeatRitmo());
-
 
 def(beatRitmoHolder, mk(SampleHold, D16));
 def(beatRitmoTimeSrc, mk(Repeater));
@@ -424,9 +293,7 @@ fun ModuckP relativeValue(int min, int max){
     .b(mk(Bigger, max) => mk(Value, max).c => val.to(P_Set).c);
 
   return mk(Wrapper, root, val);
-
 }
-
 
 
 circuitKeyboard => frm("cc80").c => beatRitmoTimeSrc.c;
@@ -472,7 +339,6 @@ fun void rowMultiControl(string rowInputTag, ModuckP m, int minVal, int maxVal, 
 }
 
 
-
 setupOutputSelection();
 setupBeatRitmoUI(clock, launchpad, beatRitmo);
 
@@ -499,6 +365,7 @@ for(0=>int rowId;rowId<rowCol.rows.size();++rowId){
   makeOutsUIRow(rowId);
   setupBufferUIs(trigAndPitchBufRouter, rowId);
 }
+
 
 keyboard
   => frm("note").c
@@ -653,13 +520,8 @@ fun ModuckP apcToLaunchadAdapterIn(ModuckP apcInstance){
   apcInstance => frm("note").c => rep.to("note").c;
   apcInstance => frm("cc").c => rep.to("cc").c;
 
-
-
   return rep;
 }
-
-
-
 
 
 function void setupBufferUIs(ModuckP trigPitchTriggerRouter, int rowId){
@@ -709,6 +571,7 @@ function ModuckP outPitchQuant(){
     return mk(Repeater) => mk(Mapper, Scales.MinorNatural, 12).c;
 }
 
+
 function void setupRowOutputs(Row row){
   row.outs
     .b(frm(0).to(mk(Offset, 7*4-3) => mk(NoteOut,circuitDeviceOut,9).c)) // Drums
@@ -722,8 +585,8 @@ function void setupRowOutputs(Row row){
   ;
 }
 
-circuitKeyboard => frm("cc87").c => mk(NoteOut, nocoast, 1).to("cc1").c;
 
+circuitKeyboard => frm("cc87").c => mk(NoteOut, nocoast, 1).to("cc1").c;
 
 
 function void setupOutputSelection(){
@@ -799,7 +662,6 @@ samp =>  now;
 rowCol.rowIndexSelector.set(P_Set, 0);
 
 Util.runForever();
-
 
 
 
