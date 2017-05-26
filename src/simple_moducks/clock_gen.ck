@@ -17,25 +17,6 @@ fun void runLoop(ModuckBase parent, Event startBang, IntRef running, Shared shar
   }
 }
 
-fun void retriggeringRunLoop(ModuckBase parent, Event startBang, IntRef running, Shared shared){
-  0::ms => dur accum;
-  while(true){
-    1::ms => now;
-    accum + 1::ms => accum;
-    if(running.i){
-      if (accum >= (minute / shared.bpm)){
-        parent.sendPulse(P_Clock, 0);
-        0::ms => accum;
-      }
-    }else{
-      startBang => now;
-      parent.sendPulse(P_Clock, 0);
-      0::ms => accum;
-    }
-  }
-}
-
-
 
 genHandler(GateHandler, P_Gate, 
     IntRef.make(false) @=> IntRef running;
@@ -45,11 +26,7 @@ genHandler(GateHandler, P_Gate,
   HANDLE{
     if(!started){
       true => started;
-      if(retriggering){
-        spork ~ retriggeringRunLoop(parent, startBang, running, shared);
-      }else{
-        spork ~ runLoop(parent, startBang, running, shared);
-      }
+      spork ~ runLoop(parent, startBang, running, shared);
       parent.sendPulse(P_Clock, 0);
     }
     running.i => int wasRunning;
@@ -59,7 +36,6 @@ genHandler(GateHandler, P_Gate,
     }
   },
   Shared shared;
-  int retriggering;
 )
 
 
@@ -87,15 +63,11 @@ public class ClockGen extends Moduck{
     
 
 
-  fun static ClockGen make(int bpm, int retriggering){
+  fun static ClockGen make(int bpm){
     ClockGen ret;
     bpm => ret.shared.bpm;
     OUT(P_Clock);
-    IN(GateHandler, (ret.shared, retriggering));
+    IN(GateHandler, (ret.shared));
     return ret;
-  }
-
-  fun static ClockGen make(int bpm){
-    return make(bpm, false);
   }
 }
