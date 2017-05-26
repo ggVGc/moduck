@@ -75,6 +75,25 @@ class GateHandler extends EventHandler{
 }
 
 
+genHandler(ClockHandler, P_Clock,
+
+    fun void init(){
+    }
+
+    HANDLE{
+      // TODO: This doesn't work (Clock out)
+      /* 
+       MidiMsg msg;
+       248 => msg.data1;
+       10 => msg.data2;
+       2 => msg.data3;
+       device.send(msg);
+       */
+    },
+    MidiOut device;
+);
+
+
 
 public class NoteOut extends Moduck{
   static int enabled;
@@ -91,6 +110,7 @@ public class NoteOut extends Moduck{
       ret.addIn("note"+i, GateHandler.make(device, msg, channel, i, false, zeroVelNoteOff));
       ret.addIn("cc"+i, GateHandler.make(device, msg, channel, i, true, zeroVelNoteOff));
     }
+    IN(ClockHandler, (device));
     ret.addVal("velocity", 127);
     return ret;
   }

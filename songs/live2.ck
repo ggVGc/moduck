@@ -10,7 +10,7 @@ include(parts/rhythms.ck)
 include(parts/toggling_outs.ck)
 // # include(instruments/ritmo2.ck)
 
-define(OUT_DEVICE_COUNT, 6);
+define(OUT_DEVICE_COUNT, 8);
 define(ROW_COUNT, 8)
 define(QUANTIZATION, Bar)
 
@@ -709,8 +709,12 @@ function void setupRowOutputs(Row row){
     .b(frm(3).to(outPitchQuant() => mk(NoteOut,brute,0).c))
     .b(frm(4).to(outPitchQuant() => mk(NoteOut,ms20,0).c))
     .b(frm(5).to(outPitchQuant() => mk(NoteOut,sys1,0).c))
+    .b(frm(6).to(outPitchQuant() => mk(NoteOut,nocoast,1).c))
   ;
 }
+
+circuitKeyboard => frm("cc83").c => mk(NoteOut, nocoast, 1).to("cc1").c;
+
 
 
 function void setupOutputSelection(){
