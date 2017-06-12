@@ -205,12 +205,12 @@ def(launchpad, mk(Wrapper,
 ));
 
 def(apc1, mk(Wrapper, 
-    apcToLaunchadAdapterOut(mk(NoteOut, openOut(MIDI_OUT_APC), 0, true))
+    apcToLaunchadAdapterOut(mk(NoteOut, openOut(MIDI_OUT_APC1), 0, true))
     ,apcToLaunchadAdapterIn(mk(MidInp, MIDI_IN_APC, 0))
 ));
 
 def(apc2, mk(Wrapper, 
-    apcToLaunchadAdapterOut(mk(NoteOut, openOut(MIDI_OUT_APC1), 0, true))
+    apcToLaunchadAdapterOut(mk(NoteOut, openOut(MIDI_OUT_APC), 0, true))
     ,apcToLaunchadAdapterIn(mk(MidInp, MIDI_IN_APC1, 0))
 ));
 
