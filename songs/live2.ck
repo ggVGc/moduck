@@ -113,9 +113,6 @@ class Row{
   ModuckP pitchShiftUI;
   /* ModuckP beatRitmoUI; */
   def(input, mk(Repeater, rowTags));
-  def(playbackRate, mk(Repeater));
-  def(nudgeForward, mk(Repeater));
-  def(nudgeBack, mk(Repeater));
 }
 
 
