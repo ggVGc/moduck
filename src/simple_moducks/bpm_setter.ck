@@ -6,18 +6,15 @@ genHandler(TrigHandler, P_Trigger,
       Runner.setBpm(v.i*Runner.ticksPerBeat);
     }
   },
-  IntRef active;
+  ;
 )
 
 
 public class BpmSetter extends Moduck{
-  maker(BpmSetter, int offFromGate){
+  maker0(BpmSetter){
     BpmSetter ret;
-    IntRef active;
-    false => active.i;
     OUT(P_Trigger);
-    IN(TrigHandler, (active));
-    ret.addVal("offFromGate", offFromGate);
+    IN(TrigHandler, ());
     return ret;
   }
 

@@ -584,8 +584,8 @@ function void setupRowOutputs(Row row){
 
 
 circuitKeyboard => frm("cc86").c
-  => mk(Multiply, 2).c
-  => mk(BpmSetter, nocoast, 1).c;
+  => mk(Mul, 2).c
+  => mk(BpmSetter).c;
 
 circuitKeyboard => frm("cc87").c => mk(NoteOut, nocoast, 1).to("cc1").c;
 
