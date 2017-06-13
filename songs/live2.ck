@@ -215,8 +215,8 @@ def(apc2, mk(Wrapper,
 ));
 
 def(maschine, mk(Wrapper, 
-    mk(NoteOut, openOut(MIDI_IN_IAC_1), 0, true)
-    ,mk(MidInp, MIDI_OUT_IAC_1, 0)
+    mk(NoteOut, openOut(MIDI_OUT_IAC_1), 0, true)
+    ,mk(MidInp, MIDI_IN_IAC_1, 0)
 ));
 
 def(keyboard, mk(MidInp, MIDI_IN_K49, 0));
@@ -577,7 +577,7 @@ function void setupRowOutputs(Row row){
     .b(frm(3).to(outPitchQuant() => mk(NoteOut,brute,0).c))
     .b(frm(4).to(outPitchQuant() => mk(NoteOut,ms20,0).c))
     .b(frm(5).to(outPitchQuant() => mk(NoteOut,sys1,0).c))
-    .b(frm(6).to(outPitchQuant() => maschine.c))
+    .b(frm(6).to(maschine))
     .b(frm(7).to(outPitchQuant() => mk(NoteOut,nocoast,1).c))
   ;
 }
