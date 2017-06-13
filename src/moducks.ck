@@ -1,4 +1,5 @@
 
+Machine.add("simple_moducks/bpm_setter.ck");
 Machine.add("simple_moducks/sequencer.ck");
 Machine.add("simple_moducks/sample_hold.ck");
 Machine.add("simple_moducks/value.ck");
