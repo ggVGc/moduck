@@ -111,6 +111,7 @@ class Row{
   ModuckP bufUI;
   ModuckP pitchLockUI;
   ModuckP pitchShiftUI;
+  def(pitchShiftOut, mk(Value, 0).set("triggerOnSet", true));
   /* ModuckP beatRitmoUI; */
   def(input, mk(Repeater, rowTags));
 }
@@ -140,6 +141,12 @@ fun Row makeRow(ModuckP clockIn){
     .b(notes.buf.to("timeMul"))
     .b(pitchLock.buf.to("timeMul"))
     .b(pitchShift.buf.to("timeMul"));
+
+  pitchShift.thing
+    => frm(recv("offset")).c
+    => MBUtil.onlyHigh().c
+    => ret.pitchShiftOut.to(P_Set).c;
+  ret.pitchShiftOut => mk(Printer, "Pitch shift").c;
 
   togglingOuts(OUT_DEVICE_COUNT) @=> ret.outs;
 
@@ -374,7 +381,6 @@ triggerKeyboard
   => iff(trigPitchToggle, P_Trigger)
     .then(rowCol.keysIn.to("pitch"))
     .els(rowCol.keysIn.to("trigpitch")).c;
-launchpadKeyboard(launchpad, 5, 8, scaleNoteCount) => mk(Offset, -7).c => rowCol.keysIn.to("pitchOffset").c;
 
 
 ModuckP rowOutputs[0];
@@ -387,6 +393,25 @@ for(0=>int rowInd;rowInd<ROW_COUNT;++rowInd){
 }
 
 rowCol.rowIndexSelector => multiSwitcher(rowOutputs, Util.genStringNums(7*5), triggerKeyboard).c;
+
+
+launchpadKeyboard(launchpad, 5, 8, scaleNoteCount) @=> ModuckP pitchOffsetKb;
+pitchOffsetKb => mk(Offset, -7).c => rowCol.keysIn.to("pitchOffset").c;
+
+ModuckP rowPitchOffsets[0];
+for(0=>int rowInd;rowInd<ROW_COUNT;++rowInd){
+  rowPitchOffsets <<
+    (rowCol.rows[rowInd].pitchShiftOut
+    => mk(Offset, 7).c
+    => mk(NumToOut, Util.range(7*3)).c
+    );
+}
+
+rowCol.rowIndexSelector => multiSwitcher(rowPitchOffsets, Util.genStringNums(7*3), pitchOffsetKb).c;
+for(0=>int rowInd;rowInd<ROW_COUNT;++rowInd){
+  rowCol.rows[rowInd].pitchShiftOut.set(P_Trigger, true);
+}
+
 
 fun void setupBeatRitmoUI(ModuckP clockIn, ModuckP controllerSrc, ModuckP ritmo){
   for(0=>int i;i<8;++i){
