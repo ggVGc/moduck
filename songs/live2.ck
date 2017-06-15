@@ -7,7 +7,7 @@ include(parts/multi_switcher.ck)
 include(parts/rhythms.ck)
 include(parts/toggling_outs.ck)
 
-define(OUT_DEVICE_COUNT, 8);
+define(OUT_DEVICE_COUNT, 3);
 define(ROW_COUNT, 8)
 define(QUANTIZATION, Bar)
 
@@ -204,12 +204,8 @@ def(launchpad, mk(Wrapper,
     ,mk(MidInp, MIDI_IN_LAUNCHPAD, 0)
 ));
 
-def(apc1, mk(Wrapper, 
-    apcToLaunchadAdapterOut(mk(NoteOut, openOut(MIDI_OUT_APC1), 0, true))
-    ,apcToLaunchadAdapterIn(mk(MidInp, MIDI_IN_APC1, 0))
-));
 
-def(apc2, mk(Wrapper, 
+def(apc, mk(Wrapper, 
     apcToLaunchadAdapterOut(mk(NoteOut, openOut(MIDI_OUT_APC), 0, true))
     ,apcToLaunchadAdapterIn(mk(MidInp, MIDI_IN_APC, 0))
 ));
@@ -240,15 +236,6 @@ beatRitmoTimeSrc
 beatRitmo 
   => beatRitmoHolder.to(P_Set).to(P_Trigger).c
   => rowCol.keysIn.to("trig").c;
-
-
-// OUTPUTS
-
-
-openOut(MIDI_OUT_MICROBRUTE) @=> MidiOut brute;
-openOut(MIDI_OUT_MS_20) @=>  MidiOut ms20;
-openOut(MIDI_OUT_USB_MIDI) @=> MidiOut nocoast;
-openOut(MIDI_OUT_SYS1) @=> MidiOut sys1;
 
 
 // MAPPINGS
@@ -299,7 +286,7 @@ rowMultiControl("noteLengthMultiplier", twoWay(circuitKeyboard, "cc81"), 1, 1000
 rowMultiControl("noteTimeMul", twoWay(circuitKeyboard, "cc82"), 1, 1000, 100);
 
 // Reset controller values
-(apc1 => frm("cc104").c)
+(apc => frm("cc106").c)
   .b(mk(TrigValue, 100) => rowCol.keysIn.to("noteLengthMultiplier").c)
   .b(mk(TrigValue, 100) => rowCol.keysIn.to("noteTimeMul").c);
 
@@ -341,14 +328,14 @@ setupBeatRitmoUI(clock, launchpad, beatRitmo);
 
 // Use one button to start/stop both trig and pitch buffer
 def(trigAndPitchBufRouter, mk(Router, 0));
-apc2
+apc
   => frm("cc104").c
   => trigAndPitchBufRouter.c;
 // Match index of row
 rowCol.rowIndexSelector => trigAndPitchBufRouter.to("index").c;
 
 
-apc2
+apc
   => frm("cc104").c
   => mk(Value, 50).c
   => circuitKeyboard.to("cc81").c;
@@ -523,27 +510,27 @@ fun ModuckP apcToLaunchadAdapterIn(ModuckP apcInstance){
 
 function void setupBufferUIs(ModuckP trigPitchTriggerRouter, int rowId){
   def(bufUI, rowCol.rows[rowId].bufUI);
-  apc2
+  apc
     .b(frm("cc105").to(mk(Bigger, 0) => bufUI.to(P_ClearAll).c))
     .b(frm("note"+(rowId*16)).to(bufUI, P_Trigger));
 
-  bufUI => apc2.to("note"+(16*rowId)).c;
+  bufUI => apc.to("note"+(16*rowId)).c;
 
 
   def(pitchLockUI, rowCol.rows[rowId].pitchLockUI);
-  apc2
+  apc
     .b(frm("cc105").to(mk(Bigger, 0) => pitchLockUI.to(P_ClearAll).c))
     .b(frm("note"+(rowId*16+1)).to(pitchLockUI, P_Trigger));
 
-  pitchLockUI => apc2.to("note"+(16*rowId+1)).c;
+  pitchLockUI => apc.to("note"+(16*rowId+1)).c;
 
 
   def(pitchShiftUI, rowCol.rows[rowId].pitchShiftUI);
-  apc2
+  apc
     .b(frm("cc105").to(mk(Bigger, 0) => pitchShiftUI.to(P_ClearAll).c))
     .b(frm("note"+(rowId*16+2)).to(pitchShiftUI, P_Trigger));
 
-  pitchShiftUI => apc2.to("note"+(16*rowId+2)).c;
+  pitchShiftUI => apc.to("note"+(16*rowId+2)).c;
 
   (trigPitchTriggerRouter => frm(rowId).c)
     .b(bufUI)
@@ -571,26 +558,17 @@ function ModuckP outPitchQuant(){
 
 function void setupRowOutputs(Row row){
   row.outs
-    .b(frm(0).to(mk(Offset, 7*4-3) => mk(NoteOut,circuitDeviceOut,9).c)) // Drums
-    .b(frm(1).to(outPitchQuant() => mk(NoteOut,circuitDeviceOut,0).c))
-    .b(frm(2).to(outPitchQuant() => mk(NoteOut,nocoast,0).c))
-    .b(frm(3).to(outPitchQuant() => mk(NoteOut,brute,0).c))
-    .b(frm(4).to(outPitchQuant() => mk(NoteOut,ms20,0).c))
-    .b(frm(5).to(outPitchQuant() => mk(NoteOut,sys1,0).c))
-    .b(frm(6).to(maschine))
-    .b(frm(7).to(outPitchQuant() => mk(NoteOut,nocoast,1).c))
+    .b(frm(0).to(outPitchQuant() => mk(NoteOut,circuitDeviceOut,0).c))
+    .b(frm(1).to(outPitchQuant() => mk(NoteOut,circuitDeviceOut,1).c))
+    .b(frm(2).to(mk(Offset, 7*4-3) => mk(NoteOut,circuitDeviceOut,9).c)) // Drums
   ;
 }
-
-
-circuitKeyboard => frm("cc87").c => mk(NoteOut, nocoast, 1).to("cc1").c;
-
 
 function void setupOutputSelection(){
   for(0=>int rowInd;rowInd<rowCol.rows.size();++rowInd){
     // Select outputs with side buttons
     8+rowInd*16 => int ind;
-    apc1
+    apc
       => mk(Bigger,0).from("note"+ind).c
       => mk(TrigValue,rowInd).c
       => rowCol.rowIndexSelector.to(P_Set).c
@@ -601,7 +579,7 @@ function void setupOutputSelection(){
       => mk(Processor, Eq.make(rowInd)).c
       => mk(TrigValue, rowInd).c
       => LP.red().c
-      => apc1.to("note"+ind).c;
+      => apc.to("note"+ind).c;
   }
 }
 
@@ -609,14 +587,15 @@ function void setupOutputSelection(){
 function void makeOutsUIRow(int rowId){
   for(0=>int outputId;outputId<OUT_DEVICE_COUNT;++outputId){
     def(outs, rowCol.rows[rowId].outs);
-    apc1
-      => frm("note"+(rowId*16+outputId)).c
+    5 + rowId*16+outputId => int ind;
+    apc
+      => frm("note"+ind).c
       => outs.to("toggleOut"+outputId).c;
 
     outs
       => frm("outActive"+outputId).c
       => LP.red().c
-      => apc1.to("note"+(rowId*16+outputId)).c;
+      => apc.to("note"+ind).c;
   }
 }
 

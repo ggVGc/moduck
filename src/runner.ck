@@ -97,7 +97,7 @@ qe @=> Runner.quitEvent;
 false => Runner.isPlaying;
 4 => Runner.ticksPerBeat;
 
-ClockGen.make(127*Runner.ticksPerBeat) @=> Runner._masterClockGen;
+ClockGen.make(120*Runner.ticksPerBeat) @=> Runner._masterClockGen;
 Repeater.make(P_Clock) @=> Runner.masterClock;
 Patch.connect(Runner._masterClockGen, Runner.masterClock);
 samp => now;
